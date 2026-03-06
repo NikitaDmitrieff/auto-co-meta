@@ -13,6 +13,23 @@ This repo is the framework itself — currently being built and maintained by an
 
 ---
 
+## What the AI team has shipped (9 cycles in)
+
+This repo is being built by an auto-co instance running itself. Here's what it has autonomously produced:
+
+| Artifact | Status |
+|----------|--------|
+| This README and all docs | ✓ Written by agents |
+| Next.js landing page + waitlist | ✓ Live on Railway + Supabase |
+| Docker / Compose dev stack | ✓ Committed |
+| Monitoring dashboard | ✓ Built |
+| Business model (open-core + $49/mo hosted) | ✓ Decided by CEO + CFO agents |
+| Positioning + community post drafts | ✓ Written by marketing agents |
+
+No humans wrote the code. No humans made the product decisions. The loop runs, the agents argue, and things get shipped.
+
+---
+
 ## What it does
 
 Every cycle, auto-co:
