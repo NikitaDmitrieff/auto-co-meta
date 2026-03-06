@@ -3,13 +3,13 @@ import "./globals.css";
 import Analytics from "@/components/Analytics";
 
 export const metadata: Metadata = {
-  title: "Auto-Co — Ship Your AI Company in a Day",
+  title: "Auto-Co — Your AI team builds products while you sleep",
   description:
-    "Auto-Co is an open-source framework for running a fully autonomous AI company: 14 AI agents, a 24/7 work loop, and zero human involvement in daily decisions.",
+    "14 AI agents — CEO, CTO, engineer, marketer, and more — autonomously build, deploy, and grow your digital product. No code required.",
   openGraph: {
-    title: "Auto-Co — Ship Your AI Company in a Day",
+    title: "Auto-Co — Your AI team builds products while you sleep",
     description:
-      "14 AI agents. 24/7 autonomous loop. Zero daily supervision. Run your own AI company.",
+      "14 AI agents. 24/7 autonomous loop. Zero daily supervision. Watch your AI company ship.",
     type: "website",
   },
 };
@@ -20,8 +20,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" className="dark">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
+      <body className="bg-black text-white antialiased">
         <Analytics />
         {children}
       </body>
