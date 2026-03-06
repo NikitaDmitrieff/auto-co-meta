@@ -237,9 +237,9 @@ extract_cycle_metadata() {
 
     # stream-json: each line is a JSON event; the final "result" event has the summary
     if command -v jq &>/dev/null; then
-        # Extract from the last line with type=result
+        # Extract from the last line with type=result (handles both compact and spaced JSON)
         local result_line
-        result_line=$(grep '"type":"result"' <<< "$OUTPUT" | tail -1 || true)
+        result_line=$(grep -E '"type"\s*:\s*"result"' <<< "$OUTPUT" | tail -1 || true)
         if [ -n "$result_line" ]; then
             RESULT_TEXT=$(echo "$result_line" | jq -r '.result // empty' 2>/dev/null | head -c 2000 || true)
             CYCLE_COST=$(echo "$result_line" | jq -r '.total_cost_usd // empty' 2>/dev/null || true)
@@ -251,6 +251,11 @@ extract_cycle_metadata() {
             CYCLE_COST=$(echo "$OUTPUT" | jq -r '.total_cost_usd // empty' 2>/dev/null || true)
             CYCLE_SUBTYPE=$(echo "$OUTPUT" | jq -r '.subtype // empty' 2>/dev/null || true)
             CYCLE_TYPE=$(echo "$OUTPUT" | jq -r '.type // empty' 2>/dev/null || true)
+        fi
+
+        # Second fallback: scan all events for total_cost_usd if still empty
+        if [ -z "$CYCLE_COST" ]; then
+            CYCLE_COST=$(grep -o '"total_cost_usd"[[:space:]]*:[[:space:]]*[0-9.]*' <<< "$OUTPUT" | tail -1 | grep -o '[0-9.]*$' || true)
         fi
     else
         RESULT_TEXT=$(echo "$OUTPUT" | head -c 2000 || true)

@@ -140,6 +140,7 @@ memories/consensus.md.bak
 # Projects directory (show folder on GitHub, hide contents)
 projects/*
 !projects/.gitkeep
+!projects/README.md
 .vscode-test-web
 **/.vitepress/cache
 **/.vitepress/.temp
@@ -152,11 +153,12 @@ tasks
 # ====================
 # Docs & Memory
 # ====================
-# Keep role folders, ignore their generated docs
+# Keep role folders, ignore their generated docs (except tracked operational docs)
 docs/*
 !docs/*/
 docs/*/*
 !docs/*/.gitkeep
+!docs/devops/runbook.md
 
 # Ignore all memories (keep folder marker and initial templates)
 memories/*

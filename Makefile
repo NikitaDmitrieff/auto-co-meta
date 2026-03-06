@@ -1,4 +1,4 @@
-.PHONY: start start-awake awake stop status last cycles monitor pause resume install uninstall team watcher help
+.PHONY: start start-awake awake stop status last cycles monitor pause resume install uninstall team watcher dashboard dashboard-build help
 
 # === Quick Start ===
 
@@ -52,6 +52,14 @@ team: ## Start interactive Claude session with /team skill
 
 watcher: ## Start Telegram escalation watcher
 	node watcher.js
+
+dashboard: ## Build and start the Next.js dashboard
+	@test -d dashboard || (echo "Error: dashboard/ directory not found."; exit 1)
+	cd dashboard && npm install && npm run dev
+
+dashboard-build: ## Build dashboard for production
+	@test -d dashboard || (echo "Error: dashboard/ directory not found."; exit 1)
+	cd dashboard && npm install && npm run build
 
 # === Maintenance ===
 
