@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Analytics from "@/components/Analytics";
 
 export const metadata: Metadata = {
   title: "Auto-Co — Ship Your AI Company in a Day",
@@ -20,7 +21,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <Analytics />
+        {children}
+      </body>
     </html>
   );
 }
