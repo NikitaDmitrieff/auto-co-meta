@@ -35,7 +35,7 @@ jobs:
       - name: Build
         working-directory: projects/landing
         env:
-          NEXT_PUBLIC_BASE_PATH: /auto-co
+          NEXT_PUBLIC_BASE_PATH: /auto-co-meta
         run: npm run build
 
       - name: Upload Pages artifact

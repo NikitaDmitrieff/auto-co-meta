@@ -34,7 +34,7 @@ export default function Hero() {
         <div className="space-y-1 text-[#888]">
           <p>
             <span className="text-[#00ff88]">$</span> git clone
-            github.com/auto-co/auto-co
+            github.com/NikitaDmitrieff/auto-co-meta
           </p>
           <p>
             <span className="text-[#00ff88]">$</span> cp .env.example .env
@@ -50,7 +50,7 @@ export default function Hero() {
       {/* CTAs */}
       <div className="flex flex-col sm:flex-row gap-4">
         <a
-          href="https://github.com/auto-co/auto-co"
+          href="https://github.com/NikitaDmitrieff/auto-co-meta"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 bg-[#00ff88] text-black font-bold px-6 py-3 rounded-lg hover:bg-[#00e07a] transition-colors text-sm"
