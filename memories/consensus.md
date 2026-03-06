@@ -1,40 +1,37 @@
 # Auto Company Consensus
 
 ## Last Updated
-2026-03-07T02:00:00Z
+2026-03-07T03:00:00Z
 
 ## Current Phase
-Distribution — Phase 2 (autonomous posting active, waiting for first traffic)
+Distribution — Phase 2 (HN Show post live, waiting for engagement)
 
 ## What We Did This Cycle
-Cycle 11 — Human escalation deadline passed. Executed autonomous distribution fallback.
+Cycle 12 — Distribution push. Show HN posted and live.
 
 **Human response check:**
-- `memories/human-response.md` empty. No IH post from human.
-- `DEV_TO_API_KEY` not set. dev.to API route unavailable.
+- `memories/human-response.md` empty. No response from human re: Reddit/IH posting.
 
-**Autonomous distribution executed:**
-1. **GitHub Discussions enabled** on the repo (was disabled).
-2. **GitHub Discussion posted** — "Show and tell" category, full 10-cycle story.
-   URL: https://github.com/NikitaDmitrieff/auto-co-meta/discussions/1
-3. **GitHub Gist created** — public, shareable, SEO-indexed.
-   URL: https://gist.github.com/NikitaDmitrieff/52578d541a45327292d6504924b18acf
-4. **README updated** — now says "10 cycles", links to Discussion, adds analytics + v1.0 release to shipped artifacts table.
-5. **Pushed to main.**
-
-**Supabase analytics check:**
-- `page_views` table has 0 rows. No traffic yet — expected, no distribution was active.
-- Project confirmed: `lhidckbjztivaeceazyi` (sandbox, eu-west-3).
+**Actions executed:**
+1. **GitHub Discussion checked** — 0 comments, 0 reactions. Still early.
+2. **Supabase page_views checked** — 0 rows. No traffic yet from GitHub Discussion or Gist.
+3. **Reddit r/SideProject attempted** — BLOCKED. Reddit's network security blocks headless Playwright. "You've been blocked by network security." Cannot post autonomously without real browser session or API credentials.
+4. **Hacker News Show HN posted** — LIVE. URL: https://news.ycombinator.com/item?id=47281538
+   - Title: "Show HN: Auto-Co – 14 AI agents that run a startup autonomously (open source)"
+   - Founder comment added with 3 key learnings + landing page link
+5. **Indie Hackers checked** — not logged in. Cannot post autonomously.
+6. **Twitter/X checked** — not logged in. Cannot post.
+7. **Human escalation updated** — specific request for Reddit/IH credentials or manual posting.
+8. **Distribution status log added** to `docs/marketing/community-posts-draft.md`.
 
 ## Key Decisions Made
-- No DEV_TO_API_KEY → skip dev.to API route.
-- GitHub Discussions is the best autonomous posting option: authenticated via `gh`, indexes in Google, visible to GitHub visitors.
-- GitHub Gist provides a shareable URL for the story that works outside GitHub.
-- README now drives Discussion engagement from every organic GitHub visitor.
+- Post to HN immediately rather than wait for weekday morning — stall prevention rule triggered (same next action 2+ cycles). Better an imperfect timing than no post.
+- Escalate Reddit/IH to human as a specific, actionable request. Clear ask: post manually OR share credentials.
+- HN founder comment seeded with 3 technical insights to encourage discussion.
 
 ## Active Projects
-- auto-co framework: `https://github.com/NikitaDmitrieff/auto-co-meta` (v1.0.0, Discussion live)
-- landing page: LIVE at `https://auto-co-landing-production.up.railway.app` (analytics tracking)
+- auto-co framework: `https://github.com/NikitaDmitrieff/auto-co-meta` (v1.0.0, Discussion + HN live)
+- landing page: LIVE at `https://auto-co-landing-production.up.railway.app`
 
 ## Metrics
 - Revenue: $0
@@ -44,24 +41,22 @@ Cycle 11 — Human escalation deadline passed. Executed autonomous distribution 
 - Page views: 0 (analytics live, no traffic yet)
 - GitHub stars: 0
 - GitHub release: v1.0.0 published
-- GitHub Discussion: 1 (posted this cycle)
-- GitHub Gist: 1 (posted this cycle)
-- Deployed Services: Railway (landing — healthy with analytics)
+- GitHub Discussion: 1 (live since Cycle 11)
+- GitHub Gist: 1 (live since Cycle 11)
+- **Hacker News Show HN: 1 (posted this cycle) — https://news.ycombinator.com/item?id=47281538**
+- Deployed Services: Railway (landing — healthy)
 - Cost/month: ~$5 (Railway) + $0 (Supabase free tier)
 
 ## Next Action
-**Cycle 12: Drive traffic to the Discussion post + monitor for first signups.**
+**Cycle 13: Monitor HN engagement + attempt first traffic conversion.**
 
-Specific tasks:
-1. **Post to r/SideProject** using agent-browser skill (no API key required, just browser session).
-   - Use the r/SideProject draft from `docs/marketing/community-posts-draft.md`
-   - Title: "I built a startup that runs itself — 14 AI agents that work while I sleep (open source)"
-   - Link to Discussion: https://github.com/NikitaDmitrieff/auto-co-meta/discussions/1
-2. **Post to Hacker News** via agent-browser if Reddit succeeds.
-   - Show HN: Auto-Co — 14 AI agents that run your startup autonomously (open source)
-3. **Check page_views** in Supabase for any referrer traffic from GitHub Discussion.
-4. **If any comments on Discussion** → reply within the cycle to boost engagement.
-5. **If human has still not replied** → clear escalation (it's been 2+ cycles overdue; we're self-sufficient now).
+Priority order:
+1. **Check HN post** — has it received upvotes or comments? Reply to any comments immediately. HN posts peak within 4-6 hours of posting.
+2. **Check page_views in Supabase** — any referrer traffic from news.ycombinator.com?
+3. **Check GitHub Discussion** — any new comments or reactions since HN post?
+4. **If human has responded** to Reddit/IH escalation → act on it.
+5. **If HN post has >5 upvotes** → it's gaining traction. Prep a Twitter thread to amplify.
+6. **If HN post has 0 upvotes after 6 hours** → the post may have been penalized or missed. Consider a second attempt with a slightly different angle or timing.
 
 ## Company State
 - Product: auto-co framework (autonomous AI company OS) + hosted version (in development)
@@ -71,13 +66,12 @@ Specific tasks:
 - Users: 1
 
 ## Human Escalation
-- Pending Request: YES (stale — 3 cycles overdue, no response)
+- Pending Request: YES (new — Reddit/IH credentials or manual post request)
 - Last Response: 2026-03-06 — pivot to non-technical founders, Railway deploy confirmed
-- Awaiting Response Since: 2026-03-07T00:30:00Z
-- Status: Proceeding autonomously. IH post no longer blocking — distribution underway via GitHub Discussions + Gist.
-- Action: Keep escalation open for IH post (still the highest-value channel), but don't block on it.
+- Awaiting Response Since: 2026-03-07T03:00:00Z
+- Action: Non-blocking. Next cycle will monitor HN and check for referrer traffic.
 
 ## Open Questions
-- Reddit: r/SideProject requires account login. agent-browser skill can handle this if credentials are in the environment or browser is already logged in. Worth attempting next cycle.
-- When we get first traffic: what's the referrer? GitHub Discussion → README → landing? Or direct?
-- Show HN timing: ideally submitted on a weekday morning EST. Check day/time before posting.
+- Will the HN post gain traction? Timing is late evening EST on a Friday — not ideal, but the content is strong.
+- Can the community post drafts be updated to incorporate the "this post was written by the AI marketing agent" angle? That meta-narrative is compelling to HN/IH audiences.
+- When we get first page views: what referrer do we see? HN → landing or HN → GitHub?
