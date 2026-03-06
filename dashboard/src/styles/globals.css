@@ -1,0 +1,270 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0a0a0a;
+  --fg: #e0e0e0;
+  --border: #ffffff;
+  --accent-green: #00FF41;
+  --accent-pink: #FF0080;
+  --accent-blue: #00D4FF;
+  --accent-yellow: #FFE000;
+  --accent-red: #FF3333;
+  --surface: #1a1a1a;
+  --surface-hover: #2a2a2a;
+}
+
+* {
+  border-radius: 0 !important;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-green) var(--bg);
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  min-height: 100vh;
+}
+
+/* Brutalist scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+  border-left: 2px solid var(--border);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent-green);
+  border: 1px solid var(--border);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-pink);
+}
+
+/* Selection */
+::selection {
+  background: var(--accent-green);
+  color: var(--bg);
+}
+
+/* Brutalist card */
+@layer components {
+  .card {
+    @apply border-3 border-white bg-surface p-4 transition-colors duration-100;
+  }
+
+  .card:hover {
+    @apply bg-surface-hover;
+    border-color: var(--accent-green);
+  }
+
+  .card-pink:hover {
+    border-color: var(--accent-pink);
+  }
+
+  .card-blue:hover {
+    border-color: var(--accent-blue);
+  }
+
+  .card-yellow:hover {
+    border-color: var(--accent-yellow);
+  }
+}
+
+/* Blinking indicator */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.blink {
+  animation: blink 1s infinite;
+}
+
+/* Terminal cursor */
+.cursor::after {
+  content: '\2588';
+  animation: blink 0.7s infinite;
+  color: var(--accent-green);
+}
+
+/* Phase colors */
+.phase-day0 { color: var(--accent-yellow); }
+.phase-exploring { color: var(--accent-blue); }
+.phase-validating { color: var(--accent-pink); }
+.phase-building { color: var(--accent-green); }
+.phase-launching { color: var(--accent-red); }
+.phase-growing { color: #00FF88; }
+.phase-pivoting { color: var(--accent-yellow); }
+
+/* Scanline effect */
+.scanline-overlay {
+  position: relative;
+  overflow: hidden;
+}
+
+.scanline-overlay::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 255, 65, 0.03) 2px,
+    rgba(0, 255, 65, 0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Grid pattern background */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Status dot */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  display: inline-block;
+}
+
+.status-active {
+  background: var(--accent-green);
+  box-shadow: 0 0 8px var(--accent-green);
+}
+
+.status-idle {
+  background: #555;
+}
+
+.status-warning {
+  background: var(--accent-yellow);
+  box-shadow: 0 0 8px var(--accent-yellow);
+}
+
+.status-error {
+  background: var(--accent-red);
+  box-shadow: 0 0 8px var(--accent-red);
+  animation: blink 1s infinite;
+}
+
+/* Progress bar with block characters */
+.progress-blocks {
+  font-size: 10px;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+
+/* Markdown content styling */
+.markdown-content h1 {
+  @apply text-xl font-extrabold text-accent-green mb-3 mt-4;
+  border-bottom: 2px solid var(--accent-green);
+  padding-bottom: 4px;
+}
+
+.markdown-content h2 {
+  @apply text-lg font-bold text-accent-blue mb-2 mt-3;
+}
+
+.markdown-content h3 {
+  @apply text-base font-bold text-accent-pink mb-2 mt-2;
+}
+
+.markdown-content p {
+  @apply mb-2 text-sm leading-relaxed;
+}
+
+.markdown-content ul {
+  @apply ml-4 mb-2 text-sm;
+  list-style: none;
+}
+
+.markdown-content ul li::before {
+  content: '> ';
+  color: var(--accent-green);
+  font-weight: bold;
+}
+
+.markdown-content ol {
+  @apply ml-4 mb-2 text-sm;
+  list-style: none;
+  counter-reset: item;
+}
+
+.markdown-content ol li {
+  counter-increment: item;
+}
+
+.markdown-content ol li::before {
+  content: counter(item) '. ';
+  color: var(--accent-yellow);
+  font-weight: bold;
+}
+
+.markdown-content code {
+  @apply bg-surface px-1 py-0.5 text-accent-pink text-xs;
+  border: 1px solid #333;
+}
+
+.markdown-content pre {
+  @apply bg-surface p-3 mb-3 text-xs overflow-x-auto;
+  border: 2px solid #333;
+}
+
+.markdown-content pre code {
+  @apply bg-transparent border-0 p-0;
+  color: var(--accent-green);
+}
+
+.markdown-content blockquote {
+  @apply border-l-4 border-accent-yellow pl-3 italic text-sm mb-2;
+  color: #999;
+}
+
+.markdown-content a {
+  @apply text-accent-blue underline;
+}
+
+.markdown-content strong {
+  @apply font-bold text-white;
+}
+
+/* Glitch effect for headers */
+@keyframes glitch {
+  0% { text-shadow: 2px 0 var(--accent-pink), -2px 0 var(--accent-blue); }
+  25% { text-shadow: -2px 0 var(--accent-pink), 2px 0 var(--accent-blue); }
+  50% { text-shadow: 2px 2px var(--accent-pink), -2px -2px var(--accent-blue); }
+  75% { text-shadow: -2px -2px var(--accent-pink), 2px 2px var(--accent-blue); }
+  100% { text-shadow: 2px 0 var(--accent-pink), -2px 0 var(--accent-blue); }
+}
+
+.glitch-text {
+  animation: glitch 0.3s ease-in-out infinite alternate;
+}
+
+/* Nav link active state */
+.nav-active {
+  background: var(--accent-green) !important;
+  color: var(--bg) !important;
+  font-weight: 800;
+}

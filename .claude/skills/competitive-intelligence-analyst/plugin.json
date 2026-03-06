@@ -1,0 +1,12 @@
+{
+  "name": "competitive-intelligence-analyst",
+  "version": "1.0.0",
+  "description": "Use this skill when users need to analyze competitors, monitor market movements, benchmark features/",
+  "author": {
+    "name": "Ship Shit Dev",
+    "email": "hello@shipshit.dev",
+    "url": "https://github.com/shipshitdev"
+  },
+  "license": "MIT",
+  "skills": "."
+}
