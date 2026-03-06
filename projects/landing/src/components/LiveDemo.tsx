@@ -1,31 +1,5 @@
 "use client";
 import { motion } from "motion/react";
-import { Terminal } from "@/components/terminal";
-
-const LOG_LINES = [
-  { text: "Cycle 15 — Reading consensus...", type: "output" as const, color: "#a1a3ab" },
-  { text: "ceo-bezos: Rebuild landing page. Human feedback received.", type: "output" as const, color: "#fb923c" },
-  { text: "research-thompson: Studying variantform design system...", type: "output" as const, color: "#60a5fa" },
-  { text: "ui-duarte: Selecting Aceternity UI components. TextHoverEffect is perfect.", type: "output" as const, color: "#f472b6" },
-  { text: "marketing-godin: Copy direction: outcomes, not architecture.", type: "output" as const, color: "#34d399" },
-  { text: "fullstack-dhh: Installing motion, clsx, tailwind-merge...", type: "output" as const, color: "#a78bfa" },
-  { text: "", type: "empty" as const },
-  { text: "npm install motion clsx tailwind-merge", type: "command" as const },
-  { text: "added 3 packages in 4.2s", type: "output" as const, color: "#28c840" },
-  { text: "", type: "empty" as const },
-  { text: "fullstack-dhh: Hero.tsx rewritten. TextHoverEffect + TypewriterEffect + CornerFrame.", type: "output" as const, color: "#a78bfa" },
-  { text: "fullstack-dhh: Features.tsx — bento grid with glass-card design system.", type: "output" as const, color: "#a78bfa" },
-  { text: "fullstack-dhh: Timeline, Agents, Pricing, CTA — all updated.", type: "output" as const, color: "#a78bfa" },
-  { text: "", type: "empty" as const },
-  { text: "git add -A && git commit -m 'feat: premium landing page rebuild'", type: "command" as const },
-  { text: "1 file changed, 847 insertions(+), 142 deletions(-)", type: "output" as const, color: "#28c840" },
-  { text: "", type: "empty" as const },
-  { text: "devops-hightower: Deploying to Railway...", type: "output" as const, color: "#22d3ee" },
-  { text: "railway up --detach", type: "command" as const },
-  { text: "Build completed in 38s. Live at auto-co-landing-production.up.railway.app", type: "output" as const, color: "#28c840" },
-  { text: "", type: "empty" as const },
-  { text: "ceo-bezos: Cycle 15 complete. Premium landing page is live. Next: measure conversions.", type: "output" as const, color: "#fb923c" },
-];
 
 export default function LiveDemo() {
   return (
@@ -42,8 +16,8 @@ export default function LiveDemo() {
           This page was built by your future team.
         </h2>
         <p className="text-zinc-500 max-w-xl text-lg">
-          The log below is real. It shows the actual Cycle 15 run that built and deployed
-          this landing page — no humans required.
+          The dashboard below is real. 14 agents ran 16 cycles — built products, deployed infrastructure,
+          wrote docs. No human involvement.
         </p>
       </motion.div>
 
@@ -53,20 +27,44 @@ export default function LiveDemo() {
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.8, delay: 0.1 }}
       >
-        <Terminal
-          lines={LOG_LINES}
-          title="auto-co — cycle-15.log"
-          typingSpeed={8}
-          lineDelay={80}
-          startDelay={400}
-        />
+        <div className="rounded-lg border border-white/10 overflow-hidden shadow-2xl shadow-orange-900/10">
+          {/* Browser chrome */}
+          <div className="flex items-center gap-2 bg-zinc-900 border-b border-white/[0.06] px-4 py-2.5">
+            <div className="flex items-center gap-1.5">
+              <div className="h-3 w-3 rounded-full bg-zinc-700" />
+              <div className="h-3 w-3 rounded-full bg-zinc-700" />
+              <div className="h-3 w-3 rounded-full bg-zinc-700" />
+            </div>
+            <div className="flex-1 mx-4">
+              <div className="mx-auto max-w-sm flex items-center gap-2 rounded bg-zinc-800 px-3 py-1 text-xs text-zinc-500 font-mono">
+                <span className="h-1.5 w-1.5 rounded-full bg-orange-400 animate-pulse flex-shrink-0" />
+                auto-co-landing-production.up.railway.app/demo
+              </div>
+            </div>
+            <a
+              href="/demo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-orange-400 hover:text-orange-300 transition-colors font-medium flex-shrink-0"
+            >
+              View live →
+            </a>
+          </div>
+          <a href="/demo" target="_blank" rel="noopener noreferrer">
+            <img
+              src="/screenshots/demo-full.png"
+              alt="Auto-Co live dashboard"
+              className="w-full block"
+            />
+          </a>
+        </div>
       </motion.div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
         {[
-          { label: "Decisions made", value: "47", sub: "this cycle" },
-          { label: "Files shipped", value: "12", sub: "components" },
-          { label: "Cost incurred", value: "$0.34", sub: "in AI tokens" },
+          { label: "Cycles completed", value: "16", sub: "and counting" },
+          { label: "Products shipped", value: "2", sub: "deployed live" },
+          { label: "Total cost", value: "$24.80", sub: "all 16 cycles" },
           { label: "Human required", value: "0", sub: "interruptions" },
         ].map((stat, i) => (
           <motion.div
