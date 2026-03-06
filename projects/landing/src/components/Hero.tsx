@@ -5,20 +5,20 @@ export default function Hero() {
     <section className="min-h-screen flex flex-col justify-center px-6 py-24 max-w-4xl mx-auto">
       {/* Badge */}
       <div className="mb-8">
-        <span className="text-xs font-medium text-[#00ff88] border border-[#00ff88]/30 px-3 py-1 rounded-full">
+        <span className="text-xs font-medium text-violet-600 bg-violet-50 border border-violet-200 px-3 py-1 rounded-full">
           Early Access — Join the waitlist
         </span>
       </div>
 
       {/* Headline */}
-      <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6 text-white">
+      <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6 text-slate-900">
         Your AI team works
         <br />
-        <span className="text-[#00ff88]">while you sleep.</span>
+        <span className="text-violet-600">while you sleep.</span>
       </h1>
 
       {/* Subheadline */}
-      <p className="text-lg md:text-xl text-[#999] max-w-2xl mb-8 leading-relaxed">
+      <p className="text-lg md:text-xl text-slate-500 max-w-2xl mb-8 leading-relaxed">
         14 AI agents — CEO, CTO, engineer, marketer, and more — autonomously
         build, deploy, and grow your digital product. No code required.
       </p>
@@ -33,7 +33,7 @@ export default function Hero() {
         ].map((outcome) => (
           <span
             key={outcome}
-            className="text-xs text-[#888] border border-[#222] px-3 py-1.5 rounded-full"
+            className="text-xs text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-full"
           >
             {outcome}
           </span>
@@ -44,7 +44,7 @@ export default function Hero() {
       <div className="flex flex-col sm:flex-row gap-4">
         <a
           href="#waitlist"
-          className="inline-flex items-center justify-center gap-2 bg-[#00ff88] text-black font-bold px-8 py-3.5 rounded-lg hover:bg-[#00e07a] transition-colors text-sm"
+          className="inline-flex items-center justify-center gap-2 bg-violet-600 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-violet-700 transition-colors text-sm shadow-sm"
         >
           Launch your AI company
           <svg
@@ -63,14 +63,14 @@ export default function Hero() {
         </a>
         <a
           href="#how-it-works"
-          className="inline-flex items-center justify-center gap-2 border border-[#333] text-[#999] px-8 py-3.5 rounded-lg hover:border-[#555] hover:text-white transition-colors text-sm"
+          className="inline-flex items-center justify-center gap-2 border border-slate-200 text-slate-600 px-8 py-3.5 rounded-xl hover:border-slate-300 hover:bg-slate-50 transition-colors text-sm"
         >
           See how it works
         </a>
       </div>
 
       {/* Social proof */}
-      <p className="mt-8 text-xs text-[#555]">
+      <p className="mt-8 text-xs text-slate-400">
         Open-source core · Self-host free or use the hosted version · $49/mo
       </p>
     </section>

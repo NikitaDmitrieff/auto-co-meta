@@ -31,17 +31,17 @@ export default function GetStarted() {
   return (
     <section id="waitlist" className="px-6 py-24 max-w-4xl mx-auto">
       {/* Waitlist */}
-      <div className="border border-[#00ff88]/20 bg-[#00ff88]/5 rounded-2xl p-10 text-center mb-12">
-        <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+      <div className="bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-100 rounded-3xl p-10 text-center mb-8 shadow-sm">
+        <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">
           Get early access.
         </h2>
-        <p className="text-[#999] max-w-lg mx-auto mb-8 leading-relaxed">
+        <p className="text-slate-500 max-w-lg mx-auto mb-8 leading-relaxed">
           The hosted version is coming soon. Join the waitlist and we&apos;ll
           notify you when it&apos;s ready — plus early-bird pricing.
         </p>
         {state === "success" ? (
-          <p className="text-[#00ff88] font-medium text-sm">
-            You&apos;re on the list. We&apos;ll be in touch.
+          <p className="text-violet-600 font-medium text-sm bg-violet-50 border border-violet-200 rounded-xl px-4 py-3 inline-block">
+            You&apos;re on the list. We&apos;ll be in touch. 🎉
           </p>
         ) : (
           <>
@@ -56,32 +56,32 @@ export default function GetStarted() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={state === "loading"}
-                className="flex-1 bg-[#0a0a0a] border border-[#222] text-white placeholder-[#555] px-4 py-3 rounded-lg text-sm focus:outline-none focus:border-[#00ff88]/50 disabled:opacity-50"
+                className="flex-1 bg-white border border-slate-200 text-slate-900 placeholder-slate-400 px-4 py-3 rounded-xl text-sm focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 disabled:opacity-50 shadow-sm"
               />
               <button
                 type="submit"
                 disabled={state === "loading"}
-                className="bg-[#00ff88] text-black font-bold px-6 py-3 rounded-lg hover:bg-[#00e07a] transition-colors text-sm whitespace-nowrap disabled:opacity-50"
+                className="bg-violet-600 text-white font-semibold px-6 py-3 rounded-xl hover:bg-violet-700 transition-colors text-sm whitespace-nowrap disabled:opacity-50 shadow-sm"
               >
                 {state === "loading" ? "Joining..." : "Join waitlist"}
               </button>
             </form>
             {state === "error" && (
-              <p className="mt-2 text-xs text-red-400">{errorMsg}</p>
+              <p className="mt-2 text-xs text-red-500">{errorMsg}</p>
             )}
-            <p className="mt-4 text-xs text-[#555]">No spam. Unsubscribe anytime.</p>
+            <p className="mt-4 text-xs text-slate-400">No spam. Unsubscribe anytime.</p>
           </>
         )}
       </div>
 
       {/* Developer path */}
-      <div className="border border-[#1a1a1a] rounded-xl p-8">
+      <div className="border border-slate-100 bg-white rounded-2xl p-8 shadow-sm">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <h3 className="text-white font-bold mb-2">
+            <h3 className="text-slate-900 font-semibold mb-2">
               Developer? Self-host for free.
             </h3>
-            <p className="text-[#666] text-sm max-w-md leading-relaxed">
+            <p className="text-slate-500 text-sm max-w-md leading-relaxed">
               The full source code is on GitHub under MIT license. Clone it,
               customize the agents, and run it on your own infrastructure.
             </p>
@@ -90,7 +90,7 @@ export default function GetStarted() {
             href="https://github.com/NikitaDmitrieff/auto-co-meta"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 border border-[#333] text-[#999] px-5 py-2.5 rounded-lg hover:border-[#555] hover:text-white transition-colors text-sm whitespace-nowrap"
+            className="inline-flex items-center gap-2 border border-slate-200 text-slate-600 px-5 py-2.5 rounded-xl hover:border-slate-300 hover:bg-slate-50 transition-colors text-sm whitespace-nowrap shadow-sm"
           >
             View on GitHub
             <svg
