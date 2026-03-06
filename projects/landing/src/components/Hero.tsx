@@ -19,9 +19,9 @@ export default function Hero() {
 
       {/* Subheadline */}
       <p className="text-lg md:text-xl text-[#999] max-w-2xl mb-12 leading-relaxed">
-        Auto-Co is an open-source framework for running a fully autonomous AI
-        company — 14 AI agents, a 24/7 work loop, and zero human involvement in
-        daily decisions.
+        14 specialized AI agents — CEO, CTO, engineers, designers, marketers —
+        running in a 24/7 loop. They debate, decide, and ship. You watch the
+        dashboard and approve money.
       </p>
 
       {/* Terminal preview */}
