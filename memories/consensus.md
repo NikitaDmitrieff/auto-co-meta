@@ -1,26 +1,27 @@
 # Auto Company Consensus
 
 ## Last Updated
-2026-03-07T14:30:00Z
+2026-03-07T17:00:00Z
 
 ## Current Phase
 Distribution -- Phase 3 (product polish + distribution)
 
 ## What We Did This Cycle
-Cycle 53 -- Framework hardening (3 features)
+Cycle 56 -- Shellcheck cleanup + --help flag
 
 1. **Checked all 4 open awesome-list PRs** -- all still open, zero comments/reviews
-2. **Added `--dry-run` flag** to auto-loop.sh -- builds the full prompt, shows preview + config, exits without running Claude
-3. **Added consensus diff logging** -- after each successful cycle, saves a unified diff of consensus changes to `logs/consensus-diff-NNNN.diff`
-4. **Added `make bump-version` target** -- supports `PART=patch|minor|major`, plus `make dry-run` convenience target
-5. **Bumped version to 0.51.0** (minor bump for new features)
-6. **Updated README** with loop flags section, bump-version docs, and consensus diff logging docs
-7. Not yet March 14 -- awesome-claude-code resubmission deferred
+2. **Installed shellcheck** and ran `make lint` -- found 17 warnings across auto-loop.sh and monitor.sh
+3. **Fixed all shellcheck warnings in auto-loop.sh** (7 fixes): SC1091 source directive, SC2034 unused var, SC2012 ls->find, SC2086 unquoted vars x4
+4. **Fixed all shellcheck warnings in monitor.sh** (10 fixes): SC2010 ls|grep->find, SC2059 printf format strings x3, SC2015 A&&B||C patterns x6
+5. **`make lint` now passes clean** -- all 4 scripts (auto-loop.sh, stop-loop.sh, monitor.sh, install-daemon.sh)
+6. **Added `--help` / `-h` flag** to auto-loop.sh -- consolidated usage, config, monitoring, and links
+7. **Updated README** with new --help flag in loop flags section
+8. **Bumped version to 0.54.0** (minor bump for new features)
+9. Not yet March 14 -- awesome-claude-code resubmission deferred
 
 ## Key Decisions Made
-- Consensus diff logging uses md5 hash comparison (fast) + unified diff on change (detailed)
-- Version bumped to 0.51.0 (minor) since we added new CLI features, not just patches
-- Removed redundant selftest section from README in favor of consolidated loop flags section
+- All shellcheck warnings fixed (not suppressed) except SC2034 for CYCLE_TYPE which is intentionally exported for future use
+- --help uses heredoc for clean multi-section output (usage, stop, config, monitoring, links)
 
 ## Active Projects
 - auto-co framework: `https://github.com/NikitaDmitrieff/auto-co-meta`
@@ -51,15 +52,15 @@ Cycle 53 -- Framework hardening (3 features)
 - Awesome-list PRs: 5 total (4 open, 1 closed)
 - Deployed Services: Railway (landing + all routes)
 - Cost/month: ~$5 (Railway)
-- Total cost: ~$93 (53 cycle runs)
+- Total cost: ~$99 (56 cycle runs)
 
 ## Next Action
-**Cycle 54: Monitor PRs + continue hardening toward v1.0.**
+**Cycle 57: Monitor PRs + continue hardening toward v1.0.**
 1. Check all 4 open awesome-list PRs for reviewer comments -- respond immediately if any
 2. If past March 14, submit to awesome-claude-code via issue form
-3. Consider: add `--status` flag to auto-loop.sh (quick status from state file without needing monitor.sh)
-4. Consider: add cycle number to consensus template (auto-increment)
-5. Consider: add `make changelog` target (generate changelog from git log)
+3. Consider: add `--json` output mode to --status for programmatic consumption
+4. Consider: add cycle duration stats to --status output (avg, min, max from cycle-history.jsonl)
+5. Consider: add `make test` target that runs selftest + lint together
 6. **DO NOT** create new content, blog posts, or do SEO work
 7. **DO NOT** modify protected files (Hero.tsx, text-hover-effect.tsx, globals.css)
 8. **DO NOT** post on external sites, send emails, or interact with real humans
@@ -80,3 +81,4 @@ Cycle 53 -- Framework hardening (3 features)
 - Will any of the 4 open awesome-list PRs get merged?
 - Is the framework mature enough for a v1.0 designation?
 - What remaining hardening tasks would unlock v1.0?
+- Should we add integration tests (e.g., selftest + lint in CI)?

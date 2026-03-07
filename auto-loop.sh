@@ -8,6 +8,7 @@
 # Usage:
 #   ./auto-loop.sh              # Run in foreground
 #   ./auto-loop.sh --daemon     # Run via launchd (no tty)
+#   ./auto-loop.sh --help       # Show full help message
 #   ./auto-loop.sh --selftest   # Validate environment without running
 #   ./auto-loop.sh --dry-run    # Build prompt + show preview, don't run
 #   ./auto-loop.sh --status     # Quick status from state file
@@ -39,6 +40,7 @@ PROJECT_DIR="$SCRIPT_DIR"
 # === Load .env if present ===
 if [ -f "$PROJECT_DIR/.env" ]; then
     set -a
+    # shellcheck source=/dev/null
     source "$PROJECT_DIR/.env"
     set +a
 fi
@@ -285,9 +287,53 @@ extract_cycle_metadata() {
         RESULT_TEXT=$(echo "$OUTPUT" | head -c 2000 || true)
         CYCLE_COST=$(echo "$OUTPUT" | sed -n 's/.*"total_cost_usd":\([0-9.]*\).*/\1/p' | tail -1 || true)
         CYCLE_SUBTYPE=$(echo "$OUTPUT" | sed -n 's/.*"subtype":"\([^"]*\)".*/\1/p' | tail -1 || true)
+        # shellcheck disable=SC2034
         CYCLE_TYPE=$(echo "$OUTPUT" | sed -n 's/.*"type":"\([^"]*\)".*/\1/p' | tail -1 || true)
     fi
 }
+
+# === Help flag ===
+
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+    cat << 'HELPEOF'
+Auto-Co -- 24/7 Autonomous AI Company Loop
+
+USAGE:
+  ./auto-loop.sh              Run the loop in foreground
+  ./auto-loop.sh --daemon     Run via launchd (no tty)
+  ./auto-loop.sh --help       Show this help message
+  ./auto-loop.sh --version    Show version
+  ./auto-loop.sh --config     Print all config values
+  ./auto-loop.sh --status     Quick status check
+  ./auto-loop.sh --selftest   Validate environment
+  ./auto-loop.sh --dry-run    Preview prompt without running
+
+STOP:
+  ./stop-loop.sh              Graceful stop
+  kill $(cat .auto-loop.pid)  Force stop
+
+CONFIG (env vars or .env file):
+  MODEL                  Claude model (default: opus)
+  LOOP_INTERVAL          Seconds between cycles (default: 120)
+  CYCLE_TIMEOUT_SECONDS  Max seconds per cycle (default: 1800)
+  MAX_CONSECUTIVE_ERRORS Circuit breaker threshold (default: 3)
+  COOLDOWN_SECONDS       Cooldown after circuit break (default: 300)
+  LIMIT_WAIT_SECONDS     Wait on API usage limit (default: 3600)
+  MAX_LOGS               Max cycle logs to keep (default: 200)
+  RETRY_BASE_SECONDS     Initial backoff on failure (default: 30)
+  RETRY_MAX_SECONDS      Max backoff cap (default: 600)
+
+MONITORING:
+  ./monitor.sh --dashboard    Live TUI dashboard
+  ./monitor.sh --status       Quick status
+  ./monitor.sh --tail         Follow main log
+  ./monitor.sh --last         Show latest cycle output
+
+MORE INFO:
+  https://github.com/NikitaDmitrieff/auto-co-meta
+HELPEOF
+    exit 0
+fi
 
 # === Version flag ===
 
@@ -516,7 +562,7 @@ if [ "${1:-}" = "--selftest" ]; then
 
     # 10. Agents directory
     if [ -d "$PROJECT_DIR/.claude/agents" ]; then
-        agent_count=$(ls "$PROJECT_DIR/.claude/agents"/*.md 2>/dev/null | wc -l | tr -d ' ')
+        agent_count=$(find "$PROJECT_DIR/.claude/agents" -name '*.md' -type f 2>/dev/null | wc -l | tr -d ' ')
         check "Agent definitions" 1 "$agent_count agents"
     else
         check "Agent definitions" 0 ".claude/agents/ missing"
@@ -704,16 +750,16 @@ This is Cycle #$loop_count. Act decisively."
         if check_usage_limit "$OUTPUT"; then
             log_cycle $loop_count "LIMIT" "API usage limit detected. Waiting ${LIMIT_WAIT_SECONDS}s..."
             save_state "waiting_limit"
-            sleep $LIMIT_WAIT_SECONDS
+            sleep "$LIMIT_WAIT_SECONDS"
             error_count=0
             continue
         fi
 
         # Circuit breaker
-        if [ $error_count -ge $MAX_CONSECUTIVE_ERRORS ]; then
+        if [ "$error_count" -ge "$MAX_CONSECUTIVE_ERRORS" ]; then
             log_cycle $loop_count "BREAKER" "Circuit breaker tripped! Cooling down ${COOLDOWN_SECONDS}s..."
             save_state "circuit_break"
-            sleep $COOLDOWN_SECONDS
+            sleep "$COOLDOWN_SECONDS"
             error_count=0
             log "Circuit breaker reset. Resuming..."
         else
@@ -728,5 +774,5 @@ This is Cycle #$loop_count. Act decisively."
 
     save_state "idle"
     log_cycle $loop_count "WAIT" "Sleeping ${LOOP_INTERVAL}s before next cycle..."
-    sleep $LOOP_INTERVAL
+    sleep "$LOOP_INTERVAL"
 done

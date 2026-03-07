@@ -160,6 +160,7 @@ make reset-consensus # Reset to Day 0
 ```
 ./auto-loop.sh              # Run in foreground
 ./auto-loop.sh --daemon     # Run via launchd (no tty)
+./auto-loop.sh --help       # Show full help message
 ./auto-loop.sh --selftest   # Validate environment (11 checks)
 ./auto-loop.sh --dry-run    # Build prompt + show preview, don't run
 ./auto-loop.sh --status     # Quick status from state file

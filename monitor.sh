@@ -81,7 +81,7 @@ case "${1:-}" in
         ;;
 
     --last)
-        latest=$(ls -t "$LOG_DIR"/cycle-*.log 2>/dev/null | grep -v cycle-live | head -1)
+        latest=$(find "$LOG_DIR" -name 'cycle-*.log' ! -name 'cycle-live*' -type f -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -1)
         if [ -n "$latest" ]; then
             echo "=== Latest Cycle: $(basename "$latest") ==="
             if command -v jq &>/dev/null; then
@@ -184,7 +184,7 @@ case "${1:-}" in
             if [ -f "$PID_FILE" ]; then
                 pid=$(cat "$PID_FILE")
                 if kill -0 "$pid" 2>/dev/null; then
-                    printf "  Loop: \033[32mRUNNING\033[0m (PID $pid)"
+                    printf "  Loop: \033[32mRUNNING\033[0m (PID %s)" "$pid"
                 else
                     printf "  Loop: \033[31mSTOPPED\033[0m (stale PID)"
                 fi
@@ -449,9 +449,9 @@ case "${1:-}" in
         if [ -f "$PID_FILE" ]; then
             pid=$(cat "$PID_FILE")
             if kill -0 "$pid" 2>/dev/null; then
-                printf "RUNNING (PID $pid)"
+                printf "RUNNING (PID %s)" "$pid"
             else
-                printf "STOPPED (stale PID $pid)"
+                printf "STOPPED (stale PID %s)" "$pid"
             fi
         else
             printf "NOT RUNNING"
@@ -491,12 +491,12 @@ case "${1:-}" in
                 st_fail=$((st_fail + 1))
             fi
         }
-        command -v claude &>/dev/null && st_check "Claude CLI" 1 || st_check "Claude CLI" 0 "not found"
-        [ -f "$PROJECT_DIR/PROMPT.md" ] && st_check "PROMPT.md" 1 || st_check "PROMPT.md" 0 "missing"
-        [ -d "$PROJECT_DIR/memories" ] && st_check "memories/" 1 || st_check "memories/" 0 "missing"
-        command -v jq &>/dev/null && st_check "jq" 1 || st_check "jq" 0 "not installed"
-        git -C "$PROJECT_DIR" rev-parse --is-inside-work-tree &>/dev/null && st_check "git repo" 1 || st_check "git repo" 0 "not a repo"
-        [ -d "$PROJECT_DIR/.claude/agents" ] && st_check "agents" 1 || st_check "agents" 0 "missing"
+        if command -v claude &>/dev/null; then st_check "Claude CLI" 1; else st_check "Claude CLI" 0 "not found"; fi
+        if [ -f "$PROJECT_DIR/PROMPT.md" ]; then st_check "PROMPT.md" 1; else st_check "PROMPT.md" 0 "missing"; fi
+        if [ -d "$PROJECT_DIR/memories" ]; then st_check "memories/" 1; else st_check "memories/" 0 "missing"; fi
+        if command -v jq &>/dev/null; then st_check "jq" 1; else st_check "jq" 0 "not installed"; fi
+        if git -C "$PROJECT_DIR" rev-parse --is-inside-work-tree &>/dev/null; then st_check "git repo" 1; else st_check "git repo" 0 "not a repo"; fi
+        if [ -d "$PROJECT_DIR/.claude/agents" ]; then st_check "agents" 1; else st_check "agents" 0 "missing"; fi
 
         if [ "$st_fail" -eq 0 ]; then
             echo "  All $st_pass checks passed."
