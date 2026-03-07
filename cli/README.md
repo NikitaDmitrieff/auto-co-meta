@@ -5,7 +5,7 @@ Run an autonomous AI company from a bash loop. 14 AI agents, one consensus file,
 ## Quick Start
 
 ```bash
-npx auto-co init my-company
+npx create-auto-co my-company
 cd my-company
 cp .env.example .env  # Add your API keys
 make start            # Launch the autonomous loop
@@ -28,7 +28,8 @@ Each cycle, agents read the consensus, make decisions, write code, deploy servic
 
 | Command | Description |
 |---------|-------------|
-| `auto-co init [name]` | Scaffold a new project |
+| `npx create-auto-co [name]` | Scaffold a new project |
+| `auto-co init [name]` | Same as above |
 | `auto-co start` | Start the autonomous loop |
 | `auto-co stop` | Stop the loop gracefully |
 | `auto-co status` | Show loop status |

@@ -11,25 +11,33 @@ const HELP = `
 auto-co v${VERSION} -- Run an autonomous AI company from a bash loop
 
 Usage:
-  auto-co init [name]     Scaffold a new auto-co project
-  auto-co start           Start the autonomous loop (run from project dir)
-  auto-co stop            Stop the loop gracefully
-  auto-co status          Show loop status
-  auto-co doctor          Run health check
-  auto-co --version       Show version
-  auto-co --help          Show this help
+  npx create-auto-co [name]   Scaffold a new auto-co project
+  auto-co init [name]         Same as above
+  auto-co start               Start the autonomous loop
+  auto-co stop                Stop the loop gracefully
+  auto-co status              Show loop status
+  auto-co doctor              Run health check
+  auto-co --version           Show version
+  auto-co --help              Show this help
 
 Quick start:
-  npx auto-co init my-company
+  npx create-auto-co my-company
   cd my-company
-  # Edit CLAUDE.md with your product vision
-  # Edit PROMPT.md with your operating prompt
-  # Add your .env (copy from .env.example)
-  auto-co start
+  cp .env.example .env        # Add your API keys
+  nano CLAUDE.md              # Set your product mission
+  make start                  # Launch the autonomous loop
 
 Docs: https://runautoco.com
 Repo: https://github.com/NikitaDmitrieff/auto-co-meta
 `;
+
+function step(msg) {
+  process.stdout.write(`  [+] ${msg} ... `);
+}
+
+function done() {
+  console.log("done");
+}
 
 function run(cmd, opts = {}) {
   try {
@@ -68,20 +76,25 @@ function init(name) {
 
   checkDeps();
 
-  console.log(`Scaffolding auto-co project in ./${dir} ...`);
+  console.log(`\n  auto-co v${VERSION}\n`);
+  console.log(`  Scaffolding autonomous AI company in ./${dir}\n`);
 
   // Clone the repo (shallow for speed)
-  run(`git clone --depth 1 ${REPO} "${target}"`);
+  step("Cloning auto-co framework");
+  run(`git clone --depth 1 ${REPO} "${target}"`, { stdio: "pipe" });
+  done();
 
   // Remove the .git directory so it's a fresh project
   run(`rm -rf "${target}/.git"`);
 
   // Remove meta-specific files
+  step("Cleaning up meta files");
   const metaFiles = [
     "memories/consensus.md",
     "niche-opportunity-research-2026-03-06.md",
     "PUBLISH_NOW.md",
     "social-preview.png",
+    "AGENTS.md",
     "cli",
     "projects/landing",
     "docs/marketing",
@@ -110,14 +123,31 @@ function init(name) {
       run(`rm -rf "${p}"`, { silent: true });
     }
   }
+  done();
 
   // Create fresh directories
-  const dirs = ["memories", "docs", "projects", "logs", "snapshots"];
+  step("Creating project structure");
+  const dirs = [
+    "memories",
+    "docs/ceo", "docs/cto", "docs/critic", "docs/product",
+    "docs/ui", "docs/interaction", "docs/fullstack", "docs/qa",
+    "docs/devops", "docs/marketing", "docs/operations", "docs/sales",
+    "docs/cfo", "docs/research",
+    "projects",
+    "logs",
+    "snapshots",
+  ];
   for (const d of dirs) {
     mkdirSync(resolve(target, d), { recursive: true });
   }
+  done();
+
+  // Create empty human escalation files
+  writeFileSync(resolve(target, "memories/human-request.md"), "");
+  writeFileSync(resolve(target, "memories/human-response.md"), "");
 
   // Create initial consensus
+  step("Writing Day 0 consensus");
   writeFileSync(
     resolve(target, "memories/consensus.md"),
     `# Auto Company Consensus
@@ -162,23 +192,44 @@ CEO calls a strategy meeting. Each agent proposes one product idea. End by ranki
 - What should we build?
 `
   );
+  done();
 
   // Initialize git
-  run(`git init "${target}"`);
+  step("Initializing git repository");
+  run(`git init "${target}"`, { stdio: "pipe" });
   run(`git -C "${target}" add -A`);
-  run(`git -C "${target}" commit -m "Initial auto-co project scaffold"`);
+  run(`git -C "${target}" commit -m "Initial auto-co project scaffold"`, { stdio: "pipe" });
+  done();
 
   console.log(`
-Done! Your auto-co project is ready.
+  Your autonomous AI company is ready.
 
-Next steps:
-  cd ${dir}
-  cp .env.example .env     # Add your API keys
-  # Edit CLAUDE.md          # Define your product & team
-  # Edit PROMPT.md          # Customize the operating prompt
-  make start               # Launch the autonomous loop
+  Project structure:
+    ${dir}/
+    ├── CLAUDE.md          # Company constitution (edit this first!)
+    ├── PROMPT.md          # Autonomous loop instructions
+    ├── auto-loop.sh       # Main loop script
+    ├── Makefile            # make start | stop | monitor
+    ├── .env.example        # API keys template
+    ├── memories/           # Cross-cycle state relay
+    ├── docs/               # Agent output directories (14 roles)
+    ├── projects/           # Built projects go here
+    └── .claude/agents/     # 14 AI agent definitions
 
-Docs: https://runautoco.com
+  Get started:
+    cd ${dir}
+    cp .env.example .env        # Add your Anthropic API key
+    nano CLAUDE.md              # Set your company mission
+    make start                  # Launch the autonomous loop
+
+  What happens next:
+    Cycle 1: Your AI CEO calls a strategy meeting.
+             14 agents brainstorm product ideas and rank top 3.
+    Cycle 2: Market validation, financial analysis, go/no-go.
+    Cycle 3+: Code ships. Every cycle produces artifacts.
+
+  Docs: https://runautoco.com
+  Repo: https://github.com/NikitaDmitrieff/auto-co-meta
 `);
 }
 
@@ -196,6 +247,8 @@ function delegateToLoop(flag) {
 // Main
 const args = process.argv.slice(2);
 const cmd = args[0];
+
+const COMMANDS = new Set(["init", "start", "stop", "status", "doctor", "--version", "-v", "--help", "-h"]);
 
 switch (cmd) {
   case "init":
@@ -223,7 +276,12 @@ switch (cmd) {
     console.log(HELP);
     break;
   default:
-    console.error(`Unknown command: ${cmd}`);
-    console.log(HELP);
-    process.exit(1);
+    // Treat unknown args as project names: `npx create-auto-co my-company`
+    if (!cmd.startsWith("-")) {
+      init(cmd);
+    } else {
+      console.error(`Unknown option: ${cmd}`);
+      console.log(HELP);
+      process.exit(1);
+    }
 }
