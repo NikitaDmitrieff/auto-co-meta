@@ -27,6 +27,7 @@
 #   ./auto-loop.sh --pause      # Pause the loop (skip cycles until resumed)
 #   ./auto-loop.sh --resume     # Resume a paused loop
 #   ./auto-loop.sh --config     # Print all config values
+#   ./auto-loop.sh --metrics    # Quick KPI dashboard from cycle history
 #   ./auto-loop.sh --version    # Show version
 #
 # Stop:
@@ -334,6 +335,7 @@ USAGE:
   ./auto-loop.sh --watch      Live dashboard (alias for monitor.sh --dashboard)
   ./auto-loop.sh --pause      Pause the loop (skip cycles until resumed)
   ./auto-loop.sh --resume     Resume a paused loop
+  ./auto-loop.sh --metrics    Quick KPI dashboard (cycles, cost, duration)
   ./auto-loop.sh --selftest   Validate environment
   ./auto-loop.sh --dry-run    Preview prompt without running
 
@@ -702,6 +704,65 @@ if [ "${1:-}" = "--config" ]; then
     echo "--- Environment ---"
     echo ".env loaded:            $([ -f "$PROJECT_DIR/.env" ] && echo 'yes' || echo 'no')"
     echo "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: ${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-unset}"
+    exit 0
+fi
+
+# === Metrics flag (quick KPI dashboard from cycle history) ===
+
+if [ "${1:-}" = "--metrics" ]; then
+    if [ ! -f "$CYCLE_HISTORY_FILE" ]; then
+        echo "No cycle history found at $CYCLE_HISTORY_FILE"
+        exit 1
+    fi
+    if ! command -v jq &>/dev/null; then
+        echo "Error: jq is required for --metrics. Install: brew install jq"
+        exit 1
+    fi
+    jq -s '
+        if length == 0 then "No cycle data.\n" | halt_error
+        else
+            {
+                total_cycles: length,
+                successful: ([.[] | select(.status == "ok")] | length),
+                failed: ([.[] | select(.status != "ok")] | length),
+                success_rate: (([.[] | select(.status == "ok")] | length) / length * 100),
+                total_cost: ([.[].cost] | add),
+                avg_cost: (([.[].cost] | add) / length),
+                avg_duration_s: (([.[].duration_s] | add) / length),
+                total_duration_h: (([.[].duration_s] | add) / 3600),
+                min_cost: ([.[].cost] | min),
+                max_cost: ([.[].cost] | max),
+                min_duration: ([.[].duration_s] | min),
+                max_duration: ([.[].duration_s] | max),
+                first_cycle: (.[0].timestamp),
+                last_cycle: (.[-1].timestamp)
+            }
+        end
+    ' "$CYCLE_HISTORY_FILE" | jq -r '
+        "=== Auto-Co Metrics Dashboard ===",
+        "",
+        "--- Cycles ---",
+        "Total cycles:      \(.total_cycles)",
+        "Successful:        \(.successful)",
+        "Failed:            \(.failed)",
+        "Success rate:      \(.success_rate | tostring | .[0:5])%",
+        "",
+        "--- Cost ---",
+        "Total cost:        $\(.total_cost | tostring | .[0:8])",
+        "Avg per cycle:     $\(.avg_cost | tostring | .[0:6])",
+        "Min cycle cost:    $\(.min_cost | tostring | .[0:6])",
+        "Max cycle cost:    $\(.max_cost | tostring | .[0:6])",
+        "",
+        "--- Duration ---",
+        "Avg per cycle:     \(.avg_duration_s | floor)s",
+        "Min cycle:         \(.min_duration)s",
+        "Max cycle:         \(.max_duration)s",
+        "Total runtime:     \(.total_duration_h | tostring | .[0:5])h",
+        "",
+        "--- Timeline ---",
+        "First cycle:       \(.first_cycle)",
+        "Last cycle:        \(.last_cycle)"
+    '
     exit 0
 fi
 
