@@ -2,7 +2,6 @@
 import React, { useRef, useEffect, useState, useId } from "react";
 import { motion } from "motion/react";
 
-// Adapted from Aceternity UI / Variantform — accent color changed to auto-co orange
 export const TextHoverEffect = ({
   text,
   duration,
@@ -17,7 +16,6 @@ export const TextHoverEffect = ({
   const [cursor, setCursor] = useState({ x: 0, y: 0 });
   const [hovered, setHovered] = useState(false);
   const [maskPosition, setMaskPosition] = useState({ cx: "50%", cy: "50%" });
-  const [animationDone, setAnimationDone] = useState(false);
   const id = useId();
 
   const gradientId = `textGradient-${id}`;
@@ -37,13 +35,6 @@ export const TextHoverEffect = ({
       window.removeEventListener("mousemove", handleMouseMove);
       document.documentElement.removeEventListener("mouseleave", handleMouseLeave);
     };
-  }, []);
-
-  // After the stroke-draw animation completes, disable the radial mask so the
-  // text stays visible regardless of cursor position.
-  useEffect(() => {
-    const t = setTimeout(() => setAnimationDone(true), 4200);
-    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
@@ -98,46 +89,48 @@ export const TextHoverEffect = ({
         </mask>
       </defs>
 
-      <text
-        x="50%"
-        y="50%"
-        textAnchor="middle"
-        dominantBaseline="middle"
-        strokeWidth="0.5"
-        className={`fill-transparent stroke-white/80 font-[helvetica] ${textSize} font-bold`}
-        style={{ opacity: hovered ? 0.7 : 0 }}
-      >
-        {text}
-      </text>
-
+      {/* Stroke-draw animation — draws the outline, then stays visible */}
       <motion.text
         x="50%"
         y="50%"
         textAnchor="middle"
         dominantBaseline="middle"
         strokeWidth="0.5"
-        className={`fill-transparent stroke-white/80 font-[helvetica] ${textSize} font-bold`}
+        className={`fill-transparent stroke-white font-[helvetica] ${textSize} font-bold`}
         initial={{ strokeDashoffset: 1000, strokeDasharray: 1000 }}
         animate={{ strokeDashoffset: 0, strokeDasharray: 1000 }}
         transition={{ duration: 4, ease: "easeInOut" }}
-      >
-        {text}
-      </motion.text>
-
-      {/* Orange accent text: cursor-following when hovered, ambient glow after animation */}
-      <text
+      />
+      {/* Permanent white outline — visible immediately after draw completes */}
+      <motion.text
         x="50%"
         y="50%"
         textAnchor="middle"
         dominantBaseline="middle"
-        stroke={hovered ? `url(#${gradientId})` : "#f97316"}
         strokeWidth="0.5"
-        mask={hovered ? `url(#${textMaskId})` : undefined}
-        className={`fill-transparent font-[helvetica] ${textSize} font-bold`}
-        style={{ opacity: animationDone ? (hovered ? 1 : 0.25) : 0 }}
+        className={`fill-transparent stroke-white font-[helvetica] ${textSize} font-bold`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 3.5 }}
       >
         {text}
-      </text>
+      </motion.text>
+
+      {/* Orange accent — only visible on hover, follows cursor */}
+      {hovered && (
+        <text
+          x="50%"
+          y="50%"
+          textAnchor="middle"
+          dominantBaseline="middle"
+          stroke={`url(#${gradientId})`}
+          strokeWidth="0.5"
+          mask={`url(#${textMaskId})`}
+          className={`fill-transparent font-[helvetica] ${textSize} font-bold`}
+        >
+          {text}
+        </text>
+      )}
     </svg>
   );
 };

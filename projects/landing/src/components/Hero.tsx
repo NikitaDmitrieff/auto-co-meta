@@ -16,7 +16,8 @@ export default function Hero() {
   return (
     <section className="relative bg-black">
       <div className="absolute inset-0 bg-grid opacity-50 pointer-events-none" />
-      <div className="absolute inset-0 bg-radial-fade pointer-events-none" />
+      {/* Radial fade limited to top half so it doesn't dim the dashboard screenshot or CTAs */}
+      <div className="absolute inset-x-0 top-0 h-1/2 bg-radial-fade pointer-events-none" />
 
       <div className="flex min-h-screen flex-col items-center justify-center px-4">
         <motion.div
