@@ -27,6 +27,7 @@
 #   ./auto-loop.sh --pause      # Pause the loop (skip cycles until resumed)
 #   ./auto-loop.sh --resume     # Resume a paused loop
 #   ./auto-loop.sh --tail       # Follow main loop log in real-time
+#   ./auto-loop.sh --cycles N   # Run at most N cycles, then exit cleanly
 #   ./auto-loop.sh --config     # Print all config values
 #   ./auto-loop.sh --metrics    # Quick KPI dashboard from cycle history
 #   ./auto-loop.sh --version    # Show version
@@ -45,6 +46,7 @@
 #   MAX_LOGS=200                # Max cycle logs to keep
 #   RETRY_BASE_SECONDS=30       # Initial backoff on transient failure
 #   RETRY_MAX_SECONDS=600       # Max backoff cap
+#   MAX_CYCLES=0                # Max cycles before exit (0 = unlimited)
 # ============================================================
 
 set -euo pipefail
@@ -79,6 +81,7 @@ LIMIT_WAIT_SECONDS="${LIMIT_WAIT_SECONDS:-3600}"
 MAX_LOGS="${MAX_LOGS:-200}"
 RETRY_BASE_SECONDS="${RETRY_BASE_SECONDS:-30}"
 RETRY_MAX_SECONDS="${RETRY_MAX_SECONDS:-600}"
+MAX_CYCLES="${MAX_CYCLES:-0}"  # 0 = unlimited
 
 # Ensure Agent Teams is available
 export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
@@ -337,6 +340,7 @@ USAGE:
   ./auto-loop.sh --pause      Pause the loop (skip cycles until resumed)
   ./auto-loop.sh --resume     Resume a paused loop
   ./auto-loop.sh --tail       Follow main loop log in real-time
+  ./auto-loop.sh --cycles N   Run at most N cycles, then exit cleanly
   ./auto-loop.sh --metrics    Quick KPI dashboard (cycles, cost, duration)
   ./auto-loop.sh --selftest   Validate environment
   ./auto-loop.sh --dry-run    Preview prompt without running
@@ -355,6 +359,7 @@ CONFIG (env vars or .env file):
   MAX_LOGS               Max cycle logs to keep (default: 200)
   RETRY_BASE_SECONDS     Initial backoff on failure (default: 30)
   RETRY_MAX_SECONDS      Max backoff cap (default: 600)
+  MAX_CYCLES             Max cycles before exit (default: 0 = unlimited)
 
 MONITORING:
   ./monitor.sh --dashboard    Live TUI dashboard
@@ -949,6 +954,20 @@ if [ "${1:-}" = "--tail" ] || [ "${1:-}" = "-t" ]; then
     exit 0
 fi
 
+# === Cycles flag (limit number of cycles) ===
+
+if [ "${1:-}" = "--cycles" ] || [ "${1:-}" = "-c" ]; then
+    if [ -z "${2:-}" ] || ! echo "$2" | grep -qE '^[0-9]+$' || [ "$2" -lt 1 ]; then
+        echo "Usage: ./auto-loop.sh --cycles N  (N must be a positive integer)"
+        echo ""
+        echo "Run at most N cycles, then exit cleanly."
+        echo "Example: ./auto-loop.sh --cycles 5  # run a quick 5-cycle burst"
+        exit 1
+    fi
+    MAX_CYCLES="$2"
+    shift 2
+fi
+
 # === Cost flag (cost summary from cycle history) ===
 
 if [ "${1:-}" = "--cost" ]; then
@@ -1524,7 +1543,7 @@ fi
 
 log "=== Auto-Co Loop Started (PID $$) ==="
 log "Project: $PROJECT_DIR"
-log "Model: $MODEL | Interval: ${LOOP_INTERVAL}s | Timeout: ${CYCLE_TIMEOUT_SECONDS}s | Breaker: ${MAX_CONSECUTIVE_ERRORS} errors"
+log "Model: $MODEL | Interval: ${LOOP_INTERVAL}s | Timeout: ${CYCLE_TIMEOUT_SECONDS}s | Breaker: ${MAX_CONSECUTIVE_ERRORS} errors | Max cycles: ${MAX_CYCLES:-unlimited}"
 
 # === Main Loop ===
 
@@ -1654,6 +1673,15 @@ This is Cycle #$loop_count. Act decisively."
     fi
 
     save_state "idle"
+
+    # Check cycle limit
+    if [ "$MAX_CYCLES" -gt 0 ] && [ "$loop_count" -ge "$MAX_CYCLES" ]; then
+        log "Cycle limit reached ($MAX_CYCLES cycles). Exiting cleanly."
+        save_state "completed"
+        rm -f "$PID_FILE"
+        exit 0
+    fi
+
     log_cycle $loop_count "WAIT" "Sleeping ${LOOP_INTERVAL}s before next cycle..."
     sleep "$LOOP_INTERVAL"
 done
