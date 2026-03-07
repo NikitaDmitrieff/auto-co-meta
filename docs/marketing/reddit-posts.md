@@ -1,201 +1,133 @@
-# Reddit Distribution -- auto-co Cycle 30
+# Reddit Posts -- auto-co Distribution
 
-**Status:** Ready to post (human submits)
-**Drafted by:** marketing-godin + operations-pg
-**Cycle:** 30 (updated from Cycle 25)
-**Priority:** Post after HN has had 24h of visibility
-
----
-
-## Target Subreddits (ranked by fit)
-
-| Subreddit | Members | Why | Best post type |
-|-----------|---------|-----|----------------|
-| r/SideProject | 190k | Indie builders, honest P&L stories land well | Text with demo link |
-| r/MachineLearning | 3M | Technical audience, loves novel architectures | Technical text post |
-| r/selfhosted | 400k | DIY ethos, bash loop is a plus | Text with GitHub link |
-| r/artificial | 1.2M | Broad AI audience | Text/link post |
-| r/LLMDevs | 50k | LLM developer community, direct fit | Technical text post |
+**Status:** Ready for human submission
+**Drafted by:** marketing-godin
+**Date:** 2026-03-07
+**Numbers current as of:** Cycle 92
 
 ---
 
-## Post 1 -- r/SideProject
+## Post 1 -- r/ClaudeAI
 
 **Title:**
 ```
-I let 14 AI agents run my startup for 30 cycles -- $40 total cost, $0 revenue. Here's the honest P&L.
+I turned Claude Code into an autonomous AI company that runs itself. 92 cycles, $171 total cost. Open source.
 ```
 
 **Body:**
 ```
-I've been building auto-co: a bash loop + Claude CLI that runs a 14-agent AI company autonomously.
+I built auto-co, an open-source framework that wraps Claude Code CLI in a bash loop and lets 14 AI agents operate as an autonomous company.
 
-30 cycles later:
-- **Revenue:** $0 (not spinning it)
-- **Total AI cost:** ~$40 (~$1.35/cycle average)
-- **Infrastructure:** $5/month (Railway)
-- **Human interventions:** 1 (an API key I still haven't set up)
-- **Products shipped:** landing page, demo dashboard, pricing page, admin analytics, DEV.to article, waitlist with email capture
+The architecture is dead simple. One bash loop calls Claude Code with a prompt. The prompt tells Claude to read a shared state file (memories/consensus.md), pick relevant agents for the current task, do real work, and write an updated state before ending. Then the loop sleeps and repeats.
 
-The architecture is one bash loop:
+That's it. No LangChain, no vector DB, no orchestration framework. Just bash + Claude Code CLI.
 
-```bash
-while true; do
-  claude -p "$PROMPT" --dangerously-skip-permissions
-  sleep 120
-done
-```
+The 14 agents are modeled on real people: Bezos as CEO, DHH as fullstack engineer, Charlie Munger as critic (he has veto power and runs pre-mortems), Seth Godin as marketing, Kelsey Hightower as DevOps, etc. Each cycle picks 3-5 agents relevant to the task at hand.
 
-14 agents (Jeff Bezos as CEO, DHH as engineering, Seth Godin as marketing, Charlie Munger as critic). They share a `memories/consensus.md` relay baton -- a markdown file that keeps the company coherent across unlimited autonomous cycles.
+What 92 autonomous cycles produced:
 
-The Munger rule: before any major decision, Munger runs a Pre-Mortem. He can veto, never delay.
+- Full Next.js landing page with waitlist (runautoco.com)
+- Live demo dashboard, pricing page, blog (3 posts), admin panel
+- 38 CLI flags: monitoring dashboard, snapshots, daemon mode (launchd), Telegram escalation, webhooks, parallel execution
+- Docker Compose stack, GitHub Actions CI
+- The business model and pricing tiers were decided by the CEO + CFO agents
+- Total API cost: ~$171 (~$1.86/cycle). Infrastructure: $5/mo on Railway.
 
-Key lesson: without hard convergence rules, agents will brainstorm forever. We had 3 cycles of pure strategy docs with zero code before adding "every cycle after Cycle 2 must produce artifacts."
+Key things I learned about making Claude Code work in long autonomous loops:
 
-**Links:**
-- Landing: https://runautoco.com
-- Demo dashboard: https://runautoco.com/demo
-- Architecture deep-dive: [DEV.to link]
-- GitHub (MIT): https://github.com/NikitaDmitrieff/auto-co-meta
+- You need hard convergence rules. Without them, agents will produce strategy documents forever. After cycle 2, every cycle must produce artifacts (code, deployments, content). Pure discussion is forbidden.
+- The single-file state pattern works surprisingly well. No retrieval failures, fully debuggable, atomic writes. Zero state corruption in 92 cycles.
+- Safety guardrails must be absolute and non-negotiable. No force push to main, no repo deletion, no DB resets. The agents will test boundaries.
+- Cost per cycle stays flat. It doesn't get more expensive over time because the context doesn't grow unboundedly -- the relay baton file stays concise.
 
-Would love feedback -- especially on pricing ($49/mo hosted tier math) and whether the "14 experts" framing resonates or feels gimmicky.
+Demo video showing 4 auto-co instances running simultaneously: https://youtu.be/1zJca_zFzys
+
+GitHub (MIT license): https://github.com/NikitaDmitrieff/auto-co-meta
+
+Landing page: https://runautoco.com
+
+Happy to answer questions about the architecture. The whole thing is about 500 lines of bash + a markdown prompt.
 ```
 
 ---
 
-## Post 2 -- r/MachineLearning
+## Post 2 -- r/SideProject
 
 **Title:**
 ```
-[Project] Auto-co: bash loop + Claude CLI running a 14-agent autonomous AI company -- 30 cycles, ~$40 total, architecture deep-dive
+I let 14 AI agents run a startup for 92 cycles. $171 total cost, $0 revenue. Here's what happened.
 ```
 
 **Body:**
 ```
-I've been running an experiment: can a bash loop + LLM CLI sustain autonomous company operations indefinitely?
+auto-co is a bash loop that turns Claude Code into an autonomous AI company. You define the mission, it assembles a team of AI agents, and they loop 24/7 making decisions, writing code, and deploying.
 
-**Architecture:**
-- Single bash loop: `claude -p "$PROMPT" --dangerously-skip-permissions && sleep 120`
-- 14 specialized agents, each with an expert persona (Bezos/CEO, DHH/Engineering, Munger/Critic, etc.)
-- Shared state via `memories/consensus.md` -- a markdown relay baton updated atomically each cycle
-- No vector database, no Redis, no embeddings -- the full context fits in Claude's window every time
+I built it to answer a simple question: what happens if you set up AI agents with real tools (git, npm, Vercel, Railway, Supabase) and get out of their way?
 
-**The relay baton pattern:**
-Each cycle MUST: (1) read previous consensus, (2) do real work, (3) write updated consensus before ending. This is what keeps the company coherent across unlimited cycles without any external memory system.
+92 cycles later, here's the honest P&L:
 
-**30 cycles of results:**
-- Next.js landing page deployed to Railway
-- Live demo dashboard with 6 panels (runautoco.com/demo)
-- Pricing page with 3 tiers
-- Admin analytics dashboard with real-time page views
-- Waitlist email capture (Supabase)
-- DEV.to article written and published by the agents
-- ~$40 total API cost, $5/mo infra
+**Costs:**
+- AI API: ~$171 total (~$1.86/cycle average)
+- Infrastructure: $5/month (Railway)
+- My time: maybe 10 hours total over 3 months (API keys, DNS, responding to escalation requests via Telegram)
 
-**Interesting failure modes:**
-- Cycle 6: loop ran same "Next Action" twice -> added convergence detection rules
-- Cycle 9: agents produced only strategy docs, zero code -> added "no pure discussion cycles" constraint
-- Cycle 29: client-side analytics silently failing (ad blockers) -> moved to server-side API route
-- Agents will gold-plate indefinitely if you don't force convergence deadlines
+**What the agents shipped:**
+- Next.js landing page at runautoco.com
+- Live demo dashboard, pricing page, blog, admin analytics
+- 38 CLI flags (monitoring, snapshots, daemon mode, webhooks, parallel sessions)
+- Docker Compose stack, GitHub Actions CI
+- Business model decided by CEO + CFO agents (open-core + hosted tiers at $49-99/mo)
 
-I wrote a detailed architecture deep-dive: [DEV.to link]
+**Revenue:** $0. Not spinning it.
+
+**What I learned:**
+- Without convergence rules, AI agents will strategize forever. I lost 3 early cycles to beautiful planning docs with zero code. Fix: "every cycle after cycle 2 must produce artifacts."
+- The relay baton pattern (one markdown file carrying full state between cycles) is more reliable than complex memory systems. Zero state corruption in 92 cycles.
+- The agents are surprisingly good at deployment and DevOps. They're bad at knowing when to stop polishing.
+- $171 for 92 cycles of autonomous development is absurdly cheap. The bottleneck is distribution, not building.
+
+The whole framework is open source (MIT): https://github.com/NikitaDmitrieff/auto-co-meta
+
+Demo video: https://youtu.be/1zJca_zFzys
+
+Setup is: clone, add API key, make start. No dependencies beyond Claude Code CLI.
+
+Would genuinely appreciate feedback on whether the "autonomous AI company" framing resonates or if it sounds like vaporware. The repo history speaks for itself -- every commit after the first few is autonomous.
+```
+
+---
+
+## Post 3 -- r/artificial
+
+**Title:**
+```
+Open-source framework that runs 14 AI agents as an autonomous company -- 92 cycles completed, $171 total cost
+```
+
+**Body:**
+```
+I've been running an experiment for the past few months: can a team of AI agents operate as a company autonomously, making real decisions and shipping real products?
+
+auto-co is the result. It's a bash loop that calls Claude Code CLI with a structured prompt. 14 specialized agents (modeled on real experts -- Bezos as CEO, DHH as engineer, Munger as critic, etc.) coordinate through a single shared state file. Each cycle, relevant agents are selected, they do real work, and the state is updated for the next cycle.
+
+No human in the loop unless the agents explicitly escalate (via Telegram). I've intervened maybe 5 times in 92 cycles, mostly for things like API keys and DNS configuration.
+
+After 92 autonomous cycles:
+
+- A full landing page, demo dashboard, pricing page, blog, and admin panel are live at runautoco.com
+- 38 CLI flags for monitoring, daemon mode, webhooks, parallel execution, snapshots
+- Total API cost: ~$171. Infrastructure: $5/mo.
+- The agents decided the business model, designed the pricing tiers, wrote the blog posts, and deployed everything.
+
+The interesting finding isn't that AI agents can write code -- we know that. It's that they can maintain coherence across 92+ cycles with no external memory system. The trick is a "relay baton" pattern: one markdown file carries the full company state, read at the start of every cycle, updated at the end. No vector database, no embeddings, no RAG. It fits in the context window every time.
+
+The other finding: convergence rules matter more than prompts. Without hard constraints ("every cycle must produce artifacts, pure discussion is forbidden"), agents will plan and strategize indefinitely. They're excellent at producing beautiful strategy documents that ship nothing.
 
 Open source (MIT): https://github.com/NikitaDmitrieff/auto-co-meta
 
-Happy to discuss the architecture -- especially the relay baton pattern vs alternatives (vector DBs, graph state, etc.).
-```
+Demo video (4 instances running in parallel): https://youtu.be/1zJca_zFzys
 
----
-
-## Post 3 -- r/selfhosted
-
-**Title:**
-```
-I built an autonomous AI company that runs on a bash loop -- self-hostable, MIT licensed, $40 for 30 cycles
-```
-
-**Body:**
-```
-auto-co is a self-hostable bash loop that runs a 14-agent AI company autonomously.
-
-Setup:
-```bash
-git clone https://github.com/NikitaDmitrieff/auto-co-meta
-cd auto-co-meta
-export ANTHROPIC_API_KEY=your_key
-./auto-loop.sh
-```
-
-That's it. No Docker (yet). No cloud dependencies except Anthropic API.
-
-What it does autonomously:
-- Strategy decisions (CEO/critic agents)
-- Code generation and deployment
-- Marketing content creation
-- Financial modeling
-- Analytics tracking
-
-After 30 cycles self-running: landing page live, demo dashboard, pricing page, admin analytics, DEV.to article published, ~$40 total API cost.
-
-Production hardening built in:
-- 30-minute watchdog timer per cycle
-- Circuit breaker (3 errors = 5-min cooldown)
-- Atomic consensus writes (no corruption on crash)
-- Log rotation (last 200 cycles)
-- Cost tracking per cycle
-
-MIT licensed. You own the loop, you own the data, you pay your own API costs.
-
-GitHub: https://github.com/NikitaDmitrieff/auto-co-meta
-Demo: https://runautoco.com/demo
-Architecture deep-dive: [DEV.to link]
-```
-
----
-
-## Post 4 -- r/LLMDevs
-
-**Title:**
-```
-The "relay baton" pattern: how I keep 14 AI agents coherent across 30+ autonomous cycles with just a markdown file
-```
-
-**Body:**
-```
-I've been building auto-co, an autonomous AI company that runs on a bash loop. The hardest problem wasn't prompting -- it was **state persistence across sessions**.
-
-LLMs don't remember. Every invocation starts fresh. The standard solutions (vector DBs, RAG, Redis) all add complexity and lose information. So I tried something simpler.
-
-**The relay baton pattern:**
-
-One markdown file (`memories/consensus.md`) that every cycle:
-1. Reads at the start (full company state in context)
-2. Updates at the end (what happened, what to do next)
-
-No embeddings, no retrieval, no lossy compression. The entire state fits in Claude's context window. The agent sees everything from the previous cycle, every time.
-
-**Why this beats vector DB approaches:**
-- Zero retrieval failures (everything is in context)
-- No semantic search misses (full state, not fragments)
-- Debuggable (it's a markdown file, you can read it)
-- Atomic (write to .tmp, rename -- survives crashes)
-
-**30 cycles later:**
-- Landing page, demo, pricing, admin dashboard all deployed
-- ~$40 total API cost
-- 14 agents producing real artifacts every cycle
-- Zero state corruption incidents
-
-**The convergence rules matter more than the state:**
-Without hard constraints, agents brainstorm forever. The key rules:
-- Cycle 3+: must produce artifacts (files, commits, deployments). Pure discussion forbidden.
-- Same Next Action twice: stalled. Change direction immediately.
-- Ship > Plan > Discuss (priority hierarchy)
-
-Full architecture deep-dive: [DEV.to link]
-GitHub (MIT): https://github.com/NikitaDmitrieff/auto-co-meta
-
-Curious if anyone else has tried the relay baton pattern vs more complex state management approaches.
+Live site: https://runautoco.com
 ```
 
 ---
@@ -203,24 +135,22 @@ Curious if anyone else has tried the relay baton pattern vs more complex state m
 ## Posting Strategy
 
 **Order:**
-1. r/SideProject first (most accessible, drives waitlist)
-2. r/LLMDevs (technical, engaged)
-3. r/MachineLearning (slower, but high visibility if upvoted)
-4. r/selfhosted (niche but very sticky audience)
-5. r/artificial (broad, lower conversion)
+1. Show HN first (highest leverage, most technical audience)
+2. r/ClaudeAI within 24 hours (direct fit, engaged community)
+3. r/SideProject same day (indie builder audience, P&L transparency resonates)
+4. r/artificial next day (broader audience, good for general visibility)
 
 **Timing:**
-- Post all within 24h
-- Link to HN thread and DEV.to article in each post
-- Engage with all comments within 2 hours
+- Weekday mornings US time (Tue-Thu ideal)
+- Space Reddit posts 4-6 hours apart to avoid looking spammy
+- Engage with every comment within the first 2 hours
 
-**Cross-promotion:**
-- Include HN link in Reddit posts
-- Include Reddit links in IH milestones
-- Architecture deep-dive DEV.to article links everywhere
+**Cross-linking:**
+- If HN post gains traction, mention it in Reddit posts ("also discussed on HN")
+- Link demo video in every post -- it's the strongest proof point
 
-**What to watch:**
-- r/SideProject posts can drive 20-50 waitlist signups if story resonates
-- r/LLMDevs will care most about the relay baton pattern
-- r/MachineLearning comments will be technical -- have architectural answers ready
-- Keep tone honest: $0 revenue, no BS, the transparent P&L is the hook
+**Tone rules:**
+- $0 revenue is stated plainly, never apologized for
+- No superlatives, no "revolutionary," no "game-changing"
+- Lead with what was built, not what it could become
+- Let the repo history and live site do the talking

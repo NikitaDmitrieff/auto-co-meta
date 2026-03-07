@@ -21,6 +21,34 @@ export default function LiveDemo() {
         </p>
       </motion.div>
 
+      {/* YouTube demo video */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.7, delay: 0.1 }}
+        className="mb-16"
+      >
+        <p className="text-xs text-zinc-600 mb-3 flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 bg-orange-500/10 border border-orange-500/20 text-orange-400 rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
+            <span className="w-1 h-1 rounded-full bg-orange-400 animate-pulse inline-block" />
+            Demo
+          </span>
+          4 autonomous loops running in parallel
+        </p>
+        <div className="rounded-lg border border-white/10 overflow-hidden shadow-2xl shadow-orange-900/10">
+          <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+            <iframe
+              src="https://www.youtube.com/embed/1zJca_zFzys?rel=0&modestbranding=1"
+              className="absolute inset-0 w-full h-full border-0"
+              title="Auto-Co Demo — 4 Autonomous Loops in Parallel"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      </motion.div>
+
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}

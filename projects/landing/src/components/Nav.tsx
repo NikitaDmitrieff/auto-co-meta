@@ -1,9 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
+import Image from "next/image";
 
 export default function Nav() {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+
+  // Hide Nav on demo page — it has its own chrome
+  if (pathname === "/demo") return null;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -25,8 +31,7 @@ export default function Nav() {
       <div className="max-w-6xl mx-auto px-6 flex items-center justify-between h-14">
         {/* Logo */}
         <a href="/" className="flex items-center gap-2 group">
-          <span className="h-2 w-2 rounded-full bg-orange-500 group-hover:bg-orange-400 transition-colors" />
-          <span className="font-mono text-sm font-bold text-white tracking-tight">auto-co</span>
+          <Image src="/logo-ac.png" alt="auto-co" width={28} height={20} className="opacity-90 group-hover:opacity-100 transition-opacity" />
         </a>
 
         {/* Links */}
@@ -51,7 +56,7 @@ export default function Nav() {
         {/* CTA */}
         <a
           href="/#waitlist"
-          className="inline-flex items-center gap-1.5 bg-orange-500 hover:bg-orange-400 text-black font-bold px-4 py-1.5 rounded-[3px] text-xs transition-all"
+          className="inline-flex items-center gap-1.5 bg-orange-500 hover:bg-orange-400 text-black font-bold px-4 py-1.5 text-xs transition-all"
         >
           Start free
           <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

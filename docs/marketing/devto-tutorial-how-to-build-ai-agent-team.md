@@ -10,6 +10,8 @@ series: "Building an Autonomous AI Company"
 
 Most AI agent tutorials show you a single chatbot. This guide shows you how to build a **team of specialized AI agents** that collaborate, make decisions, and ship real software -- with working code you can run today.
 
+**See it in action:** [Watch the 2-minute demo](https://youtu.be/1zJca_zFzys) of Auto-Co running a full autonomous cycle -- from reading state to forming a team to shipping code.
+
 ---
 
 ## Why a team, not a single agent?

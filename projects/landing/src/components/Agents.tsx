@@ -52,7 +52,7 @@ function AgentPill({ agent, index, hovered, setHovered }: { agent: typeof agents
             style={{ x: springX }}
             className="absolute -top-20 left-1/2 -translate-x-1/2 z-30 pointer-events-none"
           >
-            <div className="bg-zinc-900/95 backdrop-blur-md border border-white/10 rounded-xl px-4 py-2.5 shadow-xl shadow-black/40 text-center whitespace-nowrap">
+            <div className="bg-zinc-900/95 backdrop-blur-md border border-white/10 px-4 py-2.5 shadow-xl shadow-black/40 text-center whitespace-nowrap">
               <div className="text-sm font-bold text-white">{agent.name}</div>
               <div className="text-[10px] text-zinc-500 mt-0.5">{agent.desc}</div>
             </div>
@@ -69,7 +69,7 @@ function AgentPill({ agent, index, hovered, setHovered }: { agent: typeof agents
           opacity: hovered !== null && hovered !== index ? 0.5 : 1,
         }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${agent.gradient} flex items-center justify-center text-white text-[10px] font-bold cursor-pointer ring-2 ring-black shadow-lg shadow-black/30`}
+        className={`w-12 h-12 bg-gradient-to-br ${agent.gradient} flex items-center justify-center text-white text-[10px] font-bold cursor-pointer ring-2 ring-black shadow-lg shadow-black/30`}
       >
         {agent.initials}
       </motion.div>
