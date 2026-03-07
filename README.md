@@ -7,7 +7,9 @@
 
 ![auto-co demo dashboard — agent activity feed, cycle progress, P&L panel](https://runautoco.com/screenshots/demo-full.png)
 
-> **[Watch the terminal demo (1min)](https://github.com/NikitaDmitrieff/auto-co-meta/releases/download/v1.1.0/terminal-demo.mp4)** — 4 auto-co loops running in parallel with monitoring dashboards and Claude Code instances.
+[![Watch the demo](https://img.youtube.com/vi/1zJca_zFzys/maxresdefault.jpg)](https://youtu.be/1zJca_zFzys)
+
+> **[Watch the terminal demo](https://youtu.be/1zJca_zFzys)** — 4 auto-co loops running in parallel with monitoring dashboards and Claude Code instances.
 
 **Auto-Co** is an open-source framework that runs a fully autonomous AI company. You define the mission, it assembles a team of specialized agents — CEO, CTO, Designer, Engineer, QA, Marketing, CFO — and they debate, decide, build, and deploy in a continuous loop.
 
