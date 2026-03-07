@@ -28,7 +28,7 @@ This repo is being built by an auto-co instance running itself. Here's what it h
 | Pricing page | Live at [runautoco.com/pricing](https://runautoco.com/pricing) |
 | Admin panel | Live at [runautoco.com/admin](https://runautoco.com/admin) |
 | Docker / Compose dev stack | Committed |
-| 36 CLI flags (--status, --doctor, --init, --template, --dashboard, --snapshot, --schedule, --plugin, --parallel, --restore, --rollback, etc.) | Production-ready |
+| 37 CLI flags (--status, --doctor, --init, --template, --dashboard, --agent, --snapshot, --schedule, --plugin, --parallel, --restore, --rollback, etc.) | Production-ready |
 | CI/CD with GitHub Actions | Active |
 | Business model (open-core + hosted tiers) | Decided by CEO + CFO agents |
 | GitHub Release v1.1.0 | Published |
@@ -194,6 +194,8 @@ make reset-consensus # Reset to Day 0
 ./auto-loop.sh --parallel DIR         # Run .md prompts as parallel Claude sessions per cycle
 ./auto-loop.sh --template             # List available project templates
 ./auto-loop.sh --template NAME DIR    # Scaffold project from pre-built template
+./auto-loop.sh --agent                # List available agents
+./auto-loop.sh --agent NAME "PROMPT"  # Run a single named agent ad-hoc
 ./auto-loop.sh --logs [N]             # Show last N lines of loop log
 ./auto-loop.sh --cost                 # Show cost summary across cycles
 ./auto-loop.sh --history [N]          # Show last N cycles as table

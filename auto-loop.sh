@@ -39,6 +39,7 @@
 #   ./auto-loop.sh --parallel DIR # Run .md prompt files from DIR as parallel Claude sessions
 #   ./auto-loop.sh --template [NAME] [DIR] # Scaffold from pre-built template (saas, docs-site, api-backend)
 #   ./auto-loop.sh --dashboard  # Rich terminal dashboard (status, costs, agents, projects)
+#   ./auto-loop.sh --agent NAME "PROMPT" # Run a single named agent ad-hoc
 #   ./auto-loop.sh --version    # Show version
 #
 # Stop:
@@ -481,6 +482,8 @@ USAGE:
   ./auto-loop.sh --notify URL POST JSON notifications to webhook after each cycle
   ./auto-loop.sh --metrics    Quick KPI dashboard (cycles, cost, duration)
   ./auto-loop.sh --dashboard  Rich terminal dashboard (status, costs, agents, projects)
+  ./auto-loop.sh --agent         List available agents
+  ./auto-loop.sh --agent NAME "PROMPT"  Run a single named agent ad-hoc
   ./auto-loop.sh --env        Generate .env.example with all config options
   ./auto-loop.sh --env FILE   Write template to custom path
   ./auto-loop.sh --snapshot   Create timestamped tarball of project state
@@ -1829,6 +1832,93 @@ if [ "${1:-}" = "--metrics" ]; then
         "Last cycle:        \(.last_cycle)"
     '
     exit 0
+fi
+
+# === Agent flag (run a single named agent ad-hoc) ===
+
+if [ "${1:-}" = "--agent" ]; then
+    AGENTS_DIR="$PROJECT_DIR/.claude/agents"
+
+    # List available agents
+    if [ -z "${2:-}" ] || [ "${2:-}" = "list" ]; then
+        echo "=== Available Agents ==="
+        echo ""
+        if [ ! -d "$AGENTS_DIR" ] || [ -z "$(ls "$AGENTS_DIR"/*.md 2>/dev/null)" ]; then
+            echo "No agents found in $AGENTS_DIR"
+            exit 1
+        fi
+        for agent_file in "$AGENTS_DIR"/*.md; do
+            agent_name="$(basename "$agent_file" .md)"
+            agent_desc=$(sed -n 's/^description: *"\(.*\)"/\1/p' "$agent_file" | head -1)
+            printf "  %-24s %s\n" "$agent_name" "${agent_desc:-No description}"
+        done
+        echo ""
+        echo "Usage: ./auto-loop.sh --agent <name> \"<prompt>\""
+        echo "Example: ./auto-loop.sh --agent ceo-bezos \"evaluate pricing strategy\""
+        exit 0
+    fi
+
+    AGENT_NAME="$2"
+    AGENT_FILE="$AGENTS_DIR/${AGENT_NAME}.md"
+
+    if [ ! -f "$AGENT_FILE" ]; then
+        echo "Error: Agent '$AGENT_NAME' not found."
+        echo ""
+        echo "Available agents:"
+        for agent_file in "$AGENTS_DIR"/*.md; do
+            echo "  $(basename "$agent_file" .md)"
+        done
+        echo ""
+        echo "Usage: ./auto-loop.sh --agent <name> \"<prompt>\""
+        exit 1
+    fi
+
+    AGENT_PROMPT="${3:-}"
+    if [ -z "$AGENT_PROMPT" ]; then
+        echo "Usage: ./auto-loop.sh --agent <name> \"<prompt>\""
+        echo ""
+        echo "Example: ./auto-loop.sh --agent $AGENT_NAME \"evaluate pricing strategy\""
+        exit 1
+    fi
+
+    # Build the full prompt: agent definition + consensus context + user prompt
+    AGENT_CONTENT=$(cat "$AGENT_FILE")
+    CONSENSUS_CONTENT=""
+    if [ -f "$CONSENSUS_FILE" ]; then
+        CONSENSUS_CONTENT=$(cat "$CONSENSUS_FILE")
+    fi
+
+    FULL_PROMPT="$(cat <<AGENTEOF
+You are being invoked as a single agent outside the auto-co loop.
+
+## Your Agent Definition
+
+$AGENT_CONTENT
+
+## Current Company State
+
+$CONSENSUS_CONTENT
+
+## Task
+
+$AGENT_PROMPT
+
+Respond directly and actionably. This is a one-shot invocation -- give your complete analysis or output in this single response.
+AGENTEOF
+)"
+
+    echo "=== Running Agent: $AGENT_NAME ==="
+    echo "Prompt: $AGENT_PROMPT"
+    echo "Model: $MODEL"
+    echo ""
+
+    # Run claude with the agent prompt
+    cd "$PROJECT_DIR" && claude -p "$FULL_PROMPT" \
+        --model "$MODEL" \
+        --verbose \
+        2>&1
+
+    exit $?
 fi
 
 # === Dashboard flag (inline terminal dashboard) ===
