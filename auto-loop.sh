@@ -35,6 +35,7 @@
 #   ./auto-loop.sh --snapshot   # Create timestamped tarball of project state
 #   ./auto-loop.sh --rollback   # Undo last restore from pre-restore backup
 #   ./auto-loop.sh --schedule [MIN] # Generate launchd/cron/systemd config (default: 30min)
+#   ./auto-loop.sh --plugin DIR # Load lifecycle hooks from DIR (pre-cycle.sh, post-cycle.sh)
 #   ./auto-loop.sh --version    # Show version
 #
 # Stop:
@@ -53,6 +54,7 @@
 #   RETRY_MAX_SECONDS=600       # Max backoff cap
 #   MAX_CYCLES=0                # Max cycles before exit (0 = unlimited)
 #   NOTIFY_URL=                 # Webhook URL for cycle notifications (empty = disabled)
+#   PLUGIN_DIR=                 # Directory with hook scripts (empty = disabled)
 # ============================================================
 
 set -euo pipefail
@@ -89,6 +91,7 @@ RETRY_BASE_SECONDS="${RETRY_BASE_SECONDS:-30}"
 RETRY_MAX_SECONDS="${RETRY_MAX_SECONDS:-600}"
 MAX_CYCLES="${MAX_CYCLES:-0}"  # 0 = unlimited
 NOTIFY_URL="${NOTIFY_URL:-}"  # Webhook URL for notifications (empty = disabled)
+PLUGIN_DIR="${PLUGIN_DIR:-}"  # Directory with lifecycle hook scripts (empty = disabled)
 
 # Ensure Agent Teams is available
 export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
@@ -226,6 +229,34 @@ send_notification() {
         "$cycle_num" "$status" "${cost}" "${duration}" "$MODEL" "$total_cost" "$timestamp")
     # Fire-and-forget: don't block the loop if the webhook is slow or down
     curl -s -o /dev/null -X POST -H "Content-Type: application/json" -d "$payload" "$NOTIFY_URL" --max-time 10 &
+}
+
+run_plugin_hook() {
+    [ -z "$PLUGIN_DIR" ] && return 0
+    local hook_name=$1
+    local hook_script="$PLUGIN_DIR/${hook_name}.sh"
+    [ ! -f "$hook_script" ] && return 0
+    [ ! -x "$hook_script" ] && {
+        log "Plugin hook $hook_script is not executable, skipping"
+        return 0
+    }
+    log "Running plugin hook: $hook_name"
+    # Export context variables for the hook script
+    export AUTO_CO_CYCLE="${2:-0}"
+    export AUTO_CO_STATUS="${3:-}"
+    export AUTO_CO_COST="${4:-0}"
+    export AUTO_CO_DURATION="${5:-0}"
+    export AUTO_CO_MODEL="$MODEL"
+    export AUTO_CO_PROJECT_DIR="$PROJECT_DIR"
+    export AUTO_CO_LOG_DIR="$LOG_DIR"
+    export AUTO_CO_CONSENSUS_FILE="$CONSENSUS_FILE"
+    # Run with timeout (10s max) — don't let a broken hook stall the loop
+    if timeout 10 "$hook_script" 2>&1 | head -20; then
+        log "Plugin hook $hook_name completed"
+    else
+        log "Plugin hook $hook_name failed (exit $?) — continuing anyway"
+    fi
+    return 0
 }
 
 kill_process_tree() {
@@ -379,6 +410,7 @@ USAGE:
   ./auto-loop.sh --schedule [MIN]  Generate launchd/cron/systemd config (default: 30)
   ./auto-loop.sh --schedule 60 --cron  Force crontab output
   ./auto-loop.sh --schedule 15 --systemd  Force systemd output
+  ./auto-loop.sh --plugin DIR Load lifecycle hooks from DIR (pre-cycle.sh, post-cycle.sh)
   ./auto-loop.sh --selftest   Validate environment
   ./auto-loop.sh --dry-run    Preview prompt without running
 
@@ -900,6 +932,7 @@ if [ "${1:-}" = "--config" ]; then
     echo "RETRY_MAX_SECONDS:      ${RETRY_MAX_SECONDS}s"
     echo "MAX_CYCLES:             ${MAX_CYCLES:-0} (0 = unlimited)"
     echo "NOTIFY_URL:             ${NOTIFY_URL:-disabled}"
+    echo "PLUGIN_DIR:             ${PLUGIN_DIR:-disabled}"
     echo ""
     echo "--- Paths ---"
     echo "PROMPT_FILE:            $PROMPT_FILE"
@@ -973,6 +1006,12 @@ if [ "${1:-}" = "--env" ] || [ "${1:-}" = "-e" ]; then
 # Receives: {cycle, status, cost, duration_s, model, total_cost, timestamp}
 # Leave empty to disable.
 # NOTIFY_URL=
+
+# --- Plugins ---
+# Directory containing lifecycle hook scripts (pre-cycle.sh, post-cycle.sh).
+# Scripts receive context via AUTO_CO_* environment variables.
+# Leave empty to disable.
+# PLUGIN_DIR=
 
 # --- Advanced ---
 # Enable Agent Teams (experimental). Set by auto-loop.sh automatically.
@@ -1555,6 +1594,39 @@ if [ "${1:-}" = "--notify" ] || [ "${1:-}" = "-n" ]; then
     shift 2
 fi
 
+# === Plugin flag (lifecycle hooks directory) ===
+
+if [ "${1:-}" = "--plugin" ]; then
+    if [ -z "${2:-}" ]; then
+        echo "Usage: ./auto-loop.sh --plugin DIR"
+        echo ""
+        echo "Load lifecycle hook scripts from DIR."
+        echo "Supported hooks (must be executable .sh files):"
+        echo "  pre-cycle.sh   Runs before each cycle starts"
+        echo "  post-cycle.sh  Runs after each cycle completes"
+        echo ""
+        echo "Hook scripts receive context via environment variables:"
+        echo "  AUTO_CO_CYCLE          Current cycle number"
+        echo "  AUTO_CO_STATUS         Cycle result (ok/fail, post-cycle only)"
+        echo "  AUTO_CO_COST           Cycle cost in dollars (post-cycle only)"
+        echo "  AUTO_CO_DURATION       Cycle duration in seconds (post-cycle only)"
+        echo "  AUTO_CO_MODEL          Model name"
+        echo "  AUTO_CO_PROJECT_DIR    Project root directory"
+        echo "  AUTO_CO_LOG_DIR        Log directory path"
+        echo "  AUTO_CO_CONSENSUS_FILE Path to consensus.md"
+        echo ""
+        echo "Example: ./auto-loop.sh --plugin ./plugins"
+        echo "Also: PLUGIN_DIR=./plugins ./auto-loop.sh"
+        exit 1
+    fi
+    if [ ! -d "$2" ]; then
+        echo "Error: Plugin directory '$2' does not exist."
+        exit 1
+    fi
+    PLUGIN_DIR="$2"
+    shift 2
+fi
+
 # === Cost flag (cost summary from cycle history) ===
 
 if [ "${1:-}" = "--cost" ]; then
@@ -2130,7 +2202,7 @@ fi
 
 log "=== Auto-Co Loop Started (PID $$) ==="
 log "Project: $PROJECT_DIR"
-log "Model: $MODEL | Interval: ${LOOP_INTERVAL}s | Timeout: ${CYCLE_TIMEOUT_SECONDS}s | Breaker: ${MAX_CONSECUTIVE_ERRORS} errors | Max cycles: ${MAX_CYCLES:-unlimited}${NOTIFY_URL:+ | Notify: $NOTIFY_URL}"
+log "Model: $MODEL | Interval: ${LOOP_INTERVAL}s | Timeout: ${CYCLE_TIMEOUT_SECONDS}s | Breaker: ${MAX_CONSECUTIVE_ERRORS} errors | Max cycles: ${MAX_CYCLES:-unlimited}${NOTIFY_URL:+ | Notify: $NOTIFY_URL}${PLUGIN_DIR:+ | Plugins: $PLUGIN_DIR}"
 
 # === Main Loop ===
 
@@ -2162,6 +2234,9 @@ while true; do
     # Backup consensus before cycle (also used for diff logging)
     backup_consensus
     pre_cycle_consensus_hash=$(md5 -q "$CONSENSUS_FILE" 2>/dev/null || md5sum "$CONSENSUS_FILE" 2>/dev/null | cut -d' ' -f1 || echo "")
+
+    # Run pre-cycle plugin hook
+    run_plugin_hook "pre-cycle" "$loop_count"
 
     # Build prompt with consensus pre-injected
     PROMPT=$(cat "$PROMPT_FILE")
@@ -2260,6 +2335,11 @@ This is Cycle #$loop_count. Act decisively."
             continue
         fi
     fi
+
+    # Run post-cycle plugin hook
+    local post_status="ok"
+    [ -n "$cycle_failed_reason" ] && post_status="fail"
+    run_plugin_hook "post-cycle" "$loop_count" "$post_status" "${CYCLE_COST:-0}" "$cycle_duration"
 
     save_state "idle"
 

@@ -28,7 +28,7 @@ This repo is being built by an auto-co instance running itself. Here's what it h
 | Pricing page | Live at [runautoco.com/pricing](https://runautoco.com/pricing) |
 | Admin panel | Live at [runautoco.com/admin](https://runautoco.com/admin) |
 | Docker / Compose dev stack | Committed |
-| 32 CLI flags (--status, --doctor, --init, --snapshot, --schedule, --restore, --rollback, etc.) | Production-ready |
+| 33 CLI flags (--status, --doctor, --init, --snapshot, --schedule, --plugin, --restore, --rollback, etc.) | Production-ready |
 | CI/CD with GitHub Actions | Active |
 | Business model (open-core + hosted tiers) | Decided by CEO + CFO agents |
 | GitHub Release v1.1.0 | Published |
@@ -189,6 +189,7 @@ make reset-consensus # Reset to Day 0
 ./auto-loop.sh --restore SNAP --backup  # Backup current state before restoring
 ./auto-loop.sh --rollback              # Undo last restore from pre-restore backup
 ./auto-loop.sh --schedule [MIN]       # Generate launchd/cron/systemd config (default: 30)
+./auto-loop.sh --plugin DIR           # Load lifecycle hooks (pre-cycle.sh, post-cycle.sh)
 ./auto-loop.sh --logs [N]             # Show last N lines of loop log
 ./auto-loop.sh --cost                 # Show cost summary across cycles
 ./auto-loop.sh --history [N]          # Show last N cycles as table
@@ -273,6 +274,23 @@ Set `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` in `.env`. Without them, escalat
 | `TELEGRAM_BOT_TOKEN` | No | For human escalation notifications |
 | `TELEGRAM_CHAT_ID` | No | Your Telegram chat ID |
 | `LOOP_INTERVAL_SECONDS` | No | Pause between cycles (default: 300) |
+
+### Plugins (lifecycle hooks)
+
+Run custom scripts before/after each cycle with `--plugin DIR`:
+
+```bash
+mkdir plugins
+cat > plugins/post-cycle.sh << 'EOF'
+#!/bin/bash
+echo "Cycle $AUTO_CO_CYCLE finished with status $AUTO_CO_STATUS (cost: $AUTO_CO_COST)"
+EOF
+chmod +x plugins/post-cycle.sh
+
+./auto-loop.sh --plugin ./plugins
+```
+
+Hook scripts receive context via `AUTO_CO_*` environment variables. Hooks time out after 10 seconds to prevent stalling the loop.
 
 ---
 
