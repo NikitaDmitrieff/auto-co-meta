@@ -446,141 +446,230 @@ function Sandbox() {
   );
 }
 
-// =================== LIVE DASHBOARD SECTION ===================
+// =================== TABBED DASHBOARD ===================
 
-function MetricsRow({ liveMetrics }: { liveMetrics: ReturnType<typeof useLiveMetrics> }) {
-  const items = [
-    { label: "Cycles Completed", value: liveMetrics ? String(liveMetrics.cyclesCompleted) : "38", accent: true },
-    { label: "Page Views", value: liveMetrics ? liveMetrics.pageViews.toLocaleString() : "208+", accent: true },
-    { label: "Total Cost", value: liveMetrics ? `$${liveMetrics.totalCost.toFixed(2)}` : "~$56", accent: false },
-    { label: "Cost / Cycle", value: liveMetrics ? `$${liveMetrics.avgCostPerCycle.toFixed(2)}` : "$1.43", accent: true },
-  ];
+const TABS = [
+  { id: "activity", label: "Activity", icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" },
+  { id: "agents", label: "Agents", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" },
+  { id: "financials", label: "Financials", icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" },
+  { id: "cycles", label: "Cycles", icon: "M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" },
+] as const;
+
+type TabId = (typeof TABS)[number]["id"];
+
+function TabActivityContent() {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      {items.map((m, i) => (
-        <motion.div key={m.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="stat-card">
-          <div className={`text-2xl font-bold mb-1 ${m.accent ? "text-orange-400" : "text-white"}`}>{m.value}</div>
-          <div className="text-xs text-zinc-400 font-medium">{m.label}</div>
+    <div className="divide-y divide-white/[0.04]">
+      {REAL_FEED.map((msg, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: i * 0.04 }}
+          className={`px-5 py-4 flex gap-3 ${msg.highlight ? "bg-orange-500/[0.04] border-l-2 border-orange-500/30" : "hover:bg-white/[0.02]"}`}
+        >
+          <AgentAvatar agent={msg.agent} />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-baseline gap-2 mb-1">
+              <span className="text-sm font-semibold text-white">{msg.agent.name}</span>
+              <span className="text-xs text-zinc-600">{msg.agent.role}</span>
+              <span className="text-xs text-zinc-700 ml-auto flex-shrink-0 tabular-nums">{msg.time}</span>
+            </div>
+            <p className="text-sm text-zinc-400 leading-relaxed">{msg.msg}</p>
+          </div>
         </motion.div>
       ))}
     </div>
   );
 }
 
-function LiveActivityFeed() {
-  return (
-    <Panel
-      title="Agent Activity"
-      className="h-full"
-      badge={
-        <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          LIVE
-        </div>
-      }
-    >
-      <div className="overflow-y-auto max-h-[480px] divide-y divide-white/[0.04]">
-        {REAL_FEED.map((msg, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: i * 0.05 }}
-            className={`px-4 py-3.5 flex gap-3 ${msg.highlight ? "bg-orange-500/[0.04] border-l-2 border-orange-500/30" : "hover:bg-white/[0.02]"}`}
-          >
-            <AgentAvatar agent={msg.agent} />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-sm font-semibold text-white">{msg.agent.name}</span>
-                <span className="text-xs text-zinc-600">{msg.agent.role}</span>
-                <span className="text-xs text-zinc-700 ml-auto flex-shrink-0 tabular-nums">{msg.time}</span>
-              </div>
-              <p className="text-sm text-zinc-400 leading-relaxed">{msg.msg}</p>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </Panel>
-  );
-}
-
-function CycleTimeline() {
-  const totalCost = REAL_CYCLES.reduce((s, c) => s + c.cost, 0);
-  return (
-    <Panel title="Cycle History" badge={<span className="text-xs text-zinc-600">{REAL_CYCLES.length} cycles &middot; ${totalCost.toFixed(2)} total</span>}>
-      <div className="overflow-y-auto max-h-[260px]">
-        <div className="space-y-0.5 px-2 py-2">
-          {[...REAL_CYCLES].reverse().map((c, i) => (
-            <motion.div
-              key={c.num}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: i * 0.02 }}
-              className={`flex items-center gap-2.5 px-2 py-1.5 rounded-md ${i === 0 ? "bg-orange-500/[0.06]" : "hover:bg-white/[0.02]"}`}
-            >
-              <div className={`w-5 h-5 rounded flex items-center justify-center flex-shrink-0 ${i === 0 ? "border border-orange-500/40" : "bg-white/[0.04]"}`}>
-                {i === 0 ? (
-                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
-                ) : (
-                  <svg className="w-2.5 h-2.5 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-              </div>
-              <span className={`text-xs font-mono flex-shrink-0 ${i === 0 ? "text-orange-400" : "text-zinc-600"}`}>C{c.num}</span>
-              <span className={`text-xs truncate flex-1 ${i === 0 ? "text-zinc-300" : "text-zinc-600"}`}>{c.what}</span>
-              <span className="text-xs text-zinc-700 flex-shrink-0 tabular-nums">${c.cost.toFixed(2)}</span>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </Panel>
-  );
-}
-
-function AgentRoster() {
+function TabAgentsContent() {
   const activeCount = 9;
+  const groups = [
+    { name: "Strategy", agents: [AGENTS.CEO, AGENTS.CTO, AGENTS.CRIT] },
+    { name: "Product", agents: [AGENTS.PRD, AGENTS.UI, AGENTS.IX] },
+    { name: "Engineering", agents: [AGENTS.ENG, AGENTS.QA, AGENTS.DVP] },
+    { name: "Business", agents: [AGENTS.MKT, AGENTS.OPS, AGENTS.SLS, AGENTS.CFO] },
+    { name: "Intelligence", agents: [AGENTS.RES] },
+  ];
+
   return (
-    <Panel title="Agent Roster" badge={<span className="text-xs text-zinc-500"><span className="text-emerald-400 font-semibold">{activeCount}</span> active</span>}>
-      <div className="px-4 py-3">
-        <div className="grid grid-cols-7 gap-x-2 gap-y-3">
-          {ALL_AGENTS.map((a, i) => {
-            const active = i < activeCount;
-            return (
-              <motion.div key={a.initials} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.03 }} className="flex flex-col items-center gap-1 group">
-                <div className="relative">
-                  <AgentAvatar agent={a} size="sm" dim={!active} />
-                  <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border-2 border-black ${active ? "bg-emerald-400" : "bg-zinc-700"}`} />
-                </div>
-                <span className={`text-[8px] text-center truncate w-full ${active ? "text-zinc-500" : "text-zinc-700"}`}>{a.role.split(" ")[0]}</span>
-              </motion.div>
-            );
-          })}
+    <div className="p-5 space-y-6">
+      {/* Summary */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="bg-white/[0.025] rounded-lg px-4 py-3 text-center">
+          <div className="text-2xl font-bold text-emerald-400">{activeCount}</div>
+          <div className="text-xs text-zinc-500 mt-0.5">Active</div>
+        </div>
+        <div className="bg-white/[0.025] rounded-lg px-4 py-3 text-center">
+          <div className="text-2xl font-bold text-zinc-600">{ALL_AGENTS.length - activeCount}</div>
+          <div className="text-xs text-zinc-500 mt-0.5">Idle</div>
+        </div>
+        <div className="bg-white/[0.025] rounded-lg px-4 py-3 text-center">
+          <div className="text-2xl font-bold text-white">{ALL_AGENTS.length}</div>
+          <div className="text-xs text-zinc-500 mt-0.5">Total</div>
         </div>
       </div>
-    </Panel>
+
+      {/* Groups */}
+      {groups.map((group) => (
+        <div key={group.name}>
+          <div className="text-[10px] text-zinc-600 uppercase tracking-widest mb-3">{group.name} Layer</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {group.agents.map((a, i) => {
+              const active = ALL_AGENTS.indexOf(a) < activeCount;
+              return (
+                <motion.div
+                  key={a.initials}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors ${active ? "border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04]" : "border-transparent opacity-40"}`}
+                >
+                  <div className="relative">
+                    <AgentAvatar agent={a} size="sm" />
+                    <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-black ${active ? "bg-emerald-400" : "bg-zinc-700"}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-white truncate">{a.name}</div>
+                    <div className="text-[10px] text-zinc-500">{a.role}</div>
+                  </div>
+                  <span className={`ml-auto text-[10px] px-1.5 py-0.5 rounded ${active ? "text-emerald-400 bg-emerald-400/10" : "text-zinc-600"}`}>
+                    {active ? "Active" : "Idle"}
+                  </span>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
-function FinancialSummary() {
+function TabFinancialsContent({ liveMetrics }: { liveMetrics: ReturnType<typeof useLiveMetrics> }) {
   const totalCost = REAL_CYCLES.reduce((s, c) => s + c.cost, 0);
-  const stats = [
-    { label: "Total spent", value: `$${totalCost.toFixed(2)}`, accent: false },
-    { label: "Revenue", value: "$0", muted: true },
-    { label: "Avg / cycle", value: `$${(totalCost / REAL_CYCLES.length).toFixed(2)}`, accent: true },
-    { label: "Break-even", value: "1 customer", accent: true },
-  ];
+  const cumulativeCosts = (() => {
+    let cum = 0;
+    return REAL_CYCLES.map((c) => { cum += c.cost; return Math.round(cum * 100) / 100; });
+  })();
+
+  // SVG chart
+  const W = 100, H = 50, pad = 2;
+  const max = cumulativeCosts[cumulativeCosts.length - 1];
+  const pts = cumulativeCosts.map((v, i) => ({
+    x: (i / (cumulativeCosts.length - 1)) * W,
+    y: H - pad - ((v / max) * (H - pad * 2)),
+  }));
+  const linePath = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+  const fillPath = `${linePath} L ${W} ${H} L 0 ${H} Z`;
+
   return (
-    <Panel title="Financials" badge={<span className="text-xs text-zinc-600">real data</span>}>
-      <div className="px-4 py-3 grid grid-cols-2 gap-2">
-        {stats.map((s) => (
-          <div key={s.label} className="bg-white/[0.025] rounded-lg px-3 py-2.5">
-            <div className={`text-lg font-bold ${s.muted ? "text-zinc-600" : s.accent ? "text-orange-400" : "text-white"}`}>{s.value}</div>
-            <div className="text-[10px] text-zinc-500">{s.label}</div>
+    <div className="p-5 space-y-5">
+      {/* Key metrics */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { label: "Total Spent", value: liveMetrics ? `$${liveMetrics.totalCost.toFixed(2)}` : `$${totalCost.toFixed(2)}`, accent: false },
+          { label: "Revenue", value: "$0", muted: true },
+          { label: "Avg / Cycle", value: liveMetrics ? `$${liveMetrics.avgCostPerCycle.toFixed(2)}` : `$${(totalCost / REAL_CYCLES.length).toFixed(2)}`, accent: true },
+          { label: "Monthly Burn", value: "~$5", sub: "Railway hosting", accent: false },
+        ].map((s) => (
+          <div key={s.label} className="bg-white/[0.025] rounded-lg px-4 py-3">
+            <div className={`text-xl font-bold ${"muted" in s && s.muted ? "text-zinc-600" : s.accent ? "text-orange-400" : "text-white"}`}>{s.value}</div>
+            <div className="text-[10px] text-zinc-500 mt-0.5">{s.label}</div>
           </div>
         ))}
       </div>
-    </Panel>
+
+      {/* Cost chart */}
+      <div className="glass-card p-4">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs text-zinc-400 font-medium">Cumulative Cost</span>
+          <span className="text-xs text-zinc-600">${cumulativeCosts[0].toFixed(2)} &rarr; ${max.toFixed(2)}</span>
+        </div>
+        <div className="h-32 w-full">
+          <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="w-full h-full">
+            <defs>
+              <linearGradient id="costFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#f97316" stopOpacity="0.25" />
+                <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path d={fillPath} fill="url(#costFill)" />
+            <path d={linePath} fill="none" stroke="#f97316" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+            <circle cx={pts[pts.length - 1].x.toFixed(1)} cy={pts[pts.length - 1].y.toFixed(1)} r="2" fill="#f97316" vectorEffect="non-scaling-stroke" />
+          </svg>
+        </div>
+        <div className="flex justify-between mt-1">
+          {[1, 10, 20, 30, REAL_CYCLES.length].map((n) => (
+            <span key={n} className="text-[9px] text-zinc-700 tabular-nums">C{n}</span>
+          ))}
+        </div>
+      </div>
+
+      {/* Break-even */}
+      <div className="glass-card p-4 flex items-center justify-between">
+        <div>
+          <div className="text-sm font-medium text-white">Break-even point</div>
+          <div className="text-xs text-zinc-500 mt-0.5">Total investment to date: ${totalCost.toFixed(2)}</div>
+        </div>
+        <div className="text-right">
+          <div className="text-lg font-bold text-orange-400">1 customer</div>
+          <div className="text-[10px] text-zinc-500">&times; $49/mo = covered in 2 months</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TabCyclesContent() {
+  const totalCost = REAL_CYCLES.reduce((s, c) => s + c.cost, 0);
+  const completed = REAL_CYCLES.length;
+
+  return (
+    <div className="p-5 space-y-5">
+      {/* Progress bar */}
+      <div className="glass-card p-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-white">Cycle {completed} running now</span>
+          <span className="text-xs text-zinc-500">${totalCost.toFixed(2)} total</span>
+        </div>
+        <div className="h-2 bg-white/[0.06] rounded-full overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: "100%" }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full"
+          />
+        </div>
+      </div>
+
+      {/* Timeline */}
+      <div className="space-y-0.5">
+        {[...REAL_CYCLES].reverse().map((c, i) => (
+          <motion.div
+            key={c.num}
+            initial={{ opacity: 0, x: -4 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.015 }}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${i === 0 ? "bg-orange-500/[0.06] border border-orange-500/20" : "hover:bg-white/[0.02]"}`}
+          >
+            <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 ${i === 0 ? "bg-orange-500/20 border border-orange-500/30" : "bg-white/[0.04]"}`}>
+              {i === 0 ? (
+                <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+              ) : (
+                <svg className="w-3 h-3 text-zinc-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+            <span className={`text-xs font-mono w-8 flex-shrink-0 ${i === 0 ? "text-orange-400 font-semibold" : "text-zinc-600"}`}>C{c.num}</span>
+            <span className={`text-sm flex-1 ${i === 0 ? "text-white font-medium" : "text-zinc-500"}`}>{c.what}</span>
+            <span className={`text-xs tabular-nums flex-shrink-0 ${i === 0 ? "text-orange-400" : "text-zinc-700"}`}>${c.cost.toFixed(2)}</span>
+          </motion.div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -589,6 +678,7 @@ function FinancialSummary() {
 export default function DemoPage() {
   const stars = useGitHubStars("NikitaDmitrieff/auto-co-meta");
   const liveMetrics = useLiveMetrics();
+  const [activeTab, setActiveTab] = useState<TabId>("activity");
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -620,40 +710,80 @@ export default function DemoPage() {
       </header>
 
       <main className="relative max-w-[1400px] mx-auto px-6 py-10">
+        {/* Part 1: Interactive sandbox */}
         <Sandbox />
 
+        {/* Divider */}
         <div className="border-t border-white/[0.06] my-12 relative">
           <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black px-4 text-xs text-zinc-600 uppercase tracking-widest">
             Live from auto-co-meta
           </div>
         </div>
 
+        {/* Part 2: Tabbed dashboard */}
         <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-xl font-bold text-white">Auto-Co Dashboard</h2>
-              <p className="text-sm text-zinc-500 mt-0.5">This AI company has been running autonomously for {liveMetrics?.cyclesCompleted ?? 38}+ cycles</p>
-            </div>
-            <span className="text-xs text-zinc-600 hidden sm:block">Real data &middot; Updated every cycle</span>
+          {/* Metrics strip */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            {[
+              { label: "Cycles", value: liveMetrics ? String(liveMetrics.cyclesCompleted) : "38", accent: true },
+              { label: "Page Views", value: liveMetrics ? liveMetrics.pageViews.toLocaleString() : "208+", accent: true },
+              { label: "Total Cost", value: liveMetrics ? `$${liveMetrics.totalCost.toFixed(2)}` : "~$56", accent: false },
+              { label: "Avg / Cycle", value: liveMetrics ? `$${liveMetrics.avgCostPerCycle.toFixed(2)}` : "$1.43", accent: true },
+            ].map((m, i) => (
+              <motion.div key={m.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} className="stat-card">
+                <div className={`text-2xl font-bold mb-0.5 ${m.accent ? "text-orange-400" : "text-white"}`}>{m.value}</div>
+                <div className="text-[10px] text-zinc-500">{m.label}</div>
+              </motion.div>
+            ))}
           </div>
 
-          <MetricsRow liveMetrics={liveMetrics} />
-
-          <div className="grid grid-cols-12 gap-5 mt-5">
-            <div className="col-span-12 lg:col-span-7">
-              <LiveActivityFeed />
+          {/* Tab bar */}
+          <div className="glass-card">
+            <div className="flex border-b border-white/[0.05]">
+              {TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium transition-colors relative ${
+                    activeTab === tab.id ? "text-orange-400" : "text-zinc-500 hover:text-zinc-300"
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={tab.icon} />
+                  </svg>
+                  {tab.label}
+                  {activeTab === tab.id && (
+                    <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
+                  )}
+                </button>
+              ))}
+              <div className="ml-auto flex items-center pr-4">
+                <div className="flex items-center gap-1.5 text-xs text-emerald-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  LIVE
+                </div>
+              </div>
             </div>
-            <div className="col-span-12 lg:col-span-5 flex flex-col gap-5">
-              <CycleTimeline />
-              <FinancialSummary />
-            </div>
-          </div>
 
-          <div className="mt-5">
-            <AgentRoster />
+            {/* Tab content */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.2 }}
+              >
+                {activeTab === "activity" && <TabActivityContent />}
+                {activeTab === "agents" && <TabAgentsContent />}
+                {activeTab === "financials" && <TabFinancialsContent liveMetrics={liveMetrics} />}
+                {activeTab === "cycles" && <TabCyclesContent />}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </motion.div>
 
+        {/* Bottom CTA */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
