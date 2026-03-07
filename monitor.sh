@@ -11,6 +11,7 @@
 #   ./monitor.sh --cycles   # Summary of all cycles (from log)
 #   ./monitor.sh --costs    # Cost analytics from cycle history
 #   ./monitor.sh --history  # Tabular cycle history
+#   ./monitor.sh --dashboard # Live-updating compact dashboard
 # ============================================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -143,6 +144,91 @@ case "${1:-}" in
         else
             echo "No cycle history yet."
         fi
+        ;;
+
+    --dashboard)
+        HISTORY_FILE="$LOG_DIR/cycle-history.jsonl"
+        while true; do
+            clear
+            echo "╔══════════════════════════════════════════════════════════╗"
+            echo "║              Auto-Co Dashboard  (Ctrl+C to stop)       ║"
+            echo "╚══════════════════════════════════════════════════════════╝"
+            echo ""
+
+            # Loop status
+            if [ -f "$PID_FILE" ]; then
+                pid=$(cat "$PID_FILE")
+                if kill -0 "$pid" 2>/dev/null; then
+                    printf "  Loop: \033[32mRUNNING\033[0m (PID $pid)"
+                else
+                    printf "  Loop: \033[31mSTOPPED\033[0m (stale PID)"
+                fi
+            else
+                printf "  Loop: \033[33mNOT RUNNING\033[0m"
+            fi
+
+            if [ -f "$PAUSE_FLAG" ]; then
+                printf "  |  Daemon: PAUSED"
+            fi
+
+            # State info
+            if [ -f "$STATE_FILE" ]; then
+                status=$(grep '^STATUS=' "$STATE_FILE" | cut -d= -f2)
+                model=$(grep '^MODEL=' "$STATE_FILE" | cut -d= -f2)
+                loop_count=$(grep '^LOOP_COUNT=' "$STATE_FILE" | cut -d= -f2)
+                last_run=$(grep '^LAST_RUN=' "$STATE_FILE" | cut -d= -f2-)
+                printf "  |  Status: %s  |  Model: %s\n" "${status:-?}" "${model:-?}"
+                printf "  Internal cycle: %s  |  Last: %s\n" "${loop_count:-?}" "${last_run:-?}"
+            else
+                echo ""
+            fi
+
+            echo ""
+
+            # Cost summary from history
+            if [ -f "$HISTORY_FILE" ] && [ -s "$HISTORY_FILE" ] && command -v jq &>/dev/null; then
+                total=$(jq -s '[.[].cost] | add' "$HISTORY_FILE")
+                count=$(jq -s 'length' "$HISTORY_FILE")
+                ok=$(jq -s '[.[] | select(.status=="ok")] | length' "$HISTORY_FILE")
+                fail=$(jq -s '[.[] | select(.status=="fail")] | length' "$HISTORY_FILE")
+                avg=$(jq -s 'if length > 0 then ([.[].cost] | add) / length | . * 100 | floor / 100 else 0 end' "$HISTORY_FILE")
+                avg_dur=$(jq -s 'if length > 0 then ([.[].duration_s] | add) / length | floor else 0 end' "$HISTORY_FILE")
+
+                echo "  ┌─────────────────────────────────────────────────────┐"
+                printf "  │  Cycles: %-5s  OK: %-5s  Fail: %-5s             │\n" "$count" "$ok" "$fail"
+                printf "  │  Total cost: \$%-10s  Avg: \$%-8s/cycle       │\n" "$total" "$avg"
+                printf "  │  Avg duration: %ss/cycle                          │\n" "$avg_dur"
+                echo "  └─────────────────────────────────────────────────────┘"
+
+                echo ""
+                echo "  Last 10 cycles:"
+                printf "  %-6s %-6s %-9s %-8s %s\n" "Cycle" "Status" "Cost" "Duration" "Model"
+                echo "  ────── ────── ───────── ──────── ──────"
+                jq -r '"\(.cycle)\t\(.status)\t$\(.cost)\t\(.duration_s)s\t\(.model)"' "$HISTORY_FILE" \
+                    | tail -10 \
+                    | while IFS=$'\t' read -r cyc st cost dur model; do
+                        if [ "$st" = "ok" ]; then
+                            printf "  %-6s \033[32m%-6s\033[0m %-9s %-8s %s\n" "$cyc" "$st" "$cost" "$dur" "$model"
+                        else
+                            printf "  %-6s \033[31m%-6s\033[0m %-9s %-8s %s\n" "$cyc" "$st" "$cost" "$dur" "$model"
+                        fi
+                    done
+            else
+                echo "  No cycle history available."
+            fi
+
+            echo ""
+
+            # Consensus snippet
+            if [ -f "$PROJECT_DIR/memories/consensus.md" ]; then
+                echo "  Next Action:"
+                sed -n '/^## Next Action/,/^##/{/^## Next Action/d;/^##/d;p;}' "$PROJECT_DIR/memories/consensus.md" | head -3 | sed 's/^/    /'
+            fi
+
+            echo ""
+            echo "  $(date '+%H:%M:%S') — refreshing every 10s"
+            sleep 10
+        done
         ;;
 
     *)
