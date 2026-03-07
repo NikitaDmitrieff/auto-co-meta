@@ -1,4 +1,4 @@
-.PHONY: start start-awake awake stop status last cycles monitor health alerts compare trend selftest version bump-version dry-run quick-status changelog config lint pause resume install uninstall team watcher dashboard dashboard-build docker-start docker-stop docker-logs help
+.PHONY: start start-awake awake stop status last cycles monitor health alerts compare trend selftest version bump-version dry-run quick-status changelog config lint test pause resume install uninstall team watcher dashboard dashboard-build docker-start docker-stop docker-logs help
 
 # === Quick Start ===
 
@@ -79,6 +79,13 @@ lint: ## Run shellcheck on all shell scripts
 	rc=$$?; \
 	if [ $$rc -eq 0 ]; then echo "All scripts passed."; else echo "shellcheck found issues (exit $$rc)."; fi; \
 	exit $$rc
+
+test: ## Run selftest + lint together
+	@echo "=== Running selftest ==="
+	@./auto-loop.sh --selftest
+	@echo ""
+	@echo "=== Running lint ==="
+	@$(MAKE) --no-print-directory lint
 
 changelog: ## Generate changelog from git log (optional: SINCE=v0.50.0)
 	@since=$${SINCE:-}; \

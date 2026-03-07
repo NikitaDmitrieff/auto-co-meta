@@ -151,6 +151,7 @@ make quick-status    # Quick status from state file
 make changelog       # Generate changelog from git log (SINCE=v0.50.0)
 make config          # Print all loop configuration values
 make lint            # Run shellcheck on all shell scripts
+make test            # Run selftest + lint together
 make version         # Show current version
 make reset-consensus # Reset to Day 0
 ```
@@ -163,7 +164,8 @@ make reset-consensus # Reset to Day 0
 ./auto-loop.sh --help       # Show full help message
 ./auto-loop.sh --selftest   # Validate environment (11 checks)
 ./auto-loop.sh --dry-run    # Build prompt + show preview, don't run
-./auto-loop.sh --status     # Quick status from state file
+./auto-loop.sh --status     # Quick status with cycle duration stats
+./auto-loop.sh --status --json  # Machine-readable JSON output
 ./auto-loop.sh --config     # Print all config values
 ./auto-loop.sh --version    # Show version
 ```

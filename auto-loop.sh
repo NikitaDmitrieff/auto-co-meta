@@ -12,6 +12,7 @@
 #   ./auto-loop.sh --selftest   # Validate environment without running
 #   ./auto-loop.sh --dry-run    # Build prompt + show preview, don't run
 #   ./auto-loop.sh --status     # Quick status from state file
+#   ./auto-loop.sh --status --json  # Machine-readable JSON status
 #   ./auto-loop.sh --config     # Print all config values
 #   ./auto-loop.sh --version    # Show version
 #
@@ -304,7 +305,8 @@ USAGE:
   ./auto-loop.sh --help       Show this help message
   ./auto-loop.sh --version    Show version
   ./auto-loop.sh --config     Print all config values
-  ./auto-loop.sh --status     Quick status check
+  ./auto-loop.sh --status     Quick status check (with cycle stats)
+  ./auto-loop.sh --status --json  Machine-readable JSON output
   ./auto-loop.sh --selftest   Validate environment
   ./auto-loop.sh --dry-run    Preview prompt without running
 
@@ -379,6 +381,12 @@ fi
 # === Status flag (quick check without monitor.sh) ===
 
 if [ "${1:-}" = "--status" ]; then
+    json_mode=0
+    if [ "${2:-}" = "--json" ]; then
+        json_mode=1
+    fi
+
+    status="unknown"; loop_ct=0; last_run=""; model_st="unknown"; total_ct=0
     if [ -f "$STATE_FILE" ]; then
         status=$(grep '^STATUS=' "$STATE_FILE" | cut -d= -f2)
         loop_ct=$(grep '^LOOP_COUNT=' "$STATE_FILE" | cut -d= -f2)
@@ -388,13 +396,77 @@ if [ "${1:-}" = "--status" ]; then
     fi
 
     # Loop running?
+    loop_state="not_running"
+    loop_pid=""
     if [ -f "$PID_FILE" ]; then
-        pid=$(cat "$PID_FILE")
-        if kill -0 "$pid" 2>/dev/null; then
-            printf "Loop: RUNNING (PID %s)  " "$pid"
+        loop_pid=$(cat "$PID_FILE")
+        if kill -0 "$loop_pid" 2>/dev/null; then
+            loop_state="running"
         else
-            printf "Loop: STOPPED (stale PID)  "
+            loop_state="stopped_stale"
         fi
+    fi
+
+    # Cycle duration stats from history
+    avg_dur=0; min_dur=0; max_dur=0; ok_cycles=0; fail_cycles=0
+    if [ -f "$CYCLE_HISTORY_FILE" ] && command -v jq &>/dev/null; then
+        stats=$(jq -s '
+            if length == 0 then {avg:0,min:0,max:0,ok:0,fail:0}
+            else {
+                avg: ([.[].duration_s] | add / length | floor),
+                min: ([.[].duration_s] | min),
+                max: ([.[].duration_s] | max),
+                ok:  [.[] | select(.status=="ok")] | length,
+                fail: [.[] | select(.status=="fail")] | length
+            } end' "$CYCLE_HISTORY_FILE" 2>/dev/null || echo '{"avg":0,"min":0,"max":0,"ok":0,"fail":0}')
+        avg_dur=$(echo "$stats" | jq -r '.avg')
+        min_dur=$(echo "$stats" | jq -r '.min')
+        max_dur=$(echo "$stats" | jq -r '.max')
+        ok_cycles=$(echo "$stats" | jq -r '.ok')
+        fail_cycles=$(echo "$stats" | jq -r '.fail')
+    fi
+
+    # Next Action from consensus
+    next_action=""
+    if [ -f "$CONSENSUS_FILE" ]; then
+        next_action=$(sed -n '/^## Next Action/,/^##/{/^## Next Action/d;/^##/d;p;}' "$CONSENSUS_FILE" | head -1 | sed 's/^[[:space:]]*//')
+    fi
+
+    if [ "$json_mode" -eq 1 ]; then
+        jq -n \
+            --arg loop_state "$loop_state" \
+            --arg loop_pid "$loop_pid" \
+            --arg status "${status:-unknown}" \
+            --arg model "${model_st:-unknown}" \
+            --argjson cycles "${loop_ct:-0}" \
+            --arg total_cost "${total_ct:-0}" \
+            --arg last_run "${last_run:-}" \
+            --argjson avg_duration "$avg_dur" \
+            --argjson min_duration "$min_dur" \
+            --argjson max_duration "$max_dur" \
+            --argjson ok_cycles "$ok_cycles" \
+            --argjson fail_cycles "$fail_cycles" \
+            --arg next_action "$next_action" \
+            '{
+                loop: $loop_state,
+                pid: (if $loop_pid == "" then null else ($loop_pid | tonumber) end),
+                status: $status,
+                model: $model,
+                cycles: $cycles,
+                total_cost: ($total_cost | tonumber),
+                last_run: (if $last_run == "" then null else $last_run end),
+                duration: {avg_s: $avg_duration, min_s: $min_duration, max_s: $max_duration},
+                results: {ok: $ok_cycles, fail: $fail_cycles},
+                next_action: (if $next_action == "" then null else $next_action end)
+            }'
+        exit 0
+    fi
+
+    # Human-readable output
+    if [ "$loop_state" = "running" ]; then
+        printf "Loop: RUNNING (PID %s)  " "$loop_pid"
+    elif [ "$loop_state" = "stopped_stale" ]; then
+        printf "Loop: STOPPED (stale PID)  "
     else
         printf "Loop: NOT RUNNING  "
     fi
@@ -406,12 +478,14 @@ if [ "${1:-}" = "--status" ]; then
         echo "Last run: $last_run"
     fi
 
-    # Show Next Action from consensus
-    if [ -f "$CONSENSUS_FILE" ]; then
-        next=$(sed -n '/^## Next Action/,/^##/{/^## Next Action/d;/^##/d;p;}' "$CONSENSUS_FILE" | head -3)
-        if [ -n "$next" ]; then
-            echo "Next: $(echo "$next" | head -1 | sed 's/^[[:space:]]*//')"
-        fi
+    # Show cycle duration stats
+    if [ "$ok_cycles" -gt 0 ] || [ "$fail_cycles" -gt 0 ]; then
+        printf "Cycles: %s ok, %s fail  Duration: avg %ss, min %ss, max %ss\n" \
+            "$ok_cycles" "$fail_cycles" "$avg_dur" "$min_dur" "$max_dur"
+    fi
+
+    if [ -n "$next_action" ]; then
+        echo "Next: $next_action"
     fi
     exit 0
 fi
