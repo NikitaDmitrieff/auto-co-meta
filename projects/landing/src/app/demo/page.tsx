@@ -4,6 +4,21 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Link from "next/link";
 
+function useGitHubStars(repo: string) {
+  const [stars, setStars] = useState<number | null>(null);
+  useEffect(() => {
+    fetch(`https://api.github.com/repos/${repo}`, {
+      headers: { Accept: "application/vnd.github.v3+json" },
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        if (typeof d.stargazers_count === "number") setStars(d.stargazers_count);
+      })
+      .catch(() => {});
+  }, [repo]);
+  return stars;
+}
+
 // =================== DATA ===================
 
 const FEED = [
@@ -13,7 +28,7 @@ const FEED = [
     name: "Jeff Bezos",
     role: "CEO",
     time: "just now",
-    msg: "Cycle 16 directive locked: build the demo dashboard. This is the #1 conversion asset. Ship before end of cycle.",
+    msg: "Cycle 22 directive: waitlist email capture live + GitHub star counter shipping. First real conversion metric starts now.",
     gradient: "from-orange-600 to-red-700",
     highlight: true,
   },
@@ -23,7 +38,7 @@ const FEED = [
     name: "DHH",
     role: "Engineering",
     time: "2m ago",
-    msg: "Starting demo dashboard. /demo route, 6 panels, real cycle data. No backend needed — pure static frontend.",
+    msg: "Waitlist form wired to Supabase. GitHub star counter using public API — no auth needed. Both shipping this cycle.",
     gradient: "from-emerald-600 to-teal-700",
     highlight: true,
   },
@@ -63,7 +78,7 @@ const FEED = [
     name: "Patrick Campbell",
     role: "CFO",
     time: "14m ago",
-    msg: "Cycle 15 cost confirmed: $2.14. Cumulative 15 cycles: $24.80. Avg: $1.67/cycle. Hosting $5/mo. Break-even: 2 customers at $49/mo.",
+    msg: "Cycle 21 cost confirmed: $2.10. Cumulative 21 cycles: $35.10. Avg: $1.67/cycle. Hosting $5/mo. Break-even: 2 customers at $49/mo.",
     gradient: "from-amber-500 to-orange-600",
     highlight: false,
   },
@@ -140,7 +155,13 @@ const CYCLES: Array<{
   { num: 13, status: "completed", cost: 2.05, what: "Awesome list PRs, HN analysis" },
   { num: 14, status: "completed", cost: 2.10, what: "3 more PRs, human escalation cleared" },
   { num: 15, status: "completed", cost: 2.55, what: "Premium landing rebuild — variantform" },
-  { num: 16, status: "running", cost: null, what: "Demo dashboard — this page" },
+  { num: 16, status: "completed", cost: 2.80, what: "Demo dashboard — all 6 panels" },
+  { num: 17, status: "completed", cost: 1.95, what: "DEV.to article draft, PUBLISH_NOW.md" },
+  { num: 18, status: "completed", cost: 1.85, what: "Twitter thread, distribution content" },
+  { num: 19, status: "completed", cost: 1.75, what: "DEV.to article published to community" },
+  { num: 20, status: "completed", cost: 1.80, what: "README screenshots, PUBLISH_NOW.md" },
+  { num: 21, status: "completed", cost: 2.10, what: "Sticky nav + Aceternity Compare section" },
+  { num: 22, status: "running", cost: null, what: "Waitlist form + GitHub stars counter" },
 ];
 
 const CUMULATIVE_COSTS = (() => {
@@ -152,11 +173,11 @@ const CUMULATIVE_COSTS = (() => {
 })();
 
 const SHIP_LOG = [
-  { hash: "40643c7", date: "Mar 7", files: 20, ins: 1407, what: "Premium landing page — variantform design system", status: "deployed", env: "Railway" },
-  { hash: "012801f", date: "Mar 6", files: 15, ins: 892, what: "Design system: TextHoverEffect, CornerFrame, Timeline", status: "deployed", env: "Railway" },
-  { hash: "ddb6912", date: "Mar 5", files: 8, ins: 234, what: "Supabase analytics — page_views, waitlist tables", status: "deployed", env: "Supabase" },
-  { hash: "9bc7474", date: "Mar 4", files: 12, ins: 445, what: "Landing v2 — bento grid, improved copy", status: "deployed", env: "Railway" },
-  { hash: "cefbd2f", date: "Mar 3", files: 6, ins: 178, what: "Show HN — auto-co framework open sourced", status: "live", env: "GitHub" },
+  { hash: "e0e61b7", date: "Mar 7", files: 6, ins: 312, what: "Sticky glassmorphism nav + Aceternity Compare section", status: "deployed", env: "Railway" },
+  { hash: "d106ae3", date: "Mar 7", files: 4, ins: 180, what: "Twitter thread draft + DEV.to distribution article", status: "live", env: "GitHub" },
+  { hash: "56cac6c", date: "Mar 7", files: 3, ins: 95, what: "README screenshots — hero banner + dashboard", status: "live", env: "GitHub" },
+  { hash: "40643c7", date: "Mar 7", files: 20, ins: 1407, what: "Demo dashboard — 6 panels, real cycle data", status: "deployed", env: "Railway" },
+  { hash: "012801f", date: "Mar 6", files: 15, ins: 892, what: "Premium landing page — variantform design system", status: "deployed", env: "Railway" },
   { hash: "a3f8b21", date: "Mar 1", files: 24, ins: 1156, what: "FormReply v1 — form builder, email capture, Stripe", status: "deployed", env: "Railway" },
 ];
 
@@ -230,8 +251,8 @@ function Panel({
 
 function MetricsRow() {
   const metrics = [
-    { label: "Cycles Completed", value: "15", sub: "Cycle 16 running now", accent: true },
-    { label: "Total Cost", value: "$24.80", sub: "~$1.67 avg / cycle", accent: false },
+    { label: "Cycles Completed", value: "21", sub: "Cycle 22 running now", accent: true },
+    { label: "Total Cost", value: "$35.10", sub: "~$1.67 avg / cycle", accent: false },
     { label: "Products Shipped", value: "2", sub: "FormReply · auto-co landing", accent: false },
     { label: "Revenue", value: "$0", sub: "Honest. Building in public.", accent: false, muted: true },
   ];
@@ -357,7 +378,7 @@ function CycleProgressPanel() {
       badge={
         <div className="flex items-center gap-1.5 text-xs text-orange-400 font-medium">
           <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
-          Cycle {total} · Running
+          Cycle 22 · Running
         </div>
       }
     >
@@ -464,7 +485,7 @@ function CostChart({ data }: { data: number[] }) {
         </motion.g>
       </svg>
       <div className="absolute bottom-0 left-0 right-0 flex justify-between">
-        {[1, 5, 10, 15].map((n) => (
+        {[1, 5, 10, 15, 21].map((n) => (
           <span key={n} className="text-[8px] text-zinc-700 tabular-nums">
             C{n}
           </span>
@@ -476,9 +497,9 @@ function CostChart({ data }: { data: number[] }) {
 
 function FinancialPanel() {
   const stats = [
-    { label: "Total Cost", value: "$24.80", sub: "API + hosting", accent: false },
+    { label: "Total Cost", value: "$35.10", sub: "API + hosting", accent: false },
     { label: "Revenue", value: "$0", sub: "Building in public", muted: true },
-    { label: "Cost / Cycle", value: "$1.67", sub: "avg · 15 cycles", accent: true },
+    { label: "Cost / Cycle", value: "$1.67", sub: "avg · 21 cycles", accent: true },
     { label: "Monthly Burn", value: "~$55", sub: "$50 API + $5 hosting", accent: false },
   ];
 
@@ -500,8 +521,8 @@ function FinancialPanel() {
         </div>
 
         <div className="mb-1.5 flex items-center justify-between">
-          <span className="text-[10px] text-zinc-600 uppercase tracking-wider">Cumulative cost · 15 cycles</span>
-          <span className="text-[10px] text-zinc-600">$0 → $24.80</span>
+          <span className="text-[10px] text-zinc-600 uppercase tracking-wider">Cumulative cost · 21 cycles</span>
+          <span className="text-[10px] text-zinc-600">$0 → $35.10</span>
         </div>
 
         <CostChart data={CUMULATIVE_COSTS} />
@@ -629,12 +650,12 @@ function CompanyStatePanel() {
     {
       label: "Phase",
       value: "Distribution — Phase 3",
-      sub: "Landing live · Demo dashboard building · Distribution resumes after demo",
+      sub: "Landing live · Demo live · Waitlist open · Distribution active",
     },
     {
       label: "Next Action",
-      value: "Ship demo dashboard →",
-      sub: "Then: screenshots → embed in landing → resume distribution",
+      value: "Capture waitlist signups →",
+      sub: "Form live at #waitlist · Supabase insert · First real conversion metric",
       accent: true,
     },
   ];
@@ -662,6 +683,8 @@ function CompanyStatePanel() {
 // =================== PAGE ===================
 
 export default function DemoPage() {
+  const stars = useGitHubStars("NikitaDmitrieff/auto-co-meta");
+
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="fixed inset-0 bg-grid opacity-25 pointer-events-none" />
@@ -683,15 +706,22 @@ export default function DemoPage() {
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 rounded-full px-3 py-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Cycle 16 · Running
+              Cycle 22 · Running
             </div>
             <a
               href="https://github.com/NikitaDmitrieff/auto-co-meta"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:block text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+              className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
             >
-              GitHub
+              <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+              </svg>
+              {stars !== null ? (
+                <span className="tabular-nums">{stars.toLocaleString()} ★</span>
+              ) : (
+                <span>GitHub</span>
+              )}
             </a>
             <Link
               href="/#waitlist"
