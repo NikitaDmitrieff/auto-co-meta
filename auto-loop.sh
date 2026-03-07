@@ -14,6 +14,8 @@
 #   ./auto-loop.sh --status     # Quick status from state file
 #   ./auto-loop.sh --status --json  # Machine-readable JSON status
 #   ./auto-loop.sh --export     # Export cycle history as CSV
+#   ./auto-loop.sh --logs [N]   # Show last N lines of loop log (default: 50)
+#   ./auto-loop.sh --cost       # Show cost summary across cycles
 #   ./auto-loop.sh --reset-errors  # Clear circuit breaker state
 #   ./auto-loop.sh --config     # Print all config values
 #   ./auto-loop.sh --version    # Show version
@@ -310,6 +312,8 @@ USAGE:
   ./auto-loop.sh --status     Quick status check (with cycle stats)
   ./auto-loop.sh --status --json  Machine-readable JSON output
   ./auto-loop.sh --export     Export cycle history as CSV
+  ./auto-loop.sh --logs [N]   Show last N lines of loop log (default: 50)
+  ./auto-loop.sh --cost       Show cost summary across cycles
   ./auto-loop.sh --reset-errors  Clear circuit breaker state
   ./auto-loop.sh --selftest   Validate environment
   ./auto-loop.sh --dry-run    Preview prompt without running
@@ -516,6 +520,60 @@ if [ "${1:-}" = "--export" ]; then
             exit 1
             ;;
     esac
+    exit 0
+fi
+
+# === Logs flag (show recent cycle logs) ===
+
+if [ "${1:-}" = "--logs" ]; then
+    lines="${2:-50}"
+    if ! echo "$lines" | grep -qE '^[0-9]+$'; then
+        echo "Usage: ./auto-loop.sh --logs [LINES]  (default: 50)"
+        exit 1
+    fi
+    if [ -f "$LOG_DIR/auto-loop.log" ]; then
+        tail -n "$lines" "$LOG_DIR/auto-loop.log"
+    else
+        echo "No log file found at $LOG_DIR/auto-loop.log"
+        exit 1
+    fi
+    exit 0
+fi
+
+# === Cost flag (cost summary from cycle history) ===
+
+if [ "${1:-}" = "--cost" ]; then
+    if [ ! -f "$CYCLE_HISTORY_FILE" ]; then
+        echo "No cycle history found at $CYCLE_HISTORY_FILE"
+        exit 1
+    fi
+    if ! command -v jq &>/dev/null; then
+        echo "Error: jq is required for --cost. Install: brew install jq"
+        exit 1
+    fi
+    jq -s '
+        if length == 0 then "No cycle data.\n" | halt_error
+        else
+            {
+                total_cycles: length,
+                total_cost: ([.[].cost] | add),
+                avg_per_cycle: (([.[].cost] | add) / length),
+                last_5: (if length >= 5 then .[-5:] else . end | [.[].cost] | add),
+                last_5_count: (if length >= 5 then 5 else length end),
+                cheapest: ([.[].cost] | min),
+                most_expensive: ([.[].cost] | max)
+            }
+        end
+    ' "$CYCLE_HISTORY_FILE" | jq -r '
+        "=== Auto-Co Cost Summary ===",
+        "",
+        "Total cycles:      \(.total_cycles)",
+        "Total cost:        $\(.total_cost | tostring | .[0:8])",
+        "Avg per cycle:     $\(.avg_per_cycle | tostring | .[0:8])",
+        "Last \(.last_5_count) cycles:    $\(.last_5 | tostring | .[0:8])",
+        "Cheapest cycle:    $\(.cheapest | tostring | .[0:8])",
+        "Most expensive:    $\(.most_expensive | tostring | .[0:8])"
+    '
     exit 0
 fi
 
