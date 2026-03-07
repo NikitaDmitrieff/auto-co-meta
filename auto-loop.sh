@@ -43,9 +43,10 @@ PID_FILE="$PROJECT_DIR/.auto-loop.pid"
 STATE_FILE="$PROJECT_DIR/.auto-loop-state"
 
 # Loop settings (all overridable via env vars)
-MODEL="${MODEL:-sonnet}"
+MODEL="${MODEL:-opus}"
 LOOP_INTERVAL="${LOOP_INTERVAL:-120}"
 CYCLE_TIMEOUT_SECONDS="${CYCLE_TIMEOUT_SECONDS:-1800}"
+CYCLE_HISTORY_FILE="$LOG_DIR/cycle-history.jsonl"
 MAX_CONSECUTIVE_ERRORS="${MAX_CONSECUTIVE_ERRORS:-3}"
 COOLDOWN_SECONDS="${COOLDOWN_SECONDS:-300}"
 LIMIT_WAIT_SECONDS="${LIMIT_WAIT_SECONDS:-3600}"
@@ -129,6 +130,20 @@ rotate_logs() {
         mv "$LOG_DIR/auto-loop.log" "$LOG_DIR/auto-loop.log.old"
         log "Main log rotated (was ${log_size} bytes)"
     fi
+}
+
+append_cycle_history() {
+    local cycle_num=$1
+    local status=$2
+    local cost=${3:-0}
+    local duration=$4
+    local exit_code=$5
+    local timestamp
+    timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+    # Append structured JSONL record for analytics
+    printf '{"cycle":%d,"timestamp":"%s","status":"%s","cost":%s,"duration_s":%d,"exit_code":%d,"model":"%s","total_cost":%s}\n' \
+        "$cycle_num" "$timestamp" "$status" "${cost:-0}" "${duration:-0}" "${exit_code:-0}" "$MODEL" "$total_cost" \
+        >> "$CYCLE_HISTORY_FILE"
 }
 
 backup_consensus() {
@@ -331,6 +346,7 @@ while true; do
     loop_count=$((loop_count + 1))
     cycle_log="$LOG_DIR/cycle-$(printf '%04d' $loop_count)-$(date '+%Y%m%d-%H%M%S').log"
 
+    cycle_start_epoch=$(date +%s)
     log_cycle $loop_count "START" "Beginning work cycle"
     save_state "running"
 
@@ -380,15 +396,20 @@ This is Cycle #$loop_count. Act decisively."
         cycle_failed_reason="consensus.md validation failed after cycle"
     fi
 
+    cycle_end_epoch=$(date +%s)
+    cycle_duration=$((cycle_end_epoch - cycle_start_epoch))
+
     if [ -z "$cycle_failed_reason" ]; then
-        log_cycle $loop_count "OK" "Completed (cost: \$${CYCLE_COST:-unknown}, subtype: ${CYCLE_SUBTYPE:-unknown})"
+        log_cycle $loop_count "OK" "Completed (cost: \$${CYCLE_COST:-unknown}, subtype: ${CYCLE_SUBTYPE:-unknown}, ${cycle_duration}s)"
         if [ -n "$RESULT_TEXT" ]; then
             log_cycle $loop_count "SUMMARY" "$(echo "$RESULT_TEXT" | head -c 300)"
         fi
+        append_cycle_history "$loop_count" "ok" "${CYCLE_COST:-0}" "$cycle_duration" "$EXIT_CODE"
         error_count=0
     else
         error_count=$((error_count + 1))
-        log_cycle $loop_count "FAIL" "$cycle_failed_reason (cost: \$${CYCLE_COST:-unknown}, subtype: ${CYCLE_SUBTYPE:-unknown}, errors: $error_count/$MAX_CONSECUTIVE_ERRORS)"
+        log_cycle $loop_count "FAIL" "$cycle_failed_reason (cost: \$${CYCLE_COST:-unknown}, subtype: ${CYCLE_SUBTYPE:-unknown}, ${cycle_duration}s, errors: $error_count/$MAX_CONSECUTIVE_ERRORS)"
+        append_cycle_history "$loop_count" "fail" "${CYCLE_COST:-0}" "$cycle_duration" "$EXIT_CODE"
 
         # Restore consensus on failure
         restore_consensus
