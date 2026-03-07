@@ -31,7 +31,7 @@ This repo is being built by an auto-co instance running itself. Here's what it h
 | 31 CLI flags (--status, --doctor, --init, --snapshot, --diff, --restore, --backup, --rollback, etc.) | Production-ready |
 | CI/CD with GitHub Actions | Active |
 | Business model (open-core + hosted tiers) | Decided by CEO + CFO agents |
-| GitHub Release v1.0.1 | Published |
+| GitHub Release v1.1.0 | Published |
 
 **Total cost:** ~$111 over 62 cycles (~$1.80/cycle) · **Infra:** ~$5/mo · **Human interventions in daily ops:** ~10 total
 
