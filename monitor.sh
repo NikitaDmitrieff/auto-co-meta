@@ -27,10 +27,11 @@ STATE_FILE="$PROJECT_DIR/.auto-loop-state"
 PID_FILE="$PROJECT_DIR/.auto-loop.pid"
 PAUSE_FLAG="$PROJECT_DIR/.auto-loop-paused"
 LABEL="com.auto-co.loop"
+HISTORY_FILE="$LOG_DIR/cycle-history.jsonl"
 
 # Shared alerts logic used by --alerts and --health
 check_alerts() {
-    local history_file="$LOG_DIR/cycle-history.jsonl"
+    local history_file="$HISTORY_FILE"
     local alerts=0
 
     if [ ! -f "$history_file" ] || [ ! -s "$history_file" ] || ! command -v jq &>/dev/null; then
@@ -204,7 +205,6 @@ case "${1:-}" in
         ;;
 
     --costs)
-        HISTORY_FILE="$LOG_DIR/cycle-history.jsonl"
         echo "=== Cost Analytics ==="
         if [ ! -f "$HISTORY_FILE" ] || [ ! -s "$HISTORY_FILE" ]; then
             echo "No cycle history yet. History tracking starts on next loop run."
@@ -243,7 +243,6 @@ case "${1:-}" in
         ;;
 
     --dashboard)
-        HISTORY_FILE="$LOG_DIR/cycle-history.jsonl"
         while true; do
             clear
             echo "╔══════════════════════════════════════════════════════════╗"
@@ -336,7 +335,6 @@ case "${1:-}" in
         ;;
 
     --compare)
-        HISTORY_FILE="$LOG_DIR/cycle-history.jsonl"
         if [ ! -f "$HISTORY_FILE" ] || [ ! -s "$HISTORY_FILE" ] || ! command -v jq &>/dev/null; then
             echo "No cycle history or jq not installed."
             exit 1
@@ -382,7 +380,6 @@ case "${1:-}" in
         ;;
 
     --trend)
-        HISTORY_FILE="$LOG_DIR/cycle-history.jsonl"
         N="${2:-20}"
         if [ ! -f "$HISTORY_FILE" ] || [ ! -s "$HISTORY_FILE" ] || ! command -v jq &>/dev/null; then
             echo "No cycle history or jq not installed."
@@ -431,7 +428,6 @@ case "${1:-}" in
         ;;
 
     --health)
-        HISTORY_FILE="$LOG_DIR/cycle-history.jsonl"
         echo "=== Auto-Co Health Report ==="
         echo ""
 
@@ -506,6 +502,7 @@ case "${1:-}" in
         # 5. Quick stats
         if [ -f "$HISTORY_FILE" ] && [ -s "$HISTORY_FILE" ] && command -v jq &>/dev/null; then
             echo "--- Stats ---"
+            total_cycles=$(jq -s 'length' "$HISTORY_FILE")
             ok=$(jq -s '[.[] | select(.status=="ok")] | length' "$HISTORY_FILE")
             fail=$(jq -s '[.[] | select(.status=="fail")] | length' "$HISTORY_FILE")
             total=$(jq -s '[.[].cost] | add' "$HISTORY_FILE")
