@@ -1,64 +1,71 @@
 # Auto Company Consensus
 
 ## Last Updated
-2026-03-07T19:00:00Z
+2026-03-07T20:30:00Z
 
 ## Current Phase
-Distribution — Phase 3 (content distribution, not creation)
+Distribution — Phase 3 (distribution blocked on human action)
 
 ## What We Did This Cycle
-Cycle 36 — Distribution push, deployment fix, human response processing
+Cycle 37 — Distribution escalation, deployment update, backup channel prep
 
-**Processed human response (from memories/human-response.md):**
-- Human confirmed: STOP writing blog posts. 3 is enough. Focus on distribution.
-- Human will handle GSC manually — don't waste cycles on it.
-- Human said "cross-post to DEV.to, you have the API key" — but API key NOT found in env or Railway. Need clarification.
-- Human said: focus outward (distribution), not inward (optimization).
-- Human fixed hero dimming issue manually (commit a57e3c5). DO NOT modify text-hover-effect.tsx or Hero.tsx.
+**Searched exhaustively for DEV.to API key:**
+- Checked: env vars, .env files, .env.example, Railway vars, macOS Keychain, shell profiles, ~/.config/
+- Result: NOT FOUND anywhere. Human said "you have the API key" but it doesn't exist in any accessible location.
+- Escalated with clear instructions: either provide the key or manually paste the article.
 
-**Fixed critical deployment gap:**
-- Tutorial blog post (/blog/how-to-build-ai-agent-team) was returning 404!
-- Root cause: Railway's last successful deploy (10:46 UTC) was built from a commit BEFORE the tutorial was added (11:04 UTC)
-- Triggered manual Railway redeploy + pushed new commit to trigger git-based deploy
-- Also: metrics API was serving stale data (Cycle 33 instead of 35) for the same reason
+**Updated all references to Cycle 37:**
+- Metrics API: 37 cycles, $53 total, $1.43 avg
+- Hero badge: "14 agents running — Cycle 37"
+- Demo dashboard: all Cycle 36 -> Cycle 37
+- DEV.to article: updated to 37 cycles, ~$53
+- Reddit posts: updated to 37 cycles, ~$53
+- Build verified: 14 routes pass
 
-**Created distribution-ready content:**
-- DEV.to tutorial article: `docs/marketing/devto-tutorial-how-to-build-ai-agent-team.md` — full markdown with front matter, canonical URL pointing to runautoco.com
-- Updated Reddit posts: `docs/marketing/reddit-posts-cycle36.md` — 4 subreddit-specific posts (r/SideProject, r/LLMDevs, r/MachineLearning, r/selfhosted) with current numbers
+**Verified deployment:**
+- Tutorial blog post: LIVE (200 OK) at /blog/how-to-build-ai-agent-team
+- Metrics API: was returning Cycle 35 data (stale Railway deploy from last cycle). New commit pushed to trigger fresh deploy.
 
-**Updated all references to Cycle 36:**
-- Metrics API: 36 cycles, $51.50 total, $1.43 avg
-- Hero badge: "14 agents running — Cycle 36"
-- Demo dashboard: all references updated
-- Blog post cost reference updated
+**Prepared backup distribution channel:**
+- Show HN draft updated at `docs/marketing/show-hn-draft.md` — ready if Reddit/DEV.to are blocked
+- Honest framing: leads with architecture, admits $0 revenue, focuses on the relay baton pattern
 
-**Deployment:**
-- Build verified: 14 routes pass (including tutorial)
-- Commit d5094d3 pushed to main, Railway deploy triggered
-- Previous manual deploy also triggered via Railway CLI
+**Wrote human escalation (memories/human-request.md):**
+- Priority 1: DEV.to API key — provide it or manually paste article
+- Priority 2: Reddit posts — 4 posts ready, need manual submission
+- Priority 3: Resend API key — still placeholder
+
+**Commits:**
+- 58b256b: chore: update all references to Cycle 37, update distribution content
+- d025691: feat: Cycle 37 — distribution escalation, Show HN draft
 
 ## Key Decisions Made
-- **Distribution over creation** — Human directive: stop writing blog posts. 3 is enough with 0 traffic. Focus on getting existing content in front of people.
-- **DEV.to cross-post is highest priority** — Tutorial with canonical URL is the best backlink + traffic play. Article is ready, just needs API key or manual posting.
-- **Reddit posts ready** — 4 posts updated to current numbers, all linking back to tutorial on runautoco.com.
+- **Exhaustive search for DEV.to key confirms it's not available** — escalated with two options (provide key or manual paste)
+- **Show HN as backup** — if DEV.to and Reddit are blocked by Cycle 39, pivot to Hacker News
+- **No new content created** — obeying human directive to focus outward, not inward
 
 ## Active Projects
-- auto-co framework: `https://github.com/NikitaDmitrieff/auto-co-meta` (Cycle 36 commit d5094d3)
+- auto-co framework: `https://github.com/NikitaDmitrieff/auto-co-meta` (Cycle 37 commit d025691)
 - landing page: LIVE at `https://runautoco.com`
   - Waitlist: `/api/waitlist` -> Supabase + Resend (email pending — RESEND_API_KEY still placeholder)
   - Page tracking: `/api/track` -> Supabase (WORKING)
-  - Live metrics: `/api/metrics` -> Supabase (updated to Cycle 36)
+  - Live metrics: `/api/metrics` -> Supabase (updated to Cycle 37, deploying)
   - Admin: `/api/admin` -> Supabase (WORKING)
   - GitHub star counter in /demo header (live from API)
   - Waitlist with live social proof + founding member urgency
-- blog: LIVE at `https://runautoco.com/blog` (3 posts — NO MORE POSTS per human directive)
-  - How to Build an AI Agent Team: `/blog/how-to-build-ai-agent-team` (was 404, now deploying)
+- blog: LIVE at `https://runautoco.com/blog` (3 posts — NO MORE per human directive)
+  - How to Build an AI Agent Team: `/blog/how-to-build-ai-agent-team` (LIVE, verified 200)
   - 5 Lessons from 33 Cycles: `/blog/lessons-from-33-cycles`
   - Architecture deep-dive: `/blog/architecture-deep-dive`
 - SEO: robots.txt + sitemap.xml (7 URLs) + JSON-LD structured data (human handling GSC)
-- demo dashboard: LIVE at `https://runautoco.com/demo` (live data, updated to Cycle 36)
+- demo dashboard: LIVE at `https://runautoco.com/demo` (updated to Cycle 37)
 - pricing page: LIVE at `https://runautoco.com/pricing`
 - admin dashboard: LIVE at `https://runautoco.com/admin`
+
+## Distribution Content Ready
+- DEV.to article: `docs/marketing/devto-tutorial-how-to-build-ai-agent-team.md` (updated to Cycle 37)
+- Reddit posts: `docs/marketing/reddit-posts-cycle36.md` (updated to Cycle 37, 4 subreddits)
+- Show HN draft: `docs/marketing/show-hn-draft.md` (backup, ready)
 
 ## Metrics
 - Revenue: $0
@@ -68,18 +75,20 @@ Cycle 36 — Distribution push, deployment fix, human response processing
 - GitHub stars: 5
 - Page views: 208+
 - Blog views: ~0 (no distribution yet)
-- Blog posts: 3 (FINAL — no more per human directive)
+- Blog posts: 3 (FINAL)
 - Deployed Services: Railway (landing + all routes)
 - Cost/month: ~$5 (Railway)
-- Cycle 36 cost: ~$1.50 (est)
-- Total cost: ~$51.50 (est, 36 cycles)
+- Cycle 37 cost: ~$1.50 (est)
+- Total cost: ~$53 (est, 37 cycles)
 
 ## Next Action
-**Cycle 37: Cross-post tutorial to DEV.to and submit Reddit posts.**
-1. **DEV.to** — If API key is available, publish `docs/marketing/devto-tutorial-how-to-build-ai-agent-team.md` via DEV.to API. If not, escalate again with specific request for the key.
-2. **Reddit** — Posts are ready at `docs/marketing/reddit-posts-cycle36.md`. Human needs to submit these (Reddit blocks automated posting). Escalate with clear instructions.
-3. **Verify deployment** — Confirm the tutorial blog post is live (was 404 this cycle). Confirm metrics API returns Cycle 36 data.
-4. **DO NOT** write more blog posts, do more SEO work, or optimize the landing page. The human was clear: focus outward.
+**Cycle 38: Check for human response. If DEV.to key provided, publish immediately. If human pasted article manually, verify it's live.**
+1. Check `memories/human-response.md` for DEV.to key or confirmation of manual posting
+2. If DEV.to key available: publish via API using `curl -X POST https://dev.to/api/articles`
+3. If no response: explore Hashnode as alternative (allows API publishing with free tier)
+4. Check if Reddit posts were submitted by human
+5. Verify Railway deploy completed (metrics API should return Cycle 37 data)
+6. **DO NOT** create new content, optimize the site, or do SEO work
 
 ## Company State
 - Product: auto-co framework (autonomous AI company OS) + demo + landing + pricing + blog (3 posts) + waitlist + admin
@@ -89,13 +98,13 @@ Cycle 36 — Distribution push, deployment fix, human response processing
 - Users: 1
 
 ## Human Escalation
-- Pending Request: YES — DEV.to API key (not found in env), Reddit post submission, Resend API key
-- Last Response: 2026-03-07 (processed this cycle — stop blog posts, focus distribution, GSC manual)
-- Awaiting Response Since: 2026-03-07T19:00:00Z
-- Default Action: If no DEV.to API key by Cycle 38, explore Hashnode/Medium cross-posting or ask human to manually paste the article.
+- Pending Request: YES — DEV.to API key (or manual paste), Reddit post submission, Resend API key
+- Last Response: 2026-03-07 (stop blog posts, focus distribution, GSC manual)
+- Awaiting Response Since: 2026-03-07T20:00:00Z
+- Default Action: If no DEV.to key by Cycle 38, explore Hashnode/Medium. If no Reddit by Cycle 39, try Show HN.
 
 ## Open Questions
-- Where is the DEV.to API key? Human said "you have it" but it's not in env vars or Railway.
-- Can we automate Reddit posting or does human need to submit manually?
-- When will the Railway deploy complete and the tutorial page go live?
-- Should we explore other distribution channels (Hashnode, Medium, Indie Hackers)?
+- Where is the DEV.to API key? Will the human provide it or paste manually?
+- Will the human submit Reddit posts?
+- Should we try Hashnode (has API, allows cross-posting with canonical URL)?
+- Is Show HN the right backup or too early with $0 revenue?
