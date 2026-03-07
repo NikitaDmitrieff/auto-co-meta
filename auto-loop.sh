@@ -36,6 +36,7 @@
 #   ./auto-loop.sh --rollback   # Undo last restore from pre-restore backup
 #   ./auto-loop.sh --schedule [MIN] # Generate launchd/cron/systemd config (default: 30min)
 #   ./auto-loop.sh --plugin DIR # Load lifecycle hooks from DIR (pre-cycle.sh, post-cycle.sh)
+#   ./auto-loop.sh --parallel DIR # Run .md prompt files from DIR as parallel Claude sessions
 #   ./auto-loop.sh --version    # Show version
 #
 # Stop:
@@ -55,6 +56,7 @@
 #   MAX_CYCLES=0                # Max cycles before exit (0 = unlimited)
 #   NOTIFY_URL=                 # Webhook URL for cycle notifications (empty = disabled)
 #   PLUGIN_DIR=                 # Directory with hook scripts (empty = disabled)
+#   PARALLEL_DIR=               # Directory with .md prompt files for parallel sessions (empty = disabled)
 # ============================================================
 
 set -euo pipefail
@@ -92,6 +94,7 @@ RETRY_MAX_SECONDS="${RETRY_MAX_SECONDS:-600}"
 MAX_CYCLES="${MAX_CYCLES:-0}"  # 0 = unlimited
 NOTIFY_URL="${NOTIFY_URL:-}"  # Webhook URL for notifications (empty = disabled)
 PLUGIN_DIR="${PLUGIN_DIR:-}"  # Directory with lifecycle hook scripts (empty = disabled)
+PARALLEL_DIR="${PARALLEL_DIR:-}"  # Directory with .md prompt files for parallel sessions (empty = disabled)
 
 # Ensure Agent Teams is available
 export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
@@ -259,6 +262,85 @@ run_plugin_hook() {
     return 0
 }
 
+launch_parallel_sessions() {
+    # Launches parallel Claude sessions in the background. Sets global arrays for collect_parallel_sessions.
+    PARALLEL_PIDS=()
+    PARALLEL_NAMES=()
+    PARALLEL_OUTPUTS=()
+    PARALLEL_COUNT=0
+    [ -z "$PARALLEL_DIR" ] && return 0
+    local cycle_num=$1
+    local prompt_files
+    prompt_files=$(find "$PARALLEL_DIR" -maxdepth 1 -name '*.md' -type f 2>/dev/null | sort)
+    [ -z "$prompt_files" ] && {
+        log "Parallel: no .md files found in $PARALLEL_DIR"
+        return 0
+    }
+    PARALLEL_COUNT=$(echo "$prompt_files" | wc -l | tr -d ' ')
+    log "Parallel: launching $PARALLEL_COUNT session(s) from $PARALLEL_DIR"
+    while IFS= read -r prompt_file; do
+        local name
+        name=$(basename "$prompt_file" .md)
+        local output_file
+        output_file=$(mktemp)
+        local parallel_log="$LOG_DIR/cycle-$(printf '%04d' "$cycle_num")-parallel-${name}.log"
+        local prompt_content
+        prompt_content=$(cat "$prompt_file")
+        (
+            cd "$PROJECT_DIR" && timeout "$CYCLE_TIMEOUT_SECONDS" claude -p "$prompt_content" \
+                --model "$MODEL" \
+                --dangerously-skip-permissions \
+                --verbose \
+                --output-format stream-json \
+                > "$output_file" 2>&1
+        ) &
+        local pid=$!
+        PARALLEL_PIDS+=("$pid")
+        PARALLEL_NAMES+=("$name")
+        PARALLEL_OUTPUTS+=("$output_file:$parallel_log")
+        log "Parallel: started session '$name' (PID $pid)"
+    done <<< "$prompt_files"
+}
+
+collect_parallel_sessions() {
+    # Waits for all parallel sessions launched by launch_parallel_sessions. Logs results and accumulates cost.
+    [ "$PARALLEL_COUNT" -eq 0 ] && return 0
+    for i in "${!PARALLEL_PIDS[@]}"; do
+        local pid="${PARALLEL_PIDS[$i]}"
+        local name="${PARALLEL_NAMES[$i]}"
+        local out_pair="${PARALLEL_OUTPUTS[$i]}"
+        local output_file="${out_pair%%:*}"
+        local parallel_log="${out_pair##*:}"
+        set +e
+        wait "$pid" 2>/dev/null
+        local exit_code=$?
+        set -e
+        cp "$output_file" "$parallel_log" 2>/dev/null || true
+        # Extract cost from parallel session
+        local pcost=""
+        if command -v jq &>/dev/null; then
+            local result_line
+            result_line=$(grep -E '"type"\s*:\s*"result"' "$output_file" 2>/dev/null | tail -1 || true)
+            if [ -n "$result_line" ]; then
+                pcost=$(echo "$result_line" | jq -r '.total_cost_usd // empty' 2>/dev/null || true)
+            fi
+        fi
+        if [ "$exit_code" -eq 0 ]; then
+            log "Parallel: session '$name' completed (cost: \$${pcost:-unknown})"
+        elif [ "$exit_code" -eq 124 ]; then
+            log "Parallel: session '$name' timed out after ${CYCLE_TIMEOUT_SECONDS}s"
+        else
+            log "Parallel: session '$name' failed (exit $exit_code, cost: \$${pcost:-unknown})"
+        fi
+        # Add parallel session cost to total
+        if [ -n "$pcost" ] && echo "$pcost" | grep -qE '^[0-9]+\.?[0-9]*$'; then
+            total_cost=$(awk "BEGIN {printf \"%.4f\", $total_cost + $pcost}")
+        fi
+        rm -f "$output_file"
+    done
+    log "Parallel: all $PARALLEL_COUNT session(s) finished"
+}
+
 kill_process_tree() {
     local pid=$1
     local sig=${2:-TERM}
@@ -411,6 +493,7 @@ USAGE:
   ./auto-loop.sh --schedule 60 --cron  Force crontab output
   ./auto-loop.sh --schedule 15 --systemd  Force systemd output
   ./auto-loop.sh --plugin DIR Load lifecycle hooks from DIR (pre-cycle.sh, post-cycle.sh)
+  ./auto-loop.sh --parallel DIR  Run .md prompts from DIR as parallel Claude sessions
   ./auto-loop.sh --selftest   Validate environment
   ./auto-loop.sh --dry-run    Preview prompt without running
 
@@ -933,6 +1016,7 @@ if [ "${1:-}" = "--config" ]; then
     echo "MAX_CYCLES:             ${MAX_CYCLES:-0} (0 = unlimited)"
     echo "NOTIFY_URL:             ${NOTIFY_URL:-disabled}"
     echo "PLUGIN_DIR:             ${PLUGIN_DIR:-disabled}"
+    echo "PARALLEL_DIR:           ${PARALLEL_DIR:-disabled}"
     echo ""
     echo "--- Paths ---"
     echo "PROMPT_FILE:            $PROMPT_FILE"
@@ -1012,6 +1096,12 @@ if [ "${1:-}" = "--env" ] || [ "${1:-}" = "-e" ]; then
 # Scripts receive context via AUTO_CO_* environment variables.
 # Leave empty to disable.
 # PLUGIN_DIR=
+
+# --- Parallel Sessions ---
+# Directory containing .md prompt files to run as parallel Claude sessions.
+# Each .md file runs alongside the main cycle as an independent session.
+# Leave empty to disable.
+# PARALLEL_DIR=
 
 # --- Advanced ---
 # Enable Agent Teams (experimental). Set by auto-loop.sh automatically.
@@ -1627,6 +1717,39 @@ if [ "${1:-}" = "--plugin" ]; then
     shift 2
 fi
 
+# === Parallel flag (run multiple prompt files as parallel Claude sessions) ===
+
+if [ "${1:-}" = "--parallel" ]; then
+    if [ -z "${2:-}" ]; then
+        echo "Usage: ./auto-loop.sh --parallel DIR"
+        echo ""
+        echo "Run .md prompt files from DIR as parallel Claude sessions alongside each cycle."
+        echo "Each .md file in DIR becomes an independent Claude session that runs concurrently"
+        echo "with the main cycle prompt."
+        echo ""
+        echo "Features:"
+        echo "  - Each session gets its own log file (cycle-NNNN-parallel-<name>.log)"
+        echo "  - Sessions share the same timeout as the main cycle"
+        echo "  - Session costs are tracked and added to the total"
+        echo "  - Failures in parallel sessions do not affect the main cycle"
+        echo ""
+        echo "Example:"
+        echo "  mkdir parallel-prompts"
+        echo "  echo 'Review and update project documentation.' > parallel-prompts/docs.md"
+        echo "  echo 'Run all tests and fix failures.' > parallel-prompts/tests.md"
+        echo "  ./auto-loop.sh --parallel ./parallel-prompts"
+        echo ""
+        echo "Also: PARALLEL_DIR=./parallel-prompts ./auto-loop.sh"
+        exit 1
+    fi
+    if [ ! -d "$2" ]; then
+        echo "Error: Parallel directory '$2' does not exist."
+        exit 1
+    fi
+    PARALLEL_DIR="$2"
+    shift 2
+fi
+
 # === Cost flag (cost summary from cycle history) ===
 
 if [ "${1:-}" = "--cost" ]; then
@@ -1983,6 +2106,11 @@ This is Cycle #1. Act decisively."
     echo "Interval: ${LOOP_INTERVAL}s"
     echo "Timeout: ${CYCLE_TIMEOUT_SECONDS}s"
     echo "Prompt length: $(echo "$FULL_PROMPT" | wc -c | tr -d ' ') bytes"
+    if [ -n "$PARALLEL_DIR" ]; then
+        local pcount
+        pcount=$(find "$PARALLEL_DIR" -maxdepth 1 -name '*.md' -type f 2>/dev/null | wc -l | tr -d ' ')
+        echo "Parallel dir: $PARALLEL_DIR ($pcount prompt files)"
+    fi
     echo ""
     echo "--- Prompt Preview (first 80 lines) ---"
     echo "$FULL_PROMPT" | head -80
@@ -2202,7 +2330,7 @@ fi
 
 log "=== Auto-Co Loop Started (PID $$) ==="
 log "Project: $PROJECT_DIR"
-log "Model: $MODEL | Interval: ${LOOP_INTERVAL}s | Timeout: ${CYCLE_TIMEOUT_SECONDS}s | Breaker: ${MAX_CONSECUTIVE_ERRORS} errors | Max cycles: ${MAX_CYCLES:-unlimited}${NOTIFY_URL:+ | Notify: $NOTIFY_URL}${PLUGIN_DIR:+ | Plugins: $PLUGIN_DIR}"
+log "Model: $MODEL | Interval: ${LOOP_INTERVAL}s | Timeout: ${CYCLE_TIMEOUT_SECONDS}s | Breaker: ${MAX_CONSECUTIVE_ERRORS} errors | Max cycles: ${MAX_CYCLES:-unlimited}${NOTIFY_URL:+ | Notify: $NOTIFY_URL}${PLUGIN_DIR:+ | Plugins: $PLUGIN_DIR}${PARALLEL_DIR:+ | Parallel: $PARALLEL_DIR}"
 
 # === Main Loop ===
 
@@ -2253,11 +2381,17 @@ $CONSENSUS
 
 This is Cycle #$loop_count. Act decisively."
 
+    # Launch parallel sessions (run alongside main cycle)
+    launch_parallel_sessions "$loop_count"
+
     # Run Claude Code in headless mode with per-cycle timeout
     run_claude_cycle "$FULL_PROMPT"
 
     # Save full output to cycle log
     echo "$OUTPUT" > "$cycle_log"
+
+    # Collect parallel session results (wait for any still running)
+    collect_parallel_sessions
 
     # Extract result fields for status classification
     extract_cycle_metadata

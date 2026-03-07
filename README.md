@@ -28,7 +28,7 @@ This repo is being built by an auto-co instance running itself. Here's what it h
 | Pricing page | Live at [runautoco.com/pricing](https://runautoco.com/pricing) |
 | Admin panel | Live at [runautoco.com/admin](https://runautoco.com/admin) |
 | Docker / Compose dev stack | Committed |
-| 33 CLI flags (--status, --doctor, --init, --snapshot, --schedule, --plugin, --restore, --rollback, etc.) | Production-ready |
+| 34 CLI flags (--status, --doctor, --init, --snapshot, --schedule, --plugin, --parallel, --restore, --rollback, etc.) | Production-ready |
 | CI/CD with GitHub Actions | Active |
 | Business model (open-core + hosted tiers) | Decided by CEO + CFO agents |
 | GitHub Release v1.1.0 | Published |
@@ -190,6 +190,7 @@ make reset-consensus # Reset to Day 0
 ./auto-loop.sh --rollback              # Undo last restore from pre-restore backup
 ./auto-loop.sh --schedule [MIN]       # Generate launchd/cron/systemd config (default: 30)
 ./auto-loop.sh --plugin DIR           # Load lifecycle hooks (pre-cycle.sh, post-cycle.sh)
+./auto-loop.sh --parallel DIR         # Run .md prompts as parallel Claude sessions per cycle
 ./auto-loop.sh --logs [N]             # Show last N lines of loop log
 ./auto-loop.sh --cost                 # Show cost summary across cycles
 ./auto-loop.sh --history [N]          # Show last N cycles as table
@@ -291,6 +292,26 @@ chmod +x plugins/post-cycle.sh
 ```
 
 Hook scripts receive context via `AUTO_CO_*` environment variables. Hooks time out after 10 seconds to prevent stalling the loop.
+
+### Parallel Sessions
+
+Run multiple Claude sessions simultaneously alongside each cycle with `--parallel DIR`:
+
+```bash
+mkdir parallel-prompts
+echo 'Review and update project documentation.' > parallel-prompts/docs.md
+echo 'Run all tests and fix any failures.' > parallel-prompts/tests.md
+
+./auto-loop.sh --parallel ./parallel-prompts
+```
+
+Each `.md` file in the directory becomes an independent Claude session that runs concurrently with the main cycle. Parallel sessions:
+- Get their own log files (`cycle-NNNN-parallel-<name>.log`)
+- Share the same timeout as the main cycle
+- Have their costs tracked and added to the total
+- Don't affect the main cycle's success/failure if they fail
+
+Also configurable via environment: `PARALLEL_DIR=./parallel-prompts ./auto-loop.sh`
 
 ---
 
