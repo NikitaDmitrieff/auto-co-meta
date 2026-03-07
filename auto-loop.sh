@@ -367,6 +367,7 @@ USAGE:
   ./auto-loop.sh --env FILE   Write template to custom path
   ./auto-loop.sh --snapshot   Create timestamped tarball of project state
   ./auto-loop.sh --snapshot PATH  Write snapshot to custom path
+  ./auto-loop.sh --diff A B  Compare two snapshots (show added/removed/changed files)
   ./auto-loop.sh --selftest   Validate environment
   ./auto-loop.sh --dry-run    Preview prompt without running
 
@@ -854,6 +855,89 @@ if [ "${1:-}" = "--snapshot" ] || [ "${1:-}" = "-S" ]; then
     if [ "$TOTAL" -gt 20 ]; then
         echo "... and $((TOTAL - 20)) more files"
     fi
+    exit 0
+fi
+
+# === Diff flag (compare two snapshots) ===
+
+if [ "${1:-}" = "--diff" ]; then
+    if [ -z "${2:-}" ] || [ -z "${3:-}" ]; then
+        echo "Usage: ./auto-loop.sh --diff <snapshot-a> <snapshot-b>"
+        echo "Compare two snapshot tarballs and show what changed."
+        exit 1
+    fi
+    SNAP_A="$2"
+    SNAP_B="$3"
+
+    for f in "$SNAP_A" "$SNAP_B"; do
+        if [ ! -f "$f" ]; then
+            echo "Error: Snapshot not found: $f"
+            exit 1
+        fi
+    done
+
+    # Create temp dirs for extraction
+    DIFF_TMP="$(mktemp -d)"
+    trap 'rm -rf "$DIFF_TMP"' EXIT
+    mkdir -p "$DIFF_TMP/a" "$DIFF_TMP/b"
+
+    tar -xzf "$SNAP_A" -C "$DIFF_TMP/a" 2>/dev/null
+    tar -xzf "$SNAP_B" -C "$DIFF_TMP/b" 2>/dev/null
+
+    # Get file lists
+    (cd "$DIFF_TMP/a" && find . -type f | sort) > "$DIFF_TMP/files_a.txt"
+    (cd "$DIFF_TMP/b" && find . -type f | sort) > "$DIFF_TMP/files_b.txt"
+
+    # Files only in A (removed)
+    REMOVED="$(comm -23 "$DIFF_TMP/files_a.txt" "$DIFF_TMP/files_b.txt")"
+    # Files only in B (added)
+    ADDED="$(comm -13 "$DIFF_TMP/files_a.txt" "$DIFF_TMP/files_b.txt")"
+    # Files in both (check for modifications)
+    COMMON="$(comm -12 "$DIFF_TMP/files_a.txt" "$DIFF_TMP/files_b.txt")"
+
+    MODIFIED=""
+    while IFS= read -r file; do
+        [ -z "$file" ] && continue
+        if ! diff -q "$DIFF_TMP/a/$file" "$DIFF_TMP/b/$file" &>/dev/null; then
+            MODIFIED="${MODIFIED}${file}\n"
+        fi
+    done <<< "$COMMON"
+
+    echo "=== Snapshot Diff ==="
+    echo "A: $(basename "$SNAP_A")"
+    echo "B: $(basename "$SNAP_B")"
+    echo ""
+
+    ADD_COUNT=0; REM_COUNT=0; MOD_COUNT=0
+
+    if [ -n "$ADDED" ]; then
+        echo "--- Added (in B, not in A) ---"
+        while IFS= read -r f; do
+            [ -n "$f" ] && echo "  + ${f#./}" && ADD_COUNT=$((ADD_COUNT + 1))
+        done <<< "$ADDED"
+        echo ""
+    fi
+
+    if [ -n "$REMOVED" ]; then
+        echo "--- Removed (in A, not in B) ---"
+        while IFS= read -r f; do
+            [ -n "$f" ] && echo "  - ${f#./}" && REM_COUNT=$((REM_COUNT + 1))
+        done <<< "$REMOVED"
+        echo ""
+    fi
+
+    if [ -n "$MODIFIED" ]; then
+        echo "--- Modified ---"
+        while IFS= read -r f; do
+            [ -n "$f" ] && echo "  ~ ${f#./}" && MOD_COUNT=$((MOD_COUNT + 1))
+        done <<< "$(echo -e "$MODIFIED")"
+        echo ""
+    fi
+
+    TOTAL_A="$(wc -l < "$DIFF_TMP/files_a.txt" | tr -d ' ')"
+    TOTAL_B="$(wc -l < "$DIFF_TMP/files_b.txt" | tr -d ' ')"
+    echo "Summary: ${ADD_COUNT} added, ${REM_COUNT} removed, ${MOD_COUNT} modified"
+    echo "Total files: A=${TOTAL_A}, B=${TOTAL_B}"
     exit 0
 fi
 
