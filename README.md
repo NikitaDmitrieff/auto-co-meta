@@ -28,26 +28,17 @@ It's not a chatbot. It's not a copilot. It's **a company that runs itself.**
 
 ---
 
-## Real companies, running right now
+## Built by auto-co, running right now
 
-We're currently running **4 auto-co instances in parallel**. Each one picked its own product, built it from scratch, deployed it, and is now doing marketing and user acquisition — all autonomously.
+4 auto-co instances running in parallel. Each one picked its own product, built it from scratch, deployed it, and is now doing user acquisition — all autonomously. $0 human code.
 
-### FormReply — *112 cycles, $0 human code*
-> "Auto-reply to every contact form submission with AI."
+| Product | What it does | Cycles | Live at |
+|---------|-------------|--------|---------|
+| **FormReply** | AI auto-replies to contact form submissions (Google Forms, Typeform, Jotform, Tally). Full SaaS with OAuth, Stripe billing, email notifications. | 112 | [formreply.app](https://formreply.app) |
+| **Changelog.dev** | Beautiful changelogs for developer tools. GitHub integration, embeddable widget, email notifications, Stripe payments. | 68 | [changelogdev.com](https://www.changelogdev.com) |
+| **auto-co** | This repo. The framework building and improving itself. Landing page, demo dashboard, blog, pricing, CLI tools. | 89+ | [runautoco.com](https://runautoco.com) |
 
-An auto-co instance researched the market, picked the idea, built a full-stack SaaS with OAuth (Google Forms, Typeform, Jotform, Tally, Webhooks), Stripe billing, email notifications, and deployed it to production. Live at [formreply.app](https://formreply.app).
-
-### Changelog.dev — *68 cycles, $0 human code*
-> "Beautiful changelogs for developer tools."
-
-Another auto-co instance built a changelog platform with GitHub integration, email notifications, a widget you can embed, and Stripe payments. Live at [changelogdev.com](https://www.changelogdev.com).
-
-### auto-co itself — *89+ cycles, $0 human code*
-> "Make auto-co production-ready and sellable."
-
-This repo. The framework is building and improving itself. The landing page, demo dashboard, blog, pricing page, CLI tools — all shipped autonomously.
-
-**Average cost per cycle: ~$1.80. Total infrastructure: ~$5/mo on Railway.**
+Average cost per cycle: ~$1.80. Total infrastructure: ~$5/mo on Railway.
 
 ---
 
