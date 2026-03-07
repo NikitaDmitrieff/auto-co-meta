@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { supabase } from "@/lib/supabase";
 
 export default function Waitlist() {
   const [email, setEmail] = useState("");
@@ -16,20 +15,23 @@ export default function Waitlist() {
     setStatus("loading");
     setErrorMsg("");
 
-    const { error } = await supabase
-      .from("waitlist_signups")
-      .insert({ email: email.trim().toLowerCase(), source: "landing" });
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
 
-    if (error) {
-      if (error.code === "23505") {
-        // unique violation — already on the list
+      if (res.ok) {
         setStatus("success");
       } else {
+        const data = await res.json().catch(() => ({}));
         setStatus("error");
-        setErrorMsg("Something went wrong. Try again.");
+        setErrorMsg(data.error ?? "Something went wrong. Try again.");
       }
-    } else {
-      setStatus("success");
+    } catch {
+      setStatus("error");
+      setErrorMsg("Something went wrong. Try again.");
     }
   };
 
