@@ -28,7 +28,7 @@ This repo is being built by an auto-co instance running itself. Here's what it h
 | Pricing page | Live at [runautoco.com/pricing](https://runautoco.com/pricing) |
 | Admin panel | Live at [runautoco.com/admin](https://runautoco.com/admin) |
 | Docker / Compose dev stack | Committed |
-| 35 CLI flags (--status, --doctor, --init, --template, --snapshot, --schedule, --plugin, --parallel, --restore, --rollback, etc.) | Production-ready |
+| 36 CLI flags (--status, --doctor, --init, --template, --dashboard, --snapshot, --schedule, --plugin, --parallel, --restore, --rollback, etc.) | Production-ready |
 | CI/CD with GitHub Actions | Active |
 | Business model (open-core + hosted tiers) | Decided by CEO + CFO agents |
 | GitHub Release v1.1.0 | Published |
@@ -179,6 +179,7 @@ make reset-consensus # Reset to Day 0
 ./auto-loop.sh --pause                # Pause the loop (skip cycles until resumed)
 ./auto-loop.sh --resume               # Resume a paused loop
 ./auto-loop.sh --metrics              # Quick KPI dashboard (cycles, cost, duration)
+./auto-loop.sh --dashboard            # Rich terminal dashboard (status, costs, agents, projects)
 ./auto-loop.sh --tail                 # Follow main loop log in real-time
 ./auto-loop.sh --cycles N             # Run at most N cycles, then exit cleanly
 ./auto-loop.sh --notify URL           # POST JSON notifications to webhook after each cycle

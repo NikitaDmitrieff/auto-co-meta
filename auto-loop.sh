@@ -38,6 +38,7 @@
 #   ./auto-loop.sh --plugin DIR # Load lifecycle hooks from DIR (pre-cycle.sh, post-cycle.sh)
 #   ./auto-loop.sh --parallel DIR # Run .md prompt files from DIR as parallel Claude sessions
 #   ./auto-loop.sh --template [NAME] [DIR] # Scaffold from pre-built template (saas, docs-site, api-backend)
+#   ./auto-loop.sh --dashboard  # Rich terminal dashboard (status, costs, agents, projects)
 #   ./auto-loop.sh --version    # Show version
 #
 # Stop:
@@ -479,6 +480,7 @@ USAGE:
   ./auto-loop.sh --cycles N   Run at most N cycles, then exit cleanly
   ./auto-loop.sh --notify URL POST JSON notifications to webhook after each cycle
   ./auto-loop.sh --metrics    Quick KPI dashboard (cycles, cost, duration)
+  ./auto-loop.sh --dashboard  Rich terminal dashboard (status, costs, agents, projects)
   ./auto-loop.sh --env        Generate .env.example with all config options
   ./auto-loop.sh --env FILE   Write template to custom path
   ./auto-loop.sh --snapshot   Create timestamped tarball of project state
@@ -1826,6 +1828,200 @@ if [ "${1:-}" = "--metrics" ]; then
         "First cycle:       \(.first_cycle)",
         "Last cycle:        \(.last_cycle)"
     '
+    exit 0
+fi
+
+# === Dashboard flag (inline terminal dashboard) ===
+
+if [ "${1:-}" = "--dashboard" ]; then
+    if ! command -v jq &>/dev/null; then
+        echo "Error: jq is required for --dashboard. Install: brew install jq"
+        exit 1
+    fi
+
+    # --- Gather data ---
+    # Loop state
+    loop_status="unknown"; loop_count=0; last_run="N/A"; model_name="unknown"; total_cost_state=0
+    if [ -f "$STATE_FILE" ]; then
+        loop_status=$(grep '^STATUS=' "$STATE_FILE" 2>/dev/null | cut -d= -f2 || echo "unknown")
+        loop_count=$(grep '^LOOP_COUNT=' "$STATE_FILE" 2>/dev/null | cut -d= -f2 || echo "0")
+        last_run=$(grep '^LAST_RUN=' "$STATE_FILE" 2>/dev/null | cut -d= -f2- || echo "N/A")
+        model_name=$(grep '^MODEL=' "$STATE_FILE" 2>/dev/null | cut -d= -f2 || echo "unknown")
+        total_cost_state=$(grep '^TOTAL_COST=' "$STATE_FILE" 2>/dev/null | cut -d= -f2 || echo "0")
+    fi
+
+    # Loop running?
+    loop_running="stopped"
+    if [ -f "$PID_FILE" ]; then
+        pid_val=$(cat "$PID_FILE")
+        if kill -0 "$pid_val" 2>/dev/null; then
+            loop_running="running"
+        fi
+    fi
+    if [ -f "$PAUSE_FILE" ]; then
+        loop_running="paused"
+    fi
+
+    # Cycle stats from history
+    cycle_stats='{"total":0,"ok":0,"fail":0,"avg_cost":0,"avg_dur":0,"total_cost":0,"total_dur_h":0,"last5":[]}'
+    if [ -f "$CYCLE_HISTORY_FILE" ]; then
+        cycle_stats=$(jq -s '
+            if length == 0 then
+                {"total":0,"ok":0,"fail":0,"avg_cost":0,"avg_dur":0,"total_cost":0,"total_dur_h":0,"last5":[]}
+            else
+                {
+                    total: length,
+                    ok: ([.[] | select(.status == "ok")] | length),
+                    fail: ([.[] | select(.status != "ok")] | length),
+                    avg_cost: (([.[].cost] | add) / length * 100 | floor / 100),
+                    avg_dur: (([.[].duration_s] | add) / length | floor),
+                    total_cost: (([.[].cost] | add) * 100 | floor / 100),
+                    total_dur_h: (([.[].duration_s] | add) / 3600 * 100 | floor / 100),
+                    last5: [.[-5:][] | {c:.cycle, s:.status, cost:.cost, dur:.duration_s}]
+                }
+            end
+        ' "$CYCLE_HISTORY_FILE" 2>/dev/null || echo "$cycle_stats")
+    fi
+
+    # Consensus data
+    current_phase="Unknown"
+    next_action="Unknown"
+    active_projects=""
+    if [ -f "$CONSENSUS_FILE" ]; then
+        current_phase=$(grep '^## Current Phase' "$CONSENSUS_FILE" -A 1 2>/dev/null | tail -1 | sed 's/^[[:space:]]*//' || echo "Unknown")
+        next_action=$(sed -n '/^## Next Action/,/^##/p' "$CONSENSUS_FILE" 2>/dev/null | grep -v '^##' | head -3 | sed 's/^[[:space:]]*//' | tr '\n' ' ' || echo "Unknown")
+        active_projects=$(sed -n '/^## Active Projects/,/^##/p' "$CONSENSUS_FILE" 2>/dev/null | grep '^- ' | head -5 || echo "")
+    fi
+
+    # Agent activity from recent cycle logs
+    latest_log=$(ls -t "$LOG_DIR"/cycle-*.log 2>/dev/null | head -1)
+    agents_active=""
+    if [ -n "$latest_log" ]; then
+        agents_active=$(grep -oE '(ceo-bezos|cto-vogels|critic-munger|product-norman|ui-duarte|interaction-cooper|fullstack-dhh|qa-bach|devops-hightower|marketing-godin|operations-pg|sales-ross|cfo-campbell|research-thompson)' "$latest_log" 2>/dev/null | sort -u | tr '\n' ', ' | sed 's/,$//' || echo "")
+    fi
+
+    # --- Render dashboard ---
+    # Colors
+    BOLD="\033[1m"
+    DIM="\033[2m"
+    GREEN="\033[32m"
+    RED="\033[31m"
+    YELLOW="\033[33m"
+    CYAN="\033[36m"
+    BLUE="\033[34m"
+    RESET="\033[0m"
+
+    # Status color
+    case "$loop_running" in
+        running) status_color="${GREEN}" ;;
+        paused)  status_color="${YELLOW}" ;;
+        *)       status_color="${RED}" ;;
+    esac
+
+    width=60
+    line=$(printf '%*s' "$width" '' | tr ' ' '─')
+    dline=$(printf '%*s' "$width" '' | tr ' ' '═')
+
+    printf "\n${BOLD}${CYAN}${dline}${RESET}\n"
+    printf "${BOLD}${CYAN}  AUTO-CO DASHBOARD${RESET}\n"
+    printf "${BOLD}${CYAN}${dline}${RESET}\n\n"
+
+    # Loop status section
+    printf "${BOLD}  LOOP STATUS${RESET}\n"
+    printf "  ${DIM}${line}${RESET}\n"
+    printf "  %-20s ${status_color}${BOLD}%-20s${RESET}\n" "State:" "$loop_running"
+    printf "  %-20s %-20s\n" "Model:" "$model_name"
+    printf "  %-20s %-20s\n" "Cycles run:" "$loop_count"
+    printf "  %-20s %-20s\n" "Last run:" "$last_run"
+    printf "  %-20s %-20s\n" "Phase:" "$current_phase"
+    printf "\n"
+
+    # Cost section
+    tc=$(echo "$cycle_stats" | jq -r '.total_cost')
+    ac=$(echo "$cycle_stats" | jq -r '.avg_cost')
+    printf "${BOLD}  COST & PERFORMANCE${RESET}\n"
+    printf "  ${DIM}${line}${RESET}\n"
+    printf "  %-20s ${BOLD}\$%-19s${RESET}\n" "Total cost:" "$tc"
+    printf "  %-20s \$%-19s\n" "Avg per cycle:" "$ac"
+    total_h=$(echo "$cycle_stats" | jq -r '.total_dur_h')
+    avg_d=$(echo "$cycle_stats" | jq -r '.avg_dur')
+    printf "  %-20s %-20s\n" "Total runtime:" "${total_h}h"
+    printf "  %-20s %-20s\n" "Avg cycle time:" "${avg_d}s"
+    printf "\n"
+
+    # Cycle stats
+    total_c=$(echo "$cycle_stats" | jq -r '.total')
+    ok_c=$(echo "$cycle_stats" | jq -r '.ok')
+    fail_c=$(echo "$cycle_stats" | jq -r '.fail')
+    if [ "$total_c" -gt 0 ]; then
+        rate=$((ok_c * 100 / total_c))
+    else
+        rate=0
+    fi
+    printf "${BOLD}  CYCLE STATS${RESET}\n"
+    printf "  ${DIM}${line}${RESET}\n"
+    printf "  %-20s %-20s\n" "Total:" "$total_c"
+    printf "  %-20s ${GREEN}%-20s${RESET}\n" "Successful:" "$ok_c"
+    printf "  %-20s ${RED}%-20s${RESET}\n" "Failed:" "$fail_c"
+    printf "  %-20s %-19s\n" "Success rate:" "${rate}%"
+
+    # Progress bar
+    if [ "$total_c" -gt 0 ]; then
+        bar_width=30
+        filled=$((rate * bar_width / 100))
+        empty=$((bar_width - filled))
+        bar_filled=$(printf '%*s' "$filled" '' | tr ' ' '█')
+        bar_empty=$(printf '%*s' "$empty" '' | tr ' ' '░')
+        printf "  %-20s ${GREEN}%s${DIM}%s${RESET} %s%%\n" "" "$bar_filled" "$bar_empty" "$rate"
+    fi
+    printf "\n"
+
+    # Recent cycles
+    printf "${BOLD}  RECENT CYCLES${RESET}\n"
+    printf "  ${DIM}${line}${RESET}\n"
+    printf "  ${DIM}%-8s %-8s %-10s %-10s${RESET}\n" "CYCLE" "STATUS" "COST" "TIME"
+    echo "$cycle_stats" | jq -r '.last5[] | "  \(.c)\t\(.s)\t$\(.cost)\t\(.dur)s"' 2>/dev/null | \
+        while IFS=$'\t' read -r cy st co du; do
+            if [ "$st" = "ok" ]; then
+                sc="${GREEN}"
+            else
+                sc="${RED}"
+            fi
+            printf "  %-8s ${sc}%-8s${RESET} %-10s %-10s\n" "$cy" "$st" "$co" "$du"
+        done
+    printf "\n"
+
+    # Agent activity
+    printf "${BOLD}  AGENT ACTIVITY (last cycle)${RESET}\n"
+    printf "  ${DIM}${line}${RESET}\n"
+    if [ -n "$agents_active" ]; then
+        printf "  ${BLUE}%s${RESET}\n" "$agents_active"
+    else
+        printf "  ${DIM}No agent data available${RESET}\n"
+    fi
+    printf "\n"
+
+    # Active projects
+    printf "${BOLD}  ACTIVE PROJECTS${RESET}\n"
+    printf "  ${DIM}${line}${RESET}\n"
+    if [ -n "$active_projects" ]; then
+        echo "$active_projects" | while IFS= read -r proj; do
+            printf "  ${CYAN}%s${RESET}\n" "$proj"
+        done
+    else
+        printf "  ${DIM}No active projects${RESET}\n"
+    fi
+    printf "\n"
+
+    # Next action
+    printf "${BOLD}  NEXT ACTION${RESET}\n"
+    printf "  ${DIM}${line}${RESET}\n"
+    printf "  ${YELLOW}%s${RESET}\n" "$next_action"
+    printf "\n"
+
+    printf "${BOLD}${CYAN}${dline}${RESET}\n"
+    printf "${DIM}  Run at: $(date '+%Y-%m-%d %H:%M:%S')${RESET}\n\n"
+
     exit 0
 fi
 
