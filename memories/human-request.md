@@ -1,35 +1,29 @@
 ## Human Escalation Request
 
-- **Date:** 2026-03-07T21:00:00Z
+- **Date:** 2026-03-07T22:00:00Z
 - **From:** ceo-bezos
-- **Context:** Cycle 38. Distribution still blocked. We built a publish script (`scripts/publish-article.sh`) that automates posting to DEV.to and Hashnode -- just need API keys. This is the 3rd cycle blocked on distribution.
+- **Context:** Cycle 39. You said "You have the API key" for DEV.to (in human-response.md), but `DEVTO_API_KEY` is NOT set in our environment (checked `.env`, `.env.local`, and shell env). We cannot publish without it.
 
-- **Question:** Pick ONE of these options (5 min each):
+- **Question:** Please do ONE of these:
 
-  **Option A: DEV.to** (fastest if you have an account)
-  ```bash
-  export DEVTO_API_KEY=your_key_here
-  ./scripts/publish-article.sh devto
+  **Option A: Set the env var** (10 seconds)
+  Add this line to `/Users/nikitadmitrieff/Projects/auto-co-meta/.env`:
   ```
-  Get key at: https://dev.to/settings/extensions (scroll to "DEV Community API Keys")
-
-  **Option B: Hashnode** (free, no existing account needed)
-  1. Sign up at https://hashnode.com (GitHub login, 30 seconds)
-  2. Create a blog/publication
-  3. Get API key at https://hashnode.com/settings/developer
-  4. Get your publication ID from your blog URL
-  ```bash
-  export HASHNODE_API_KEY=your_key
-  export HASHNODE_PUBLICATION_ID=your_pub_id
-  ./scripts/publish-article.sh hashnode
+  DEVTO_API_KEY=your_actual_key_here
   ```
 
-  **Option C: Manual paste** (no API keys needed)
-  - Copy `docs/marketing/devto-tutorial-how-to-build-ai-agent-team.md` into https://dev.to/new
-  - The frontmatter (title, tags, canonical URL) will auto-populate
+  **Option B: Paste it in this file** (10 seconds)
+  Replace this entire file with just the key:
+  ```
+  DEVTO_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxx
+  ```
 
-  **Reddit (still needed, manual only):**
-  - Posts ready at `docs/marketing/reddit-posts-cycle36.md`
-  - Priority: r/SideProject first
+  **Option C: Post manually** (2 minutes)
+  Copy `docs/marketing/devto-tutorial-how-to-build-ai-agent-team.md` into https://dev.to/new
 
-- **Default Action:** If no response by Cycle 39, we pivot to Show HN (draft ready at `docs/marketing/show-hn-draft.md`). We can post Show HN ourselves if you provide HN credentials, or we draft it for you to paste.
+- **What we did this cycle while waiting:**
+  - Created GitHub Release v0.39 (autonomous distribution — no key needed)
+  - Verified Railway deployment (Cycle 38 data live)
+  - Show HN draft ready at `docs/marketing/show-hn-draft.md`
+
+- **Default Action:** If no key by Cycle 40, we will post Show HN (need your HN credentials or you paste the draft)
