@@ -89,7 +89,7 @@ export const TextHoverEffect = ({
         </mask>
       </defs>
 
-      {/* Stroke-draw animation — draws the outline, then stays visible */}
+      {/* Stroke-draw animation — draws the outline over 4s */}
       <motion.text
         x="50%"
         y="50%"
@@ -100,18 +100,6 @@ export const TextHoverEffect = ({
         initial={{ strokeDashoffset: 1000, strokeDasharray: 1000 }}
         animate={{ strokeDashoffset: 0, strokeDasharray: 1000 }}
         transition={{ duration: 4, ease: "easeInOut" }}
-      />
-      {/* Permanent white outline — visible immediately after draw completes */}
-      <motion.text
-        x="50%"
-        y="50%"
-        textAnchor="middle"
-        dominantBaseline="middle"
-        strokeWidth="0.5"
-        className={`fill-transparent stroke-white font-[helvetica] ${textSize} font-bold`}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 3.5 }}
       >
         {text}
       </motion.text>
