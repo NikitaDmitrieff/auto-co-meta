@@ -11,6 +11,7 @@
 #   ./auto-loop.sh --selftest   # Validate environment without running
 #   ./auto-loop.sh --dry-run    # Build prompt + show preview, don't run
 #   ./auto-loop.sh --status     # Quick status from state file
+#   ./auto-loop.sh --config     # Print all config values
 #   ./auto-loop.sh --version    # Show version
 #
 # Stop:
@@ -296,6 +297,39 @@ if [ "${1:-}" = "--version" ] || [ "${1:-}" = "-V" ]; then
     exit 0
 fi
 
+# === Config flag (print all config values) ===
+
+if [ "${1:-}" = "--config" ]; then
+    echo "=== Auto-Co Configuration ==="
+    echo ""
+    echo "Version:                $(cat "$PROJECT_DIR/VERSION" 2>/dev/null || echo 'unknown')"
+    echo "Project dir:            $PROJECT_DIR"
+    echo ""
+    echo "--- Loop Settings ---"
+    echo "MODEL:                  $MODEL"
+    echo "LOOP_INTERVAL:          ${LOOP_INTERVAL}s"
+    echo "CYCLE_TIMEOUT_SECONDS:  ${CYCLE_TIMEOUT_SECONDS}s"
+    echo "MAX_CONSECUTIVE_ERRORS: $MAX_CONSECUTIVE_ERRORS"
+    echo "COOLDOWN_SECONDS:       ${COOLDOWN_SECONDS}s"
+    echo "LIMIT_WAIT_SECONDS:     ${LIMIT_WAIT_SECONDS}s"
+    echo "MAX_LOGS:               $MAX_LOGS"
+    echo "RETRY_BASE_SECONDS:     ${RETRY_BASE_SECONDS}s"
+    echo "RETRY_MAX_SECONDS:      ${RETRY_MAX_SECONDS}s"
+    echo ""
+    echo "--- Paths ---"
+    echo "PROMPT_FILE:            $PROMPT_FILE"
+    echo "CONSENSUS_FILE:         $CONSENSUS_FILE"
+    echo "LOG_DIR:                $LOG_DIR"
+    echo "PID_FILE:               $PID_FILE"
+    echo "STATE_FILE:             $STATE_FILE"
+    echo "CYCLE_HISTORY_FILE:     $CYCLE_HISTORY_FILE"
+    echo ""
+    echo "--- Environment ---"
+    echo ".env loaded:            $([ -f "$PROJECT_DIR/.env" ] && echo 'yes' || echo 'no')"
+    echo "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: ${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-unset}"
+    exit 0
+fi
+
 # === Status flag (quick check without monitor.sh) ===
 
 if [ "${1:-}" = "--status" ]; then
@@ -420,6 +454,19 @@ if [ "${1:-}" = "--selftest" ]; then
             check "consensus.md valid" 1
         else
             check "consensus.md valid" 0 "missing required sections"
+        fi
+        # 4b. Check all required consensus sections
+        required_sections=("Last Updated" "Current Phase" "What We Did This Cycle" "Key Decisions Made" "Active Projects" "Metrics" "Next Action" "Company State" "Human Escalation" "Open Questions")
+        missing_sections=""
+        for section in "${required_sections[@]}"; do
+            if ! grep -q "^## $section" "$CONSENSUS_FILE"; then
+                missing_sections="${missing_sections}${section}, "
+            fi
+        done
+        if [ -z "$missing_sections" ]; then
+            check "consensus.md sections" 1 "${#required_sections[@]} required sections present"
+        else
+            check "consensus.md sections" 0 "missing: ${missing_sections%, }"
         fi
     else
         check "consensus.md exists" 1 "not yet created (OK for first run)"

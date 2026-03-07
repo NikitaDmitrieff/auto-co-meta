@@ -1,4 +1,4 @@
-.PHONY: start start-awake awake stop status last cycles monitor health alerts compare trend selftest version bump-version dry-run quick-status changelog pause resume install uninstall team watcher dashboard dashboard-build docker-start docker-stop docker-logs help
+.PHONY: start start-awake awake stop status last cycles monitor health alerts compare trend selftest version bump-version dry-run quick-status changelog config lint pause resume install uninstall team watcher dashboard dashboard-build docker-start docker-stop docker-logs help
 
 # === Quick Start ===
 
@@ -68,6 +68,17 @@ dry-run: ## Build and preview the prompt without running Claude
 
 quick-status: ## Quick status from state file (no monitor.sh needed)
 	./auto-loop.sh --status
+
+config: ## Print all loop configuration values
+	./auto-loop.sh --config
+
+lint: ## Run shellcheck on all shell scripts
+	@command -v shellcheck >/dev/null 2>&1 || (echo "shellcheck not found. Install: brew install shellcheck"; exit 1)
+	@echo "Running shellcheck on .sh files..."
+	@shellcheck -s bash auto-loop.sh stop-loop.sh monitor.sh install-daemon.sh 2>&1; \
+	rc=$$?; \
+	if [ $$rc -eq 0 ]; then echo "All scripts passed."; else echo "shellcheck found issues (exit $$rc)."; fi; \
+	exit $$rc
 
 changelog: ## Generate changelog from git log (optional: SINCE=v0.50.0)
 	@since=$${SINCE:-}; \
