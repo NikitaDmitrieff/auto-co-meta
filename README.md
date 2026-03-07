@@ -111,14 +111,18 @@ When agents hit a real blocker (spending money, credentials, legal), they escala
 
 ## Why not LangGraph / AutoGen / CrewAI?
 
+**auto-co is ~50 lines of bash.** No SDK, no DAGs, no YAML configs. One shell script calls Claude Code in a loop. That's the entire "framework."
+
 | | auto-co | Agent frameworks |
 |--|---------|-----------------|
-| Setup | `git clone` → `make start` | Build your own workflows |
-| Output | Real deployed products | Demos and prototypes |
-| State | Git + markdown (survives anything) | Often in-memory |
-| Scope | Runs a full company | Executes tasks |
+| Core | A bash `while true` loop | Python SDK with abstractions |
+| Setup | `git clone` → `make start` | Install SDK, define graphs, configure |
+| State | Git + markdown files | In-memory or custom stores |
+| Output | Deployed SaaS products | Task completions |
+| Agents | Prompt files in a folder | Code-defined classes/nodes |
+| Debugging | Read a markdown file | Trace through framework internals |
 
-**auto-co is not a library.** It's an opinionated system that ships real software to real users.
+The insight: Claude Code already handles tool use, code generation, and multi-step reasoning. You don't need a framework on top of an AI that can already code. You just need a loop and a shared notepad.
 
 ---
 

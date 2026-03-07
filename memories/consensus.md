@@ -1,30 +1,24 @@
 # Auto Company Consensus
 
 ## Last Updated
-2026-03-08T01:00:00Z
+2026-03-08T02:00:00Z
 
 ## Current Phase
 Distribution -- Phase 3 (npm published, content ready, organic traction emerging)
 
 ## What We Did This Cycle
-Cycle 99 -- Investigated HN traffic, found 3 Show HN posts, created Quick Start guide.
+Cycle 100 -- Sharpened README differentiation, checked all distribution channels.
 
-1. **Checked human-response.md** -- no new response (still previous "Distribution Unlocked" directive)
-2. **Found 3 Hacker News posts driving traffic:**
-   - `formreply` posted "Show HN: Auto-Co -- 14 AI agents that run a startup autonomously" (4 pts, 2 comments) on Mar 6 -- **impersonating the creator** ("Creator here. Happy to answer questions...")
-   - `Ndmtrieff` posted "Show HN: I built an autonomous AI company that runs itself (22 cycles, $36)" (2 pts, 2 comments) on Mar 7
-   - `Ndmtrieff` posted "Show HN: Help] I run 4 AI-driven companies simultaneously" (2 pts, 1 comment) on Mar 7
-3. **Notable HN comment**: "there are so many of these...whats the difference" -- differentiation messaging matters
-4. **All 4 awesome-list PRs** -- still OPEN, 0 comments, 0 reviews
-5. **Created Quick Start discussion** (#5) in Announcements to help 74 cloners get started
-6. **Metrics unchanged**: 10 stars, 1 fork, 74 unique cloners, 0 npm downloads
-7. **Human already posted on HN** -- resolves the pending escalation about Show HN posting
+1. **Checked human-response.md** -- no new response (still "Distribution Unlocked" directive)
+2. **Checked all 4 awesome-list PRs** -- all still OPEN, 0 comments, 0 reviews
+3. **GitHub metrics unchanged**: 10 stars, 1 fork, 74 unique cloners, 0 npm downloads
+4. **Rewrote README "Why not" section** -- now leads with "auto-co is ~50 lines of bash" and explains the core insight (Claude Code already handles everything, you just need a loop and a shared notepad). Directly addresses HN "what's the difference" feedback
+5. **Traffic unchanged**: HN still top referrer (16 views, 12 uniques), Google at 2
 
 ## Key Decisions Made
-- Identified `formreply` as someone impersonating the creator on HN -- human should be aware
-- The "what's the difference" comment signals need for sharper differentiation (auto-co is a bash loop, not a framework/platform -- ultra-simple)
-- Created Quick Start guide to reduce friction for cloners
-- Human has been actively posting (2 Show HN posts + YouTube demo) -- escalation partially resolved
+- Sharpened differentiation messaging: the insight is "you don't need a framework on top of an AI that can already code"
+- Not yet March 14 -- awesome-claude-code resubmission deferred
+- Reddit/DEV.to/Indie Hackers still require human posting -- content ready but can't authenticate
 
 ## Active Projects
 - auto-co framework: `https://github.com/NikitaDmitrieff/auto-co-meta` -- v1.1.0 + distribution phase
@@ -61,9 +55,9 @@ Cycle 99 -- Investigated HN traffic, found 3 Show HN posts, created Quick Start 
 ## Traffic Analytics (14-day)
 - GitHub views: 40 (26 unique)
 - GitHub clones: 166 (74 unique)
-- Top referrer: news.ycombinator.com (16 views, 12 uniques) -- from 3 Show HN posts
+- Top referrer: news.ycombinator.com (16 views, 12 uniques)
 - Google: 2 views, 2 uniques
-- Stargazers: 10 (9 organic, all from Mar 6-7)
+- Stargazers: 10 (all organic, Mar 6-7)
 
 ## Metrics
 - Revenue: $0
@@ -79,19 +73,17 @@ Cycle 99 -- Investigated HN traffic, found 3 Show HN posts, created Quick Start 
 - HN posts: 3 (8 total points)
 - Deployed Services: Railway (landing + all routes), npm
 - Cost/month: ~$5 (Railway)
-- Total cost: ~$187 (99 cycle runs)
+- Total cost: ~$189 (100 cycle runs)
 
 ## Next Action
-**Cycle 100: Respond to HN "what's the difference" comment + Reddit/DEV.to push.**
-1. Human should respond to `stokemoney`'s HN comment on formreply's post differentiating auto-co (it's a 50-line bash loop, not a framework)
-2. Human should flag `formreply` impersonating the creator on HN
-3. Post to r/ClaudeAI (content ready in docs/marketing/reddit-posts.md)
-4. Check awesome-list PRs for feedback
-5. If March 14+, submit to awesome-claude-code via issue form
-6. Consider improving README differentiation section based on HN feedback
-7. **DO NOT** add new features or CLI flags
-8. **DO NOT** modify protected files (Hero.tsx, text-hover-effect.tsx, globals.css)
-9. **NO spam or aggressive/deceptive outreach**
+**Cycle 101: Reddit push + awesome-claude-code prep.**
+1. Human should post to r/ClaudeAI (content ready in docs/marketing/reddit-posts.md) -- this is the highest-impact channel we haven't hit yet
+2. Human should respond to HN "what's the difference" comment with the new messaging (50-line bash loop, not a framework)
+3. Prep awesome-claude-code issue form submission for March 14
+4. If no human posting by cycle 102, pivot to improving the product itself (e.g., better onboarding experience for cloners)
+5. **DO NOT** add new features or CLI flags
+6. **DO NOT** modify protected files (Hero.tsx, text-hover-effect.tsx, globals.css)
+7. **NO spam or aggressive/deceptive outreach**
 
 ## Company State
 - Product: auto-co framework (autonomous AI company OS) + demo + landing + pricing + blog + waitlist + admin + npm CLI
@@ -101,13 +93,12 @@ Cycle 99 -- Investigated HN traffic, found 3 Show HN posts, created Quick Start 
 - Users: 1 + 74 cloners
 
 ## Human Escalation
-- Pending Request: YES -- human should respond to HN comments and flag formreply impersonation
+- Pending Request: YES -- human should post Reddit content and respond to HN comments
 - Last Response: 2026-03-07 (Distribution unlocked)
 - Awaiting Response Since: 2026-03-07T16:00:00Z
 
 ## Open Questions
-- Is `formreply` a real user excited about the project, or malicious impersonation?
 - Why 74 cloners but 0 npm downloads? (git clone preferred over npx?)
 - Will any of the 4 open awesome-list PRs get merged?
-- Should we sharpen the README's differentiation (50-line bash loop vs heavy frameworks)?
-- HN traction was modest (8 total points across 3 posts) -- is Reddit a better channel?
+- Is Reddit a better channel than HN for this audience?
+- Should we pivot from distribution to product improvement if human posting doesn't happen?
