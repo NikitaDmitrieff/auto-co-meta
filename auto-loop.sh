@@ -583,65 +583,67 @@ if [ "${1:-}" = "--version" ] || [ "${1:-}" = "-V" ]; then
     exit 0
 fi
 
-# === Init flag (scaffold a new auto-co project) ===
+# === Shared scaffolding function (used by --init and --template) ===
 
-if [ "${1:-}" = "--init" ]; then
-    TARGET_DIR="${2:-}"
-    if [ -z "$TARGET_DIR" ]; then
-        echo "Usage: ./auto-loop.sh --init <project-directory>"
-        echo ""
-        echo "Scaffolds a new auto-co project with all necessary files."
-        echo "Example: ./auto-loop.sh --init ~/Projects/my-ai-company"
-        exit 1
-    fi
-
-    # Resolve to absolute path
-    if [[ "$TARGET_DIR" != /* ]]; then
-        TARGET_DIR="$(pwd)/$TARGET_DIR"
-    fi
-
-    if [ -f "$TARGET_DIR/auto-loop.sh" ]; then
-        echo "Error: $TARGET_DIR already contains an auto-co project (auto-loop.sh exists)."
-        exit 1
-    fi
-
-    echo "=== Scaffolding new auto-co project ==="
-    echo "Target: $TARGET_DIR"
-    echo ""
+# scaffold_project <target_dir> <mission_text> <next_action> <consensus_annotation> <tech_stack> <commit_msg>
+#   target_dir:            absolute path to new project
+#   mission_text:          mission for CLAUDE.md
+#   next_action:           initial Next Action for consensus.md
+#   consensus_annotation:  extra text for consensus (e.g. "template: saas") or empty
+#   tech_stack:            tech stack label for consensus or "TBD"
+#   commit_msg:            git commit message
+scaffold_project() {
+    local target_dir="$1"
+    local mission_text="$2"
+    local next_action="$3"
+    local annotation="$4"
+    local tech_stack="${5:-TBD}"
+    local commit_msg="$6"
 
     # Create directory structure
-    mkdir -p "$TARGET_DIR"/{memories,logs,docs,projects}
-    mkdir -p "$TARGET_DIR/docs"/{ceo,cto,critic,product,ui,interaction,fullstack,qa,devops,marketing,operations,sales,cfo,research}
-    mkdir -p "$TARGET_DIR/.claude/agents"
-    mkdir -p "$TARGET_DIR/.claude/skills/team"
+    mkdir -p "$target_dir"/{memories,logs,docs,projects}
+    mkdir -p "$target_dir/docs"/{ceo,cto,critic,product,ui,interaction,fullstack,qa,devops,marketing,operations,sales,cfo,research}
+    mkdir -p "$target_dir/.claude/agents"
+    mkdir -p "$target_dir/.claude/skills/team"
 
     # Copy core scripts
     for script in auto-loop.sh stop-loop.sh monitor.sh; do
         if [ -f "$PROJECT_DIR/$script" ]; then
-            cp "$PROJECT_DIR/$script" "$TARGET_DIR/$script"
-            chmod +x "$TARGET_DIR/$script"
+            cp "$PROJECT_DIR/$script" "$target_dir/$script"
+            chmod +x "$target_dir/$script"
             echo "  copied $script"
         fi
     done
 
     # Copy agent definitions
     if [ -d "$PROJECT_DIR/.claude/agents" ]; then
-        cp "$PROJECT_DIR/.claude/agents/"*.md "$TARGET_DIR/.claude/agents/" 2>/dev/null || true
-        agent_count=$(ls "$TARGET_DIR/.claude/agents/"*.md 2>/dev/null | wc -l | tr -d ' ')
+        cp "$PROJECT_DIR/.claude/agents/"*.md "$target_dir/.claude/agents/" 2>/dev/null || true
+        local agent_count
+        agent_count=$(ls "$target_dir/.claude/agents/"*.md 2>/dev/null | wc -l | tr -d ' ')
         echo "  copied $agent_count agent definitions"
     fi
 
     # Copy team skill
     if [ -f "$PROJECT_DIR/.claude/skills/team/SKILL.md" ]; then
-        cp "$PROJECT_DIR/.claude/skills/team/SKILL.md" "$TARGET_DIR/.claude/skills/team/SKILL.md"
+        cp "$PROJECT_DIR/.claude/skills/team/SKILL.md" "$target_dir/.claude/skills/team/SKILL.md"
         echo "  copied team skill"
     fi
 
     # Copy VERSION
-    cp "$PROJECT_DIR/VERSION" "$TARGET_DIR/VERSION" 2>/dev/null || echo "1.0.1" > "$TARGET_DIR/VERSION"
+    cp "$PROJECT_DIR/VERSION" "$target_dir/VERSION" 2>/dev/null || echo "1.0.1" > "$target_dir/VERSION"
 
-    # Create fresh consensus (Day 0)
-    cat > "$TARGET_DIR/memories/consensus.md" << 'CONSENSUS_EOF'
+    # Build consensus annotation strings
+    local cycle_note="Nothing yet -- this is a fresh auto-co project."
+    local product_note="TBD"
+    local question_note="the"
+    if [ -n "$annotation" ]; then
+        cycle_note="Nothing yet -- this is a fresh auto-co project ($annotation)."
+        product_note="TBD ($annotation)"
+        question_note="the ${annotation#template: }"
+    fi
+
+    # Create consensus (Day 0)
+    cat > "$target_dir/memories/consensus.md" << CONSENSUS_EOF
 # Auto Company Consensus
 
 ## Last Updated
@@ -651,7 +653,7 @@ if [ "${1:-}" = "--init" ]; then
 Day 0
 
 ## What We Did This Cycle
-Nothing yet -- this is a fresh auto-co project.
+${cycle_note}
 
 ## Key Decisions Made
 (none)
@@ -660,19 +662,19 @@ Nothing yet -- this is a fresh auto-co project.
 (none)
 
 ## Metrics
-- Revenue: $0
+- Revenue: \$0
 - Users: 0
-- MRR: $0
+- MRR: \$0
 - Deployed Services: (none)
-- Cost/month: $0
+- Cost/month: \$0
 
 ## Next Action
-**Cycle 1: CEO calls a strategy meeting to decide what to build.**
+${next_action}
 
 ## Company State
-- Product: TBD
-- Tech Stack: TBD
-- Revenue: $0
+- Product: ${product_note}
+- Tech Stack: ${tech_stack}
+- Revenue: \$0
 - Users: 0
 
 ## Human Escalation
@@ -681,18 +683,18 @@ Nothing yet -- this is a fresh auto-co project.
 - Awaiting Response Since: N/A
 
 ## Open Questions
-- What product should we build?
+- What specific product should we build within ${question_note} space?
 - What market should we target?
 CONSENSUS_EOF
-    echo "  created memories/consensus.md (Day 0)"
+    echo "  created memories/consensus.md"
 
     # Create empty escalation files
-    echo "" > "$TARGET_DIR/memories/human-request.md"
-    echo "" > "$TARGET_DIR/memories/human-response.md"
+    echo "" > "$target_dir/memories/human-request.md"
+    echo "" > "$target_dir/memories/human-response.md"
     echo "  created escalation files"
 
-    # Create template PROMPT.md
-    cat > "$TARGET_DIR/PROMPT.md" << 'PROMPT_EOF'
+    # Create PROMPT.md
+    cat > "$target_dir/PROMPT.md" << 'PROMPT_EOF'
 # Auto-Co -- Autonomous Loop Prompt
 
 You are Auto-Co's autonomous operating coordinator. Each time you are invoked, you drive one work cycle. No supervision, autonomous decisions, bold action.
@@ -748,13 +750,13 @@ Before ending, you **must** update `memories/consensus.md`.
 PROMPT_EOF
     echo "  created PROMPT.md"
 
-    # Create template CLAUDE.md
-    cat > "$TARGET_DIR/CLAUDE.md" << 'CLAUDE_EOF'
+    # Create CLAUDE.md
+    cat > "$target_dir/CLAUDE.md" << CLAUDE_EOF
 # Auto-Co -- Fully Autonomous AI Company
 
 ## Mission
 
-**Define your mission here.** This auto-co instance will work autonomously toward this goal.
+${mission_text}
 
 ## Operating Mode
 
@@ -769,19 +771,19 @@ This is a **fully autonomous AI company** with no human involvement in daily dec
 
 | Forbidden | Specifics |
 |-----------|-----------|
-| Delete GitHub repos | `gh repo delete` and any repo-deletion operations |
-| Delete Vercel projects | `vercel remove` -- never delete projects/deployments |
-| Delete Railway services | `railway delete` -- never delete services/projects |
-| Reset Supabase databases | `supabase db reset` -- never wipe production data |
-| Delete system files | `rm -rf /`, do not touch `~/.ssh/`, `~/.config/`, `~/.claude/` |
+| Delete GitHub repos | \`gh repo delete\` and any repo-deletion operations |
+| Delete Vercel projects | \`vercel remove\` -- never delete projects/deployments |
+| Delete Railway services | \`railway delete\` -- never delete services/projects |
+| Reset Supabase databases | \`supabase db reset\` -- never wipe production data |
+| Delete system files | \`rm -rf /\`, do not touch \`~/.ssh/\`, \`~/.config/\`, \`~/.claude/\` |
 | Illegal activity | Fraud, copyright infringement, data theft, unauthorized access |
 | Leak credentials | API keys/tokens/passwords must never enter public repos or logs |
-| Force push main | `git push --force` to main/master |
-| Destructive git ops | `git reset --hard` only on temporary branches |
+| Force push main | \`git push --force\` to main/master |
+| Destructive git ops | \`git reset --hard\` only on temporary branches |
 
 ## Team Architecture
 
-14 AI Agents defined in `.claude/agents/`. See agent files for full role definitions.
+14 AI Agents defined in \`.claude/agents/\`. See agent files for full role definitions.
 
 ## Decision Principles
 
@@ -795,22 +797,22 @@ This is a **fully autonomous AI company** with no human involvement in daily dec
 
 ## Shared Memory
 
-- **`memories/consensus.md`** -- cross-cycle relay baton
-- **`memories/human-request.md`** -- outbound escalation requests
-- **`memories/human-response.md`** -- inbound responses from the human
-- **`docs/<role>/`** -- each Agent's work output
-- **`projects/`** -- all new projects
+- **\`memories/consensus.md\`** -- cross-cycle relay baton
+- **\`memories/human-request.md\`** -- outbound escalation requests
+- **\`memories/human-response.md\`** -- inbound responses from the human
+- **\`docs/<role>/\`** -- each Agent's work output
+- **\`projects/\`** -- all new projects
 
 ## Human Escalation Protocol
 
 When truly necessary (spending money, legal questions, credentials):
-1. CEO writes request to `memories/human-request.md`
+1. CEO writes request to \`memories/human-request.md\`
 2. If no response within 2 cycles, make autonomous decision and note it
 CLAUDE_EOF
-    echo "  created CLAUDE.md (template)"
+    echo "  created CLAUDE.md"
 
     # Create .gitignore
-    cat > "$TARGET_DIR/.gitignore" << 'GITIGNORE_EOF'
+    cat > "$target_dir/.gitignore" << 'GITIGNORE_EOF'
 # Auto-Co
 .auto-loop.pid
 .auto-loop-stop
@@ -837,10 +839,45 @@ GITIGNORE_EOF
     echo "  created .gitignore"
 
     # Init git repo if not already one
-    if [ ! -d "$TARGET_DIR/.git" ]; then
-        (cd "$TARGET_DIR" && git init -q && git add -A && git commit -q -m "chore: scaffold auto-co project via --init")
+    if [ ! -d "$target_dir/.git" ]; then
+        (cd "$target_dir" && git init -q && git add -A && git commit -q -m "$commit_msg")
         echo "  initialized git repository"
     fi
+}
+
+# === Init flag (scaffold a new auto-co project) ===
+
+if [ "${1:-}" = "--init" ]; then
+    TARGET_DIR="${2:-}"
+    if [ -z "$TARGET_DIR" ]; then
+        echo "Usage: ./auto-loop.sh --init <project-directory>"
+        echo ""
+        echo "Scaffolds a new auto-co project with all necessary files."
+        echo "Example: ./auto-loop.sh --init ~/Projects/my-ai-company"
+        exit 1
+    fi
+
+    # Resolve to absolute path
+    if [[ "$TARGET_DIR" != /* ]]; then
+        TARGET_DIR="$(pwd)/$TARGET_DIR"
+    fi
+
+    if [ -f "$TARGET_DIR/auto-loop.sh" ]; then
+        echo "Error: $TARGET_DIR already contains an auto-co project (auto-loop.sh exists)."
+        exit 1
+    fi
+
+    echo "=== Scaffolding new auto-co project ==="
+    echo "Target: $TARGET_DIR"
+    echo ""
+
+    scaffold_project \
+        "$TARGET_DIR" \
+        "**Define your mission here.** This auto-co instance will work autonomously toward this goal." \
+        "**Cycle 1: CEO calls a strategy meeting to decide what to build.**" \
+        "" \
+        "TBD" \
+        "chore: scaffold auto-co project via --init"
 
     echo ""
     echo "=== Auto-Co project scaffolded successfully! ==="
@@ -937,50 +974,14 @@ if [ "${1:-}" = "--template" ]; then
     echo "Target:      $TARGET_DIR"
     echo ""
 
-    # Create base directory structure (same as --init)
-    mkdir -p "$TARGET_DIR"/{memories,logs,docs,projects}
-    mkdir -p "$TARGET_DIR/docs"/{ceo,cto,critic,product,ui,interaction,fullstack,qa,devops,marketing,operations,sales,cfo,research}
-    mkdir -p "$TARGET_DIR/.claude/agents"
-    mkdir -p "$TARGET_DIR/.claude/skills/team"
-
     # Create template-specific extra directories
     if [ -n "${EXTRA_DIRS:-}" ]; then
+        mkdir -p "$TARGET_DIR"
         for dir in $EXTRA_DIRS; do
             mkdir -p "$TARGET_DIR/$dir"
             echo "  created $dir/"
         done
     fi
-
-    # Copy core scripts
-    for script in auto-loop.sh stop-loop.sh monitor.sh; do
-        if [ -f "$PROJECT_DIR/$script" ]; then
-            cp "$PROJECT_DIR/$script" "$TARGET_DIR/$script"
-            chmod +x "$TARGET_DIR/$script"
-            echo "  copied $script"
-        fi
-    done
-
-    # Copy agent definitions
-    if [ -d "$PROJECT_DIR/.claude/agents" ]; then
-        cp "$PROJECT_DIR/.claude/agents/"*.md "$TARGET_DIR/.claude/agents/" 2>/dev/null || true
-        agent_count=$(ls "$TARGET_DIR/.claude/agents/"*.md 2>/dev/null | wc -l | tr -d ' ')
-        echo "  copied $agent_count agent definitions"
-    fi
-
-    # Copy team skill
-    if [ -f "$PROJECT_DIR/.claude/skills/team/SKILL.md" ]; then
-        cp "$PROJECT_DIR/.claude/skills/team/SKILL.md" "$TARGET_DIR/.claude/skills/team/SKILL.md"
-        echo "  copied team skill"
-    fi
-
-    # Copy templates directory so the new project can also scaffold
-    if [ -d "$TEMPLATES_DIR" ]; then
-        cp -r "$TEMPLATES_DIR" "$TARGET_DIR/templates"
-        echo "  copied templates/"
-    fi
-
-    # Copy VERSION
-    cp "$PROJECT_DIR/VERSION" "$TARGET_DIR/VERSION" 2>/dev/null || echo "1.0.1" > "$TARGET_DIR/VERSION"
 
     # Read template mission
     TPL_MISSION="**Define your mission here.**"
@@ -994,206 +995,18 @@ if [ "${1:-}" = "--template" ]; then
         TPL_NEXT_ACTION="$(cat "$TPL_DIR/consensus-next-action.md")"
     fi
 
-    # Create consensus with template-specific next action
-    cat > "$TARGET_DIR/memories/consensus.md" << CONSENSUS_EOF
-# Auto Company Consensus
+    scaffold_project \
+        "$TARGET_DIR" \
+        "$TPL_MISSION" \
+        "$TPL_NEXT_ACTION" \
+        "template: $TPL_NAME" \
+        "${TECH_STACK:-TBD}" \
+        "chore: scaffold auto-co project from template '$TPL_NAME'"
 
-## Last Updated
-(not yet started)
-
-## Current Phase
-Day 0
-
-## What We Did This Cycle
-Nothing yet -- this is a fresh auto-co project (template: ${TPL_NAME}).
-
-## Key Decisions Made
-(none)
-
-## Active Projects
-(none)
-
-## Metrics
-- Revenue: \$0
-- Users: 0
-- MRR: \$0
-- Deployed Services: (none)
-- Cost/month: \$0
-
-## Next Action
-${TPL_NEXT_ACTION}
-
-## Company State
-- Product: TBD (template: ${TPL_NAME})
-- Tech Stack: ${TECH_STACK:-TBD}
-- Revenue: \$0
-- Users: 0
-
-## Human Escalation
-- Pending Request: NO
-- Last Response: N/A
-- Awaiting Response Since: N/A
-
-## Open Questions
-- What specific product should we build within the ${NAME:-$TPL_NAME} space?
-- What market should we target?
-CONSENSUS_EOF
-    echo "  created memories/consensus.md (template: $TPL_NAME)"
-
-    # Create empty escalation files
-    echo "" > "$TARGET_DIR/memories/human-request.md"
-    echo "" > "$TARGET_DIR/memories/human-response.md"
-    echo "  created escalation files"
-
-    # Create PROMPT.md (same as --init)
-    cat > "$TARGET_DIR/PROMPT.md" << 'PROMPT_EOF'
-# Auto-Co -- Autonomous Loop Prompt
-
-You are Auto-Co's autonomous operating coordinator. Each time you are invoked, you drive one work cycle. No supervision, autonomous decisions, bold action.
-
-## Work Cycle
-
-### 1. Read Consensus
-
-The current consensus is pre-loaded at the end of this prompt. If it's missing, read `memories/consensus.md`.
-
-### 2. Check for Human Escalation Response
-
-Before deciding on the cycle's action, check `memories/human-response.md`. If it contains a response:
-- Read and incorporate the human's answer into your decision-making
-- Clear the file after processing (write an empty string)
-- Note in consensus that a human response was received and acted upon
-
-### 3. Decide
-
-- Clear Next Action exists -> execute it
-- Active project in progress -> continue pushing forward (check `docs/*/` for outputs)
-- Day 0, no direction -> CEO calls a strategy meeting
-- Stuck -> change angle, narrow scope, or just ship it
-
-Priority: **Ship > Plan > Discuss**
-
-### 4. Form Team and Execute
-
-Read `.claude/skills/team/SKILL.md` and follow the process to assemble a team for the task. Select 3-5 of the most relevant agents per cycle -- do not pull everyone in.
-
-### 5. Update Consensus (Mandatory)
-
-Before ending, you **must** update `memories/consensus.md`.
-
-**Atomic write protocol:** Write to `memories/.consensus.tmp` first, then rename to `memories/consensus.md`.
-
-## Convergence Rules (Mandatory)
-
-1. **Cycle 1**: Brainstorm. Each agent proposes one idea. End by ranking top 3.
-2. **Cycle 2**: Select #1. Critic runs Pre-Mortem, Research validates the market, CFO runs the numbers. Deliver a **GO / NO-GO** verdict.
-3. **Cycle 3+**: GO -> create repo, start writing code. Discussion is **FORBIDDEN**. NO-GO -> try #2. If all fail, force-pick one and build it.
-4. **Every cycle after Cycle 2 must produce artifacts** (files, repos, deployments). Pure discussion is forbidden.
-5. **Same Next Action appearing 2 consecutive cycles** -> you are stalled. Change direction or narrow scope and ship immediately.
-
-## Anti-Patterns (Never Do These)
-
-- Endless brainstorming past Cycle 1
-- "Let's research more" after Cycle 2
-- Producing only documents with no code or deployments
-- Waiting for perfect information
-- Asking the human for routine decisions
-- Repeating the same Next Action without progress
-PROMPT_EOF
-    echo "  created PROMPT.md"
-
-    # Create CLAUDE.md with template-specific mission
-    cat > "$TARGET_DIR/CLAUDE.md" << CLAUDE_EOF
-# Auto-Co -- Fully Autonomous AI Company
-
-## Mission
-
-${TPL_MISSION}
-
-## Operating Mode
-
-This is a **fully autonomous AI company** with no human involvement in daily decisions.
-
-- **Do NOT wait for human approval** -- you are the decision-maker
-- **Do NOT ask for human opinions** -- discuss internally as a team, then act
-- **CEO (Bezos) is the ultimate decision-maker** -- when the team disagrees, CEO has final say
-- **Munger is the only brake** -- every major decision must pass through him
-
-## Safety Red Lines (Absolute -- Never Violate)
-
-| Forbidden | Specifics |
-|-----------|-----------|
-| Delete GitHub repos | \`gh repo delete\` and any repo-deletion operations |
-| Delete Vercel projects | \`vercel remove\` -- never delete projects/deployments |
-| Delete Railway services | \`railway delete\` -- never delete services/projects |
-| Reset Supabase databases | \`supabase db reset\` -- never wipe production data |
-| Delete system files | \`rm -rf /\`, do not touch \`~/.ssh/\`, \`~/.config/\`, \`~/.claude/\` |
-| Illegal activity | Fraud, copyright infringement, data theft, unauthorized access |
-| Leak credentials | API keys/tokens/passwords must never enter public repos or logs |
-| Force push main | \`git push --force\` to main/master |
-| Destructive git ops | \`git reset --hard\` only on temporary branches |
-
-## Team Architecture
-
-14 AI Agents defined in \`.claude/agents/\`. See agent files for full role definitions.
-
-## Decision Principles
-
-1. **Ship > Plan > Discuss** -- if you can ship it, don't discuss it
-2. **Act on 70% information** -- waiting for 90% means you're already too slow
-3. **Customer obsession** -- start from real needs
-4. **Simplicity first** -- if one person can do it, don't split it
-5. **Ramen profitability** -- the first goal is revenue, not users
-6. **Boring technology** -- mature, stable tech unless new tech offers 10x advantage
-7. **Monolith first** -- get it running, split when needed
-
-## Shared Memory
-
-- **\`memories/consensus.md\`** -- cross-cycle relay baton
-- **\`memories/human-request.md\`** -- outbound escalation requests
-- **\`memories/human-response.md\`** -- inbound responses from the human
-- **\`docs/<role>/\`** -- each Agent's work output
-- **\`projects/\`** -- all new projects
-
-## Human Escalation Protocol
-
-When truly necessary (spending money, legal questions, credentials):
-1. CEO writes request to \`memories/human-request.md\`
-2. If no response within 2 cycles, make autonomous decision and note it
-CLAUDE_EOF
-    echo "  created CLAUDE.md (template: $TPL_NAME)"
-
-    # Create .gitignore
-    cat > "$TARGET_DIR/.gitignore" << 'GITIGNORE_EOF'
-# Auto-Co
-.auto-loop.pid
-.auto-loop-stop
-.auto-loop-paused
-.auto-loop-state
-logs/cycle-*.log
-logs/auto-loop.log*
-memories/.consensus.tmp
-
-# Dependencies
-node_modules/
-.next/
-out/
-
-# Environment
-.env
-.env.local
-.env*.local
-
-# OS
-.DS_Store
-Thumbs.db
-GITIGNORE_EOF
-    echo "  created .gitignore"
-
-    # Init git repo if not already one
-    if [ ! -d "$TARGET_DIR/.git" ]; then
-        (cd "$TARGET_DIR" && git init -q && git add -A && git commit -q -m "chore: scaffold auto-co project from template '$TPL_NAME'")
-        echo "  initialized git repository"
+    # Copy templates directory so the new project can also scaffold
+    if [ -d "$TEMPLATES_DIR" ]; then
+        cp -r "$TEMPLATES_DIR" "$TARGET_DIR/templates"
+        echo "  copied templates/"
     fi
 
     echo ""
