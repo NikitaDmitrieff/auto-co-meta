@@ -33,6 +33,7 @@
 #   ./auto-loop.sh --metrics    # Quick KPI dashboard from cycle history
 #   ./auto-loop.sh --env        # Generate .env.example with all config options
 #   ./auto-loop.sh --snapshot   # Create timestamped tarball of project state
+#   ./auto-loop.sh --rollback   # Undo last restore from pre-restore backup
 #   ./auto-loop.sh --version    # Show version
 #
 # Stop:
@@ -372,6 +373,8 @@ USAGE:
   ./auto-loop.sh --restore SNAP --force  Restore without confirmation prompt
   ./auto-loop.sh --restore SNAP --backup  Snapshot current state before restoring
   ./auto-loop.sh --restore SNAP --backup --force  Backup + restore without confirmation
+  ./auto-loop.sh --rollback   Restore from most recent pre-restore backup (quick undo)
+  ./auto-loop.sh --rollback --force  Rollback without confirmation prompt
   ./auto-loop.sh --selftest   Validate environment
   ./auto-loop.sh --dry-run    Preview prompt without running
 
@@ -1049,6 +1052,69 @@ if [ "${1:-}" = "--restore" ]; then
     tar -xzf "$SNAP_FILE" 2>/dev/null
     echo ""
     echo "Restored $(echo "$SNAP_FILES" | grep -cv '/$' | tr -d ' ') files from $(basename "$SNAP_FILE")"
+    exit 0
+fi
+
+# === Rollback flag (quick undo: restore from most recent pre-restore backup) ===
+
+if [ "${1:-}" = "--rollback" ]; then
+    SNAP_DIR="snapshots"
+    FORCE_ROLLBACK=false
+    [ "${2:-}" = "--force" ] && FORCE_ROLLBACK=true
+
+    if [ ! -d "$SNAP_DIR" ]; then
+        echo "Error: No snapshots directory found."
+        exit 1
+    fi
+
+    # Find the most recent pre-restore backup
+    LATEST_BACKUP="$(ls -1t "$SNAP_DIR"/auto-co-pre-restore-*.tar.gz 2>/dev/null | head -1 || true)"
+
+    if [ -z "$LATEST_BACKUP" ]; then
+        echo "Error: No pre-restore backups found in $SNAP_DIR/"
+        echo "Backups are created when you use: ./auto-loop.sh --restore SNAP --backup"
+        exit 1
+    fi
+
+    echo "=== Rollback ==="
+    echo "Found backup: $(basename "$LATEST_BACKUP")"
+    SIZE="$(du -h "$LATEST_BACKUP" | cut -f1)"
+    echo "Size: $SIZE"
+    echo ""
+
+    # Show contents preview
+    echo "Files to be restored:"
+    SNAP_FILES="$(tar -tzf "$LATEST_BACKUP" 2>/dev/null)"
+    OVERWRITE_COUNT=0
+    NEW_COUNT=0
+    while IFS= read -r f; do
+        [ -z "$f" ] && continue
+        [ "${f: -1}" = "/" ] && continue
+        if [ -f "$f" ]; then
+            echo "  ~ $f (overwrite)"
+            OVERWRITE_COUNT=$((OVERWRITE_COUNT + 1))
+        else
+            echo "  + $f (new)"
+            NEW_COUNT=$((NEW_COUNT + 1))
+        fi
+    done <<< "$SNAP_FILES"
+
+    echo ""
+    echo "Summary: ${OVERWRITE_COUNT} files to overwrite, ${NEW_COUNT} new files"
+
+    if [ "$FORCE_ROLLBACK" != true ]; then
+        echo ""
+        printf "Proceed with rollback? [y/N] "
+        read -r CONFIRM
+        if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
+            echo "Rollback cancelled."
+            exit 0
+        fi
+    fi
+
+    tar -xzf "$LATEST_BACKUP" 2>/dev/null
+    echo ""
+    echo "Rolled back $(echo "$SNAP_FILES" | grep -cv '/$' | tr -d ' ') files from $(basename "$LATEST_BACKUP")"
     exit 0
 fi
 
