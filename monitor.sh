@@ -14,6 +14,7 @@
 #   ./monitor.sh --dashboard # Live-updating compact dashboard
 #   ./monitor.sh --export    # Export cycle history as CSV
 #   ./monitor.sh --alerts    # Check for failures, cost spikes, stalls
+#   ./monitor.sh --compare   # Compare cost/duration across models
 # ============================================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -332,6 +333,52 @@ case "${1:-}" in
             echo ""
             echo "  $alerts alert(s) found."
         fi
+        ;;
+
+    --compare)
+        HISTORY_FILE="$LOG_DIR/cycle-history.jsonl"
+        if [ ! -f "$HISTORY_FILE" ] || [ ! -s "$HISTORY_FILE" ] || ! command -v jq &>/dev/null; then
+            echo "No cycle history or jq not installed."
+            exit 1
+        fi
+
+        echo "=== Model Comparison ==="
+        echo ""
+        printf "%-12s %7s %10s %10s %10s %8s\n" "Model" "Cycles" "Total" "Avg Cost" "Avg Dur" "OK Rate"
+        echo "──────────── ─────── ────────── ────────── ────────── ────────"
+
+        jq -s '
+            group_by(.model) | .[] |
+            {
+                model: .[0].model,
+                count: length,
+                total: ([.[].cost] | add),
+                avg_cost: (([.[].cost] | add) / length | . * 100 | floor / 100),
+                avg_dur: (([.[].duration_s] | add) / length | floor),
+                ok: ([.[] | select(.status=="ok")] | length),
+                ok_pct: (([.[] | select(.status=="ok")] | length) * 100 / length | floor)
+            } |
+            "\(.model)\t\(.count)\t$\(.total)\t$\(.avg_cost)\t\(.avg_dur)s\t\(.ok_pct)%"
+        ' -r "$HISTORY_FILE" \
+            | sort -t$'\t' -k2 -rn \
+            | while IFS=$'\t' read -r model count total avg_cost avg_dur ok_pct; do
+                printf "%-12s %7s %10s %10s %10s %8s\n" "$model" "$count" "$total" "$avg_cost" "$avg_dur" "$ok_pct"
+            done
+
+        echo ""
+        echo "Cost efficiency (lower = better):"
+        jq -s '
+            group_by(.model) | .[] |
+            {
+                model: .[0].model,
+                cost_per_ok: (
+                    ([.[] | select(.status=="ok")] | length) as $ok |
+                    if $ok > 0 then (([.[].cost] | add) / $ok | . * 100 | floor / 100)
+                    else "N/A" end
+                )
+            } |
+            "  \(.model): $\(.cost_per_ok) per successful cycle"
+        ' -r "$HISTORY_FILE"
         ;;
 
     *)

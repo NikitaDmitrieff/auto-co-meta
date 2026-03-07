@@ -8,6 +8,7 @@
 # Usage:
 #   ./auto-loop.sh              # Run in foreground
 #   ./auto-loop.sh --daemon     # Run via launchd (no tty)
+#   ./auto-loop.sh --selftest   # Validate environment without running
 #
 # Stop:
 #   ./stop-loop.sh              # Graceful stop
@@ -283,6 +284,123 @@ extract_cycle_metadata() {
         CYCLE_TYPE=$(echo "$OUTPUT" | sed -n 's/.*"type":"\([^"]*\)".*/\1/p' | tail -1 || true)
     fi
 }
+
+# === Self-test mode ===
+
+if [ "${1:-}" = "--selftest" ]; then
+    echo "=== Auto-Co Self-Test ==="
+    pass=0
+    fail=0
+
+    check() {
+        local label="$1" ok="$2" detail="${3:-}"
+        if [ "$ok" -eq 1 ]; then
+            printf "  [PASS] %s" "$label"
+            [ -n "$detail" ] && printf " (%s)" "$detail"
+            echo ""
+            pass=$((pass + 1))
+        else
+            printf "  [FAIL] %s" "$label"
+            [ -n "$detail" ] && printf " -- %s" "$detail"
+            echo ""
+            fail=$((fail + 1))
+        fi
+    }
+
+    # 1. Claude CLI
+    if command -v claude &>/dev/null; then
+        ver=$(claude --version 2>/dev/null | head -1 || echo "unknown")
+        check "Claude CLI installed" 1 "$ver"
+    else
+        check "Claude CLI installed" 0 "not found in PATH"
+    fi
+
+    # 2. PROMPT.md
+    if [ -f "$PROMPT_FILE" ]; then
+        lines=$(wc -l < "$PROMPT_FILE" | tr -d ' ')
+        check "PROMPT.md exists" 1 "${lines} lines"
+    else
+        check "PROMPT.md exists" 0 "missing at $PROMPT_FILE"
+    fi
+
+    # 3. memories/ directory
+    if [ -d "$PROJECT_DIR/memories" ]; then
+        check "memories/ directory" 1
+    else
+        check "memories/ directory" 0 "missing"
+    fi
+
+    # 4. consensus.md validity
+    if [ -f "$CONSENSUS_FILE" ]; then
+        if validate_consensus; then
+            check "consensus.md valid" 1
+        else
+            check "consensus.md valid" 0 "missing required sections"
+        fi
+    else
+        check "consensus.md exists" 1 "not yet created (OK for first run)"
+    fi
+
+    # 5. jq installed
+    if command -v jq &>/dev/null; then
+        check "jq installed" 1 "$(jq --version 2>/dev/null || echo 'unknown')"
+    else
+        check "jq installed" 0 "required for cost analytics"
+    fi
+
+    # 6. git repo
+    if git -C "$PROJECT_DIR" rev-parse --is-inside-work-tree &>/dev/null; then
+        branch=$(git -C "$PROJECT_DIR" branch --show-current 2>/dev/null || echo "detached")
+        check "Git repository" 1 "branch: $branch"
+    else
+        check "Git repository" 0 "not a git repo"
+    fi
+
+    # 7. No stale PID
+    if [ -f "$PID_FILE" ]; then
+        pid=$(cat "$PID_FILE")
+        if kill -0 "$pid" 2>/dev/null; then
+            check "No stale PID" 1 "loop running as PID $pid"
+        else
+            check "No stale PID" 0 "stale PID file (process $pid not running) -- delete $PID_FILE"
+        fi
+    else
+        check "No stale PID" 1 "no PID file"
+    fi
+
+    # 8. .env file
+    if [ -f "$PROJECT_DIR/.env" ]; then
+        check ".env config" 1
+    else
+        check ".env config" 1 "no .env (using defaults)"
+    fi
+
+    # 9. Log directory writable
+    mkdir -p "$LOG_DIR" 2>/dev/null
+    if [ -w "$LOG_DIR" ]; then
+        check "Log directory writable" 1 "$LOG_DIR"
+    else
+        check "Log directory writable" 0 "$LOG_DIR not writable"
+    fi
+
+    # 10. Agents directory
+    if [ -d "$PROJECT_DIR/.claude/agents" ]; then
+        agent_count=$(ls "$PROJECT_DIR/.claude/agents"/*.md 2>/dev/null | wc -l | tr -d ' ')
+        check "Agent definitions" 1 "$agent_count agents"
+    else
+        check "Agent definitions" 0 ".claude/agents/ missing"
+    fi
+
+    echo ""
+    echo "Results: $pass passed, $fail failed"
+    if [ "$fail" -gt 0 ]; then
+        echo "Fix the failures above before running the loop."
+        exit 1
+    else
+        echo "All checks passed. Ready to run: ./auto-loop.sh"
+        exit 0
+    fi
+fi
 
 # === Setup ===
 
