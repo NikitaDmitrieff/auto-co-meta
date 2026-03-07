@@ -17,9 +17,11 @@
 #   ./auto-loop.sh --logs [N]   # Show last N lines of loop log (default: 50)
 #   ./auto-loop.sh --cost       # Show cost summary across cycles
 #   ./auto-loop.sh --history [N]   # Show last N cycles as table (default: 10)
+#   ./auto-loop.sh --history --compact [N]  # One-line-per-cycle summary
 #   ./auto-loop.sh --reset-errors  # Clear circuit breaker state
 #   ./auto-loop.sh --purge-logs [N]  # Purge old logs, keep latest N (default: 50)
 #   ./auto-loop.sh --doctor     # Comprehensive health check
+#   ./auto-loop.sh --upgrade    # Check for newer version on GitHub
 #   ./auto-loop.sh --config     # Print all config values
 #   ./auto-loop.sh --version    # Show version
 #
@@ -318,9 +320,11 @@ USAGE:
   ./auto-loop.sh --logs [N]   Show last N lines of loop log (default: 50)
   ./auto-loop.sh --cost       Show cost summary across cycles
   ./auto-loop.sh --history [N]   Show last N cycles as table (default: 10)
+  ./auto-loop.sh --history --compact [N]  One-line-per-cycle summary
   ./auto-loop.sh --reset-errors  Clear circuit breaker state
   ./auto-loop.sh --purge-logs [N]  Purge old logs, keep latest N (default: 50)
   ./auto-loop.sh --doctor     Comprehensive system health check
+  ./auto-loop.sh --upgrade    Check for newer version on GitHub
   ./auto-loop.sh --selftest   Validate environment
   ./auto-loop.sh --dry-run    Preview prompt without running
 
@@ -600,9 +604,15 @@ fi
 # === History flag (show last N cycles as table) ===
 
 if [ "${1:-}" = "--history" ]; then
-    count="${2:-10}"
+    compact=0
+    if [ "${2:-}" = "--compact" ]; then
+        compact=1
+        count="${3:-10}"
+    else
+        count="${2:-10}"
+    fi
     if ! echo "$count" | grep -qE '^[0-9]+$'; then
-        echo "Usage: ./auto-loop.sh --history [N]  (default: 10)"
+        echo "Usage: ./auto-loop.sh --history [--compact] [N]  (default: 10)"
         exit 1
     fi
     if [ ! -f "$CYCLE_HISTORY_FILE" ]; then
@@ -617,18 +627,24 @@ if [ "${1:-}" = "--history" ]; then
     if [ "$count" -gt "$total_lines" ]; then
         count="$total_lines"
     fi
-    printf "%-7s %-22s %-8s %-10s %-10s %-6s %-8s\n" \
-        "CYCLE" "TIMESTAMP" "STATUS" "COST" "DURATION" "EXIT" "MODEL"
-    printf "%-7s %-22s %-8s %-10s %-10s %-6s %-8s\n" \
-        "-----" "---------------------" "------" "--------" "--------" "----" "------"
-    tail -n "$count" "$CYCLE_HISTORY_FILE" | jq -r \
-        '[.cycle, .timestamp, .status, .cost, .duration_s, .exit_code, .model] |
-         "\(.[0])\t\(.[1])\t\(.[2])\t$\(.[3])\t\(.[4])s\t\(.[5])\t\(.[6])"' | \
-        while IFS=$'\t' read -r cy ts st co du ex mo; do
-            printf "%-7s %-22s %-8s %-10s %-10s %-6s %-8s\n" "$cy" "$ts" "$st" "$co" "$du" "$ex" "$mo"
-        done
-    echo ""
-    echo "Showing last $count of $total_lines cycles"
+    if [ "$compact" -eq 1 ]; then
+        tail -n "$count" "$CYCLE_HISTORY_FILE" | jq -r \
+            '"\(.cycle) \(.status) $\(.cost) \(.duration_s)s \(.timestamp | split("T")[0])"'
+        echo "-- $count of $total_lines cycles"
+    else
+        printf "%-7s %-22s %-8s %-10s %-10s %-6s %-8s\n" \
+            "CYCLE" "TIMESTAMP" "STATUS" "COST" "DURATION" "EXIT" "MODEL"
+        printf "%-7s %-22s %-8s %-10s %-10s %-6s %-8s\n" \
+            "-----" "---------------------" "------" "--------" "--------" "----" "------"
+        tail -n "$count" "$CYCLE_HISTORY_FILE" | jq -r \
+            '[.cycle, .timestamp, .status, .cost, .duration_s, .exit_code, .model] |
+             "\(.[0])\t\(.[1])\t\(.[2])\t$\(.[3])\t\(.[4])s\t\(.[5])\t\(.[6])"' | \
+            while IFS=$'\t' read -r cy ts st co du ex mo; do
+                printf "%-7s %-22s %-8s %-10s %-10s %-6s %-8s\n" "$cy" "$ts" "$st" "$co" "$du" "$ex" "$mo"
+            done
+        echo ""
+        echo "Showing last $count of $total_lines cycles"
+    fi
     exit 0
 fi
 
@@ -819,11 +835,64 @@ if [ "${1:-}" = "--doctor" ]; then
         fi
     done
 
+    # 9. Orphaned Claude processes
+    orphan_count=$( (pgrep -f "claude.*--print-conversation-id" 2>/dev/null || true) | wc -l | tr -d ' ')
+    if [ -f "$PID_FILE" ]; then
+        loop_pid_val=$(cat "$PID_FILE")
+        # Subtract processes that are children of the current loop
+        if kill -0 "$loop_pid_val" 2>/dev/null; then
+            child_count=$( (pgrep -P "$loop_pid_val" -f "claude" 2>/dev/null || true) | wc -l | tr -d ' ')
+            orphan_count=$((orphan_count - child_count))
+            [ "$orphan_count" -lt 0 ] && orphan_count=0
+        fi
+    fi
+    if [ "$orphan_count" -gt 0 ]; then
+        doctor_check "Orphaned Claude processes" "warn" "$orphan_count process(es) not attached to loop"
+    else
+        doctor_check "Orphaned Claude processes" "ok" "none detected"
+    fi
+
     echo ""
     if [ "$warnings" -eq 0 ]; then
         echo "Health: ALL OK ($ok checks passed)"
     else
         echo "Health: $warnings warnings, $ok OK"
+    fi
+    exit 0
+fi
+
+# === Upgrade check flag ===
+
+if [ "${1:-}" = "--upgrade" ]; then
+    local_version=$(cat "$PROJECT_DIR/VERSION" 2>/dev/null || echo "0.0.0")
+    echo "Local version: v${local_version}"
+    echo "Checking GitHub for latest release..."
+    if ! command -v curl &>/dev/null; then
+        echo "Error: curl is required for --upgrade."
+        exit 1
+    fi
+    remote_tag=$(curl -sS --max-time 10 \
+        "https://api.github.com/repos/NikitaDmitrieff/auto-co-meta/releases/latest" 2>/dev/null \
+        | grep '"tag_name"' | head -1 | sed 's/.*"tag_name"[[:space:]]*:[[:space:]]*"v\{0,1\}\([^"]*\)".*/\1/')
+    if [ -z "$remote_tag" ]; then
+        echo "Could not fetch latest release from GitHub."
+        echo "Check manually: https://github.com/NikitaDmitrieff/auto-co-meta/releases"
+        exit 1
+    fi
+    echo "Latest release: v${remote_tag}"
+    if [ "$local_version" = "$remote_tag" ]; then
+        echo "You are up to date."
+    else
+        # Simple version comparison using sort -V
+        newer=$(printf '%s\n%s' "$local_version" "$remote_tag" | sort -V | tail -1)
+        if [ "$newer" = "$remote_tag" ] && [ "$newer" != "$local_version" ]; then
+            echo ""
+            echo "A newer version is available!"
+            echo "  Upgrade: git pull origin main"
+            echo "  Release: https://github.com/NikitaDmitrieff/auto-co-meta/releases/tag/v${remote_tag}"
+        else
+            echo "Local version is ahead of latest release."
+        fi
     fi
     exit 0
 fi

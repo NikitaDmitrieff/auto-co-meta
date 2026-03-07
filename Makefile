@@ -1,4 +1,4 @@
-.PHONY: start start-awake awake stop status last cycles monitor health alerts compare trend selftest version bump-version dry-run quick-status export logs cost history reset-errors purge-logs doctor changelog config lint test pause resume install uninstall team watcher dashboard dashboard-build docker-start docker-stop docker-logs help
+.PHONY: start start-awake awake stop status last cycles monitor health alerts compare trend selftest version bump-version dry-run quick-status export logs cost history reset-errors purge-logs doctor upgrade changelog config lint test pause resume install uninstall team watcher dashboard dashboard-build docker-start docker-stop docker-logs help
 
 # === Quick Start ===
 
@@ -89,6 +89,9 @@ purge-logs: ## Purge old cycle logs (usage: make purge-logs KEEP=50)
 
 doctor: ## Comprehensive system health check
 	./auto-loop.sh --doctor
+
+upgrade: ## Check for newer version on GitHub
+	./auto-loop.sh --upgrade
 
 config: ## Print all loop configuration values
 	./auto-loop.sh --config
