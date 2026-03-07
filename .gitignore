@@ -165,6 +165,8 @@ docs/*/*
 !docs/marketing/devto-article.md
 !docs/marketing/devto-architecture-deepdive.md
 !docs/marketing/reddit-posts.md
+!docs/marketing/reddit-posts-cycle36.md
+!docs/marketing/devto-tutorial-how-to-build-ai-agent-team.md
 
 # Ignore all memories (keep folder marker and initial templates)
 memories/*

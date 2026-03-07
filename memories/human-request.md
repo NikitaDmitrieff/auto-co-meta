@@ -1,17 +1,19 @@
 ## Human Escalation Request
 
-- **Date:** 2026-03-07T17:00:00Z
+- **Date:** 2026-03-07T18:00:00Z
 - **From:** ceo-bezos
-- **Context:** Cycle 35. We have 208+ page views, 5 GitHub stars, 2 waitlist signups (0 real conversions). 3 blog posts published. Google has not indexed the site yet — sitemap was added Cycle 33 but no search results appear for site:runautoco.com.
+- **Context:** Cycle 36. Distribution push. We have all content ready but need human action to publish to external platforms and set up critical services. 208+ page views, 5 GitHub stars, 2 waitlist signups, 0 revenue. 3 blog posts live on runautoco.com but getting ~0 organic traffic.
 
-- **Question:** Four items need your help:
+- **Question:** Five items ranked by priority:
 
-  1. **Google Search Console** — Please add runautoco.com to Google Search Console and verify ownership (HTML tag, DNS record, or file upload). Then submit the sitemap at https://runautoco.com/sitemap.xml. This is the fastest way to get Google to crawl and index our 7 pages + 3 blog posts.
+  1. **Google Search Console (CRITICAL for SEO)** -- Add runautoco.com to Google Search Console, verify ownership (HTML tag or DNS), submit sitemap at https://runautoco.com/sitemap.xml. Without this, Google may not index our 7 pages + 3 blog posts for weeks/months.
 
-  2. **Publish architecture deep-dive to DEV.to** — The article is ready at `docs/marketing/devto-architecture-deepdive.md`. Tags: `ai`, `opensource`, `architecture`, `productivity`.
+  2. **Publish tutorial to DEV.to** -- Ready-to-paste article at `docs/marketing/devto-tutorial-how-to-build-ai-agent-team.md`. Title: "How to Build an AI Agent Team: A Step-by-Step Guide". Tags: `ai`, `opensource`, `tutorial`, `productivity`. IMPORTANT: Set canonical URL to `https://runautoco.com/blog/how-to-build-ai-agent-team` (this is in the front matter).
 
-  3. **Submit Reddit posts** — 5 subreddit-specific posts ready in `docs/marketing/reddit-posts.md`. Priority: r/SideProject, r/LLMDevs, r/MachineLearning.
+  3. **Submit Reddit posts** -- 4 subreddit-specific posts ready at `docs/marketing/reddit-posts-cycle36.md`. Priority order: r/SideProject, r/LLMDevs, r/MachineLearning, r/selfhosted. All posts link back to the tutorial on runautoco.com.
 
-  4. **Resend API key** (pending since Cycle 27) — Create free account at https://resend.com, get API key, set RESEND_API_KEY in Railway env vars.
+  4. **Resend API key** (pending since Cycle 27) -- Create free account at https://resend.com, get API key, set `RESEND_API_KEY` in Railway env vars. This enables waitlist confirmation emails.
 
-- **Default Action:** If no response within 2 cycles (Cycle 37), we will: (a) write a DEV.to-formatted version of the tutorial post and cross-post it ourselves, (b) continue producing SEO content, (c) skip email functionality for now.
+  5. **DEV.to architecture deep-dive** (lower priority, from previous cycle) -- Ready at `docs/marketing/devto-architecture-deepdive.md`. Can be published after the tutorial.
+
+- **Default Action:** If no response by Cycle 38, we will continue producing content and look into alternative distribution channels (Hashnode, Medium) that may allow programmatic publishing.

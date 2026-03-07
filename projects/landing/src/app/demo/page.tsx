@@ -407,7 +407,7 @@ function CycleProgressPanel() {
       badge={
         <div className="flex items-center gap-1.5 text-xs text-orange-400 font-medium">
           <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
-          Cycle 35 · Running
+          Cycle 36 · Running
         </div>
       }
     >
@@ -526,14 +526,14 @@ function CostChart({ data }: { data: number[] }) {
 
 function FinancialPanel() {
   const stats = [
-    { label: "Total Cost", value: "~$50", sub: "API + hosting", accent: false },
+    { label: "Total Cost", value: "~$51.50", sub: "API + hosting", accent: false },
     { label: "Revenue", value: "$0", sub: "Building in public", muted: true },
-    { label: "Cost / Cycle", value: "$1.43", sub: "avg · 35 cycles", accent: true },
+    { label: "Cost / Cycle", value: "$1.43", sub: "avg · 36 cycles", accent: true },
     { label: "Monthly Burn", value: "~$5", sub: "Railway hosting only", accent: false },
   ];
 
   return (
-    <Panel title="P&L · Financial" badge={<span className="text-xs text-zinc-600">35 cycles · real data</span>}>
+    <Panel title="P&L · Financial" badge={<span className="text-xs text-zinc-600">36 cycles · real data</span>}>
       <div className="px-4 pt-3 pb-4">
         <div className="grid grid-cols-2 gap-2 mb-4">
           {stats.map((s) => (
@@ -550,8 +550,8 @@ function FinancialPanel() {
         </div>
 
         <div className="mb-1.5 flex items-center justify-between">
-          <span className="text-[10px] text-zinc-600 uppercase tracking-wider">Cumulative cost · 35 cycles</span>
-          <span className="text-[10px] text-zinc-600">$0 → ~$50</span>
+          <span className="text-[10px] text-zinc-600 uppercase tracking-wider">Cumulative cost · 36 cycles</span>
+          <span className="text-[10px] text-zinc-600">$0 → ~$51.50</span>
         </div>
 
         <CostChart data={CUMULATIVE_COSTS} />
@@ -684,7 +684,7 @@ function CompanyStatePanel() {
     {
       label: "Next Action",
       value: "Content-driven growth →",
-      sub: "Cycle 35 — SEO blog post, sitemap submission, content-driven growth. 208+ page views, 3 blog posts.",
+      sub: "Cycle 36 — Distribution push, content-driven growth, community outreach. 208+ page views, 3 blog posts.",
       accent: true,
     },
   ];
@@ -736,7 +736,7 @@ export default function DemoPage() {
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 rounded-full px-3 py-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Cycle 35 · Running
+              Cycle 36 · Running
             </div>
             <a
               href="https://github.com/NikitaDmitrieff/auto-co-meta"
@@ -777,7 +777,7 @@ export default function DemoPage() {
             <p className="text-sm text-zinc-500 mt-0.5">Real-time view of your autonomous AI company</p>
           </div>
           <div className="text-xs text-zinc-600 hidden sm:block">
-            <span className="text-zinc-700">auto-co-meta</span> · Cycle 35 · shipping live data
+            <span className="text-zinc-700">auto-co-meta</span> · Cycle 36 · shipping live data
           </div>
         </motion.div>
 

@@ -27,7 +27,7 @@ export default function Hero() {
           className="mb-4 flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/5 px-4 py-1.5"
         >
           <span className="h-1.5 w-1.5 rounded-full bg-orange-400 animate-pulse" />
-          <span className="text-xs text-orange-300 font-medium">14 agents running — Cycle 35</span>
+          <span className="text-xs text-orange-300 font-medium">14 agents running — Cycle 36</span>
         </motion.div>
 
         <motion.div

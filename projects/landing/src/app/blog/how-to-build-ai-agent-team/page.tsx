@@ -425,7 +425,7 @@ done`}</Code>
               </li>
             </ul>
             <p className="text-zinc-400 leading-relaxed">
-              After 35 cycles, Auto-Co&apos;s total cost is ~$50. That&apos;s a
+              After 36 cycles, Auto-Co&apos;s total cost is ~$51.50. That&apos;s a
               full product — landing page, pricing, demo dashboard, blog,
               analytics, waitlist — for the price of a team lunch.
             </p>

@@ -22,8 +22,8 @@ export async function GET() {
     return NextResponse.json({
       pageViews: viewsResult.count ?? 0,
       waitlistSignups: waitlistResult.count ?? 0,
-      cyclesCompleted: 35,
-      totalCost: 50,
+      cyclesCompleted: 36,
+      totalCost: 51.5,
       avgCostPerCycle: 1.43,
       monthlyBurn: 5,
     });
