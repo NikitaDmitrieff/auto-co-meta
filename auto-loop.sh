@@ -368,6 +368,8 @@ USAGE:
   ./auto-loop.sh --snapshot   Create timestamped tarball of project state
   ./auto-loop.sh --snapshot PATH  Write snapshot to custom path
   ./auto-loop.sh --diff A B  Compare two snapshots (show added/removed/changed files)
+  ./auto-loop.sh --restore SNAP  Restore project state from a snapshot tarball
+  ./auto-loop.sh --restore SNAP --force  Restore without confirmation prompt
   ./auto-loop.sh --selftest   Validate environment
   ./auto-loop.sh --dry-run    Preview prompt without running
 
@@ -938,6 +940,71 @@ if [ "${1:-}" = "--diff" ]; then
     TOTAL_B="$(wc -l < "$DIFF_TMP/files_b.txt" | tr -d ' ')"
     echo "Summary: ${ADD_COUNT} added, ${REM_COUNT} removed, ${MOD_COUNT} modified"
     echo "Total files: A=${TOTAL_A}, B=${TOTAL_B}"
+    exit 0
+fi
+
+# === Restore flag (unpack a snapshot over the current project) ===
+
+if [ "${1:-}" = "--restore" ]; then
+    if [ -z "${2:-}" ]; then
+        echo "Usage: ./auto-loop.sh --restore <snapshot.tar.gz> [--force]"
+        echo "Restore project state from a snapshot tarball."
+        echo ""
+        echo "Options:"
+        echo "  --force    Skip confirmation prompt"
+        exit 1
+    fi
+    SNAP_FILE="$2"
+    FORCE_RESTORE="${3:-}"
+
+    if [ ! -f "$SNAP_FILE" ]; then
+        echo "Error: Snapshot not found: $SNAP_FILE"
+        exit 1
+    fi
+
+    # Show what will be overwritten
+    echo "=== Restore Preview ==="
+    echo "Snapshot: $(basename "$SNAP_FILE")"
+    echo ""
+    echo "Files to be restored:"
+    SNAP_FILES="$(tar -tzf "$SNAP_FILE" 2>/dev/null)"
+    if [ -z "$SNAP_FILES" ]; then
+        echo "Error: Could not read snapshot (corrupt or empty tarball)."
+        exit 1
+    fi
+
+    OVERWRITE_COUNT=0
+    NEW_COUNT=0
+    while IFS= read -r f; do
+        [ -z "$f" ] && continue
+        # Skip directory entries (end with /)
+        [ "${f: -1}" = "/" ] && continue
+        if [ -f "$f" ]; then
+            echo "  ~ $f (overwrite)"
+            OVERWRITE_COUNT=$((OVERWRITE_COUNT + 1))
+        else
+            echo "  + $f (new)"
+            NEW_COUNT=$((NEW_COUNT + 1))
+        fi
+    done <<< "$SNAP_FILES"
+
+    echo ""
+    echo "Summary: ${OVERWRITE_COUNT} files to overwrite, ${NEW_COUNT} new files"
+
+    if [ "$FORCE_RESTORE" != "--force" ]; then
+        echo ""
+        printf "Proceed with restore? [y/N] "
+        read -r CONFIRM
+        if [ "$CONFIRM" != "y" ] && [ "$CONFIRM" != "Y" ]; then
+            echo "Restore cancelled."
+            exit 0
+        fi
+    fi
+
+    # Extract snapshot over current directory
+    tar -xzf "$SNAP_FILE" 2>/dev/null
+    echo ""
+    echo "Restored $(echo "$SNAP_FILES" | grep -cv '/$' | tr -d ' ') files from $(basename "$SNAP_FILE")"
     exit 0
 fi
 
