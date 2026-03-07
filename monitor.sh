@@ -28,6 +28,97 @@ PID_FILE="$PROJECT_DIR/.auto-loop.pid"
 PAUSE_FLAG="$PROJECT_DIR/.auto-loop-paused"
 LABEL="com.auto-co.loop"
 
+# Shared alerts logic used by --alerts and --health
+check_alerts() {
+    local history_file="$LOG_DIR/cycle-history.jsonl"
+    local alerts=0
+
+    if [ ! -f "$history_file" ] || [ ! -s "$history_file" ] || ! command -v jq &>/dev/null; then
+        echo "  No cycle history or jq not installed. Nothing to check."
+        return 0
+    fi
+
+    local total_cycles
+    total_cycles=$(jq -s 'length' "$history_file")
+
+    # 1. Recent failures (last 10 cycles)
+    local recent_fails
+    recent_fails=$(jq -s '[.[-10:] | .[] | select(.status=="fail")] | length' "$history_file")
+    if [ "$recent_fails" -gt 0 ]; then
+        echo "  [WARN] $recent_fails failures in last 10 cycles"
+        jq -s '.[-10:] | .[] | select(.status=="fail") | "    Cycle \(.cycle): exit \(.exit_code), \(.duration_s)s"' -r "$history_file"
+        alerts=$((alerts + 1))
+    fi
+
+    # 2. Cost spike detection (last cycle > 2x average)
+    if [ "$total_cycles" -ge 3 ]; then
+        local cost_alert
+        cost_alert=$(jq -s '
+            if length < 3 then empty
+            else
+                (.[:-1] | [.[].cost] | add / length) as $avg |
+                (.[-1].cost) as $last |
+                if $last > ($avg * 2) then
+                    "  [WARN] Last cycle cost $\($last) is >2x average ($\($avg | . * 100 | floor / 100))"
+                else empty end
+            end
+        ' -r "$history_file")
+        if [ -n "$cost_alert" ]; then
+            echo "$cost_alert"
+            alerts=$((alerts + 1))
+        fi
+    fi
+
+    # 3. Consecutive failure streak
+    local streak
+    streak=$(jq -s '[foreach .[] as $x (0; if $x.status == "fail" then . + 1 else 0 end)] | max' "$history_file")
+    if [ "$streak" -ge 3 ]; then
+        echo "  [CRIT] Worst consecutive failure streak: $streak cycles"
+        alerts=$((alerts + 1))
+    fi
+
+    # 4. Stall detection (loop not running but should be)
+    if [ -f "$STATE_FILE" ]; then
+        local last_run_ts lr_epoch n_epoch idle_m
+        last_run_ts=$(grep '^LAST_RUN=' "$STATE_FILE" | cut -d= -f2-)
+        if [ -n "$last_run_ts" ]; then
+            lr_epoch=$(date -j -f "%Y-%m-%d %H:%M:%S" "$last_run_ts" +%s 2>/dev/null || date -d "$last_run_ts" +%s 2>/dev/null || echo 0)
+            n_epoch=$(date +%s)
+            idle_m=$(( (n_epoch - lr_epoch) / 60 ))
+            if [ "$idle_m" -gt 60 ]; then
+                echo "  [WARN] Loop idle for ${idle_m}m (last run: $last_run_ts)"
+                alerts=$((alerts + 1))
+            fi
+        fi
+    fi
+
+    # 5. Duration anomaly (last cycle > 2x average duration)
+    if [ "$total_cycles" -ge 3 ]; then
+        local dur_alert
+        dur_alert=$(jq -s '
+            if length < 3 then empty
+            else
+                (.[:-1] | [.[].duration_s] | add / length) as $avg |
+                (.[-1].duration_s) as $last |
+                if $last > ($avg * 2) then
+                    "  [WARN] Last cycle took \($last)s (>2x avg \($avg | floor)s)"
+                else empty end
+            end
+        ' -r "$history_file")
+        if [ -n "$dur_alert" ]; then
+            echo "$dur_alert"
+            alerts=$((alerts + 1))
+        fi
+    fi
+
+    if [ "$alerts" -eq 0 ]; then
+        echo "  All clear. No alerts across $total_cycles cycles."
+    else
+        echo ""
+        echo "  $alerts alert(s) found."
+    fi
+}
+
 if [ "${1:-}" = "--version" ] || [ "${1:-}" = "-V" ]; then
     version=$(cat "$PROJECT_DIR/VERSION" 2>/dev/null || echo "unknown")
     echo "monitor.sh v${version}"
@@ -260,88 +351,8 @@ case "${1:-}" in
         ;;
 
     --alerts)
-        HISTORY_FILE="$LOG_DIR/cycle-history.jsonl"
         echo "=== Auto-Co Alerts ==="
-        alerts=0
-
-        if [ ! -f "$HISTORY_FILE" ] || [ ! -s "$HISTORY_FILE" ] || ! command -v jq &>/dev/null; then
-            echo "  No cycle history or jq not installed. Nothing to check."
-            exit 0
-        fi
-
-        total_cycles=$(jq -s 'length' "$HISTORY_FILE")
-
-        # 1. Recent failures (last 10 cycles)
-        recent_fails=$(jq -s '[.[-10:] | .[] | select(.status=="fail")] | length' "$HISTORY_FILE")
-        if [ "$recent_fails" -gt 0 ]; then
-            echo "  [WARN] $recent_fails failures in last 10 cycles"
-            jq -s '.[-10:] | .[] | select(.status=="fail") | "    Cycle \(.cycle): exit \(.exit_code), \(.duration_s)s"' -r "$HISTORY_FILE"
-            alerts=$((alerts + 1))
-        fi
-
-        # 2. Cost spike detection (last cycle > 2x average)
-        if [ "$total_cycles" -ge 3 ]; then
-            cost_alert=$(jq -s '
-                if length < 3 then empty
-                else
-                    (.[:-1] | [.[].cost] | add / length) as $avg |
-                    (.[-1].cost) as $last |
-                    if $last > ($avg * 2) then
-                        "  [WARN] Last cycle cost $\($last) is >2x average ($\($avg | . * 100 | floor / 100))"
-                    else empty end
-                end
-            ' -r "$HISTORY_FILE")
-            if [ -n "$cost_alert" ]; then
-                echo "$cost_alert"
-                alerts=$((alerts + 1))
-            fi
-        fi
-
-        # 3. Consecutive failure streak
-        streak=$(jq -s '[foreach .[] as $x (0; if $x.status == "fail" then . + 1 else 0 end)] | max' "$HISTORY_FILE")
-        if [ "$streak" -ge 3 ]; then
-            echo "  [CRIT] Worst consecutive failure streak: $streak cycles"
-            alerts=$((alerts + 1))
-        fi
-
-        # 4. Stall detection (loop not running but should be)
-        if [ -f "$STATE_FILE" ]; then
-            last_run=$(grep '^LAST_RUN=' "$STATE_FILE" | cut -d= -f2-)
-            if [ -n "$last_run" ]; then
-                last_epoch=$(date -j -f "%Y-%m-%d %H:%M:%S" "$last_run" +%s 2>/dev/null || date -d "$last_run" +%s 2>/dev/null || echo 0)
-                now_epoch=$(date +%s)
-                idle_minutes=$(( (now_epoch - last_epoch) / 60 ))
-                if [ "$idle_minutes" -gt 60 ]; then
-                    echo "  [WARN] Loop idle for ${idle_minutes}m (last run: $last_run)"
-                    alerts=$((alerts + 1))
-                fi
-            fi
-        fi
-
-        # 5. Duration anomaly (last cycle > 2x average duration)
-        if [ "$total_cycles" -ge 3 ]; then
-            dur_alert=$(jq -s '
-                if length < 3 then empty
-                else
-                    (.[:-1] | [.[].duration_s] | add / length) as $avg |
-                    (.[-1].duration_s) as $last |
-                    if $last > ($avg * 2) then
-                        "  [WARN] Last cycle took \($last)s (>2x avg \($avg | floor)s)"
-                    else empty end
-                end
-            ' -r "$HISTORY_FILE")
-            if [ -n "$dur_alert" ]; then
-                echo "$dur_alert"
-                alerts=$((alerts + 1))
-            fi
-        fi
-
-        if [ "$alerts" -eq 0 ]; then
-            echo "  All clear. No alerts across $total_cycles cycles."
-        else
-            echo ""
-            echo "  $alerts alert(s) found."
-        fi
+        check_alerts
         ;;
 
     --compare)
@@ -506,66 +517,9 @@ case "${1:-}" in
 
         echo ""
 
-        # 4. Alerts (inline version of --alerts)
+        # 4. Alerts (shared with --alerts)
         echo "--- Alerts ---"
-        alerts=0
-        if [ -f "$HISTORY_FILE" ] && [ -s "$HISTORY_FILE" ] && command -v jq &>/dev/null; then
-            total_cycles=$(jq -s 'length' "$HISTORY_FILE")
-
-            # Recent failures
-            recent_fails=$(jq -s '[.[-10:] | .[] | select(.status=="fail")] | length' "$HISTORY_FILE")
-            if [ "$recent_fails" -gt 0 ]; then
-                echo "  [WARN] $recent_fails failures in last 10 cycles"
-                alerts=$((alerts + 1))
-            fi
-
-            # Cost spike
-            if [ "$total_cycles" -ge 3 ]; then
-                cost_alert=$(jq -s '
-                    if length < 3 then empty
-                    else
-                        (.[:-1] | [.[].cost] | add / length) as $avg |
-                        (.[-1].cost) as $last |
-                        if $last > ($avg * 2) then
-                            "  [WARN] Last cycle cost $\($last) is >2x average ($\($avg | . * 100 | floor / 100))"
-                        else empty end
-                    end
-                ' -r "$HISTORY_FILE")
-                if [ -n "$cost_alert" ]; then
-                    echo "$cost_alert"
-                    alerts=$((alerts + 1))
-                fi
-            fi
-
-            # Consecutive failure streak
-            streak=$(jq -s '[foreach .[] as $x (0; if $x.status == "fail" then . + 1 else 0 end)] | max' "$HISTORY_FILE")
-            if [ "$streak" -ge 3 ]; then
-                echo "  [CRIT] Worst consecutive failure streak: $streak cycles"
-                alerts=$((alerts + 1))
-            fi
-
-            # Stall detection
-            if [ -f "$STATE_FILE" ]; then
-                last_run_ts=$(grep '^LAST_RUN=' "$STATE_FILE" | cut -d= -f2-)
-                if [ -n "$last_run_ts" ]; then
-                    lr_epoch=$(date -j -f "%Y-%m-%d %H:%M:%S" "$last_run_ts" +%s 2>/dev/null || date -d "$last_run_ts" +%s 2>/dev/null || echo 0)
-                    n_epoch=$(date +%s)
-                    idle_m=$(( (n_epoch - lr_epoch) / 60 ))
-                    if [ "$idle_m" -gt 60 ]; then
-                        echo "  [WARN] Loop idle for ${idle_m}m"
-                        alerts=$((alerts + 1))
-                    fi
-                fi
-            fi
-
-            if [ "$alerts" -eq 0 ]; then
-                echo "  All clear across $total_cycles cycles."
-            else
-                echo "  $alerts alert(s) found."
-            fi
-        else
-            echo "  No cycle history available."
-        fi
+        check_alerts
 
         echo ""
 

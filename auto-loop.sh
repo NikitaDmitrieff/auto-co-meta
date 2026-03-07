@@ -3165,6 +3165,7 @@ This is Cycle #$loop_count. Act decisively."
             save_state "waiting_limit"
             sleep "$LIMIT_WAIT_SECONDS"
             error_count=0
+            run_plugin_hook "post-cycle" "$loop_count" "fail" "${CYCLE_COST:-0}" "$cycle_duration"
             continue
         fi
 
@@ -3182,6 +3183,7 @@ This is Cycle #$loop_count. Act decisively."
             log_cycle $loop_count "RETRY" "Backoff ${backoff}s before retry (error $error_count/$MAX_CONSECUTIVE_ERRORS)"
             save_state "backoff"
             sleep "$backoff"
+            run_plugin_hook "post-cycle" "$loop_count" "fail" "${CYCLE_COST:-0}" "$cycle_duration"
             continue
         fi
     fi
