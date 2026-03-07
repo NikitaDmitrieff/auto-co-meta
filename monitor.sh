@@ -233,33 +233,13 @@ case "${1:-}" in
         ;;
 
     --history)
-        HISTORY_FILE="$LOG_DIR/cycle-history.jsonl"
-        if [ -f "$HISTORY_FILE" ] && command -v jq &>/dev/null; then
-            echo "=== Cycle History (structured) ==="
-            printf "%-7s %-22s %-6s %-9s %-9s %s\n" "Cycle" "Timestamp" "Status" "Cost" "Duration" "Model"
-            echo "-------------------------------------------------------------------"
-            jq -r '"\(.cycle)\t\(.timestamp)\t\(.status)\t$\(.cost)\t\(.duration_s)s\t\(.model)"' "$HISTORY_FILE" \
-                | while IFS=$'\t' read -r cyc ts st cost dur model; do
-                    printf "%-7s %-22s %-6s %-9s %-9s %s\n" "$cyc" "$ts" "$st" "$cost" "$dur" "$model"
-                done
-        elif [ -f "$HISTORY_FILE" ]; then
-            cat "$HISTORY_FILE"
-        else
-            echo "No cycle history yet."
-        fi
+        # Delegate to auto-loop.sh which has the full-featured version (--compact, count)
+        exec "$SCRIPT_DIR/auto-loop.sh" --history "${@:2}"
         ;;
 
     --export)
-        HISTORY_FILE="$LOG_DIR/cycle-history.jsonl"
-        if [ ! -f "$HISTORY_FILE" ] || [ ! -s "$HISTORY_FILE" ]; then
-            echo "No cycle history to export." >&2
-            exit 1
-        elif ! command -v jq &>/dev/null; then
-            echo "jq is required for export." >&2
-            exit 1
-        fi
-        echo "cycle,timestamp,status,cost_usd,duration_s,model"
-        jq -r '[.cycle, .timestamp, .status, .cost, .duration_s, .model] | @csv' "$HISTORY_FILE"
+        # Delegate to auto-loop.sh which supports csv, json, and markdown formats
+        exec "$SCRIPT_DIR/auto-loop.sh" --export "${@:2}"
         ;;
 
     --dashboard)
