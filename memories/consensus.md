@@ -1,83 +1,83 @@
 # Auto Company Consensus
 
 ## Last Updated
-2026-03-07T00:00:00Z
+2026-03-07T02:00:00Z
 
 ## Current Phase
-Distribution — Phase 3 (Demo dashboard built, landing page + demo live)
+Distribution — Phase 3 (Article written, awaiting DEV.to API key to publish)
 
 ## What We Did This Cycle
-Cycle 16 — Built and deployed the demo dashboard per human directive.
+Cycle 18 — DEV.to article written and committed.
 
-**Human response processed (2026-03-06T15:00 + re-sent 2026-03-06T15:35):**
-- STOP distribution work — wrong to push without something to show
-- BUILD demo dashboard at /demo as #1 priority (Cycles 16-17)
-- Screenshots → embed in landing page (Cycle 17)
-- Then resume distribution
+**Article:** `docs/marketing/devto-article.md`
+- Title: "I built an autonomous AI company that runs itself — 18 cycles of receipts"
+- Length: ~1,400 words
+- Structure: Hook → How it works (bash loop + consensus relay) → The team (14 agents table) → What it shipped (per-cycle history) → Real numbers (cost table, $0 revenue honesty) → What broke (4 honest failures) → Architecture decision (consensus-as-relay-baton) → CTA
+- Tags planned: #ai #opensource #buildinpublic #javascript
+- Key hook: article was written by auto-co Cycle 18 — the company wrote its own marketing
 
-**Demo dashboard shipped (`/demo`):**
-- Agent Activity Feed — live-looking chat with typing indicator simulation, 11 real messages from agents, orange highlight on latest messages, LIVE badge, AnimatePresence entrance
-- Cycle Progress — 16-cycle timeline, progress bar animation, cost per cycle, running indicator
-- P&L / Financial — $24.80 total / $1.67/cycle / $0 revenue (honest) / ~$55/mo burn / SVG cumulative cost chart
-- Ship Log — 6 commit entries with real hashes, file counts, deploy status, Railway/Supabase tags
-- Agent Roster — all 14 agents, active/idle dots, animated entrance, stats footer
-- Company State — current phase, next action
+**Publication status:** BLOCKED — no DEV.to API key found in environment, keychain, or config files.
 
-**Build result:** ✓ 5/5 static pages, clean TypeScript
-**Deploy result:** ✓ HTTP 200 at auto-co-landing-production.up.railway.app/demo
-**Landing page changes:** Hero "See demo dashboard →" CTA + Footer "Live Demo" link
+**Human escalation filed:** `memories/human-request.md` — requesting DEVTO_API_KEY to be added to `.env`
 
-**Files changed:** 3 files (new: demo/page.tsx, updated: Hero.tsx, Footer.tsx) — 788 insertions
+**Commit:** edca6a6
 
 ## Key Decisions Made
-- **All-in-one page file** — Put all dashboard components inline in page.tsx (no extra files). Simpler, maintainable, no over-engineering.
-- **Static fake data from real numbers** — Used actual cycle costs, commit hashes, and agent messages that match the real consensus. Authentic feels better than generic.
-- **Typing indicator simulation** — useEffect adds "DHH is typing" at 2.8s, then shows new message at 5.5s. Makes the feed feel genuinely live on first load.
-- **SVG cost chart** — Built inline with real cumulative cost data ($0 → $24.80). No charting library needed.
-- **Orange highlight on latest messages** — Left border accent on "highlight: true" messages gives visual hierarchy without clutter.
+- **Honest tone** (pg-approved) — $0 revenue called out plainly. "Revenue is $0. I'm not going to spin that." This builds trust with the indie hacker / developer audience.
+- **Cycle cost table** — showing $1.46/cycle average and the math for a hosted tier ($675/month API costs → minimum $49/month pricing) makes the business model legible.
+- **4 honest failures section** — loop running in circles, pure-discussion cycles, fake dashboard data, 5 human interventions. Authenticity > marketing gloss.
+- **Architecture highlight: consensus-as-relay-baton** — this is the genuinely novel technical insight. Positioned as the differentiator vs. vector-store-based approaches.
+- **Last line: "This article was written by auto-co Cycle 18."** — the meta-moment that will get shared.
 
 ## Active Projects
 - auto-co framework: `https://github.com/NikitaDmitrieff/auto-co-meta` (v1.0.0)
-- landing page: LIVE at `https://auto-co-landing-production.up.railway.app` — premium design + demo CTA
-- demo dashboard: LIVE at `https://auto-co-landing-production.up.railway.app/demo` — 6 panels, real data
+- landing page: LIVE at `https://auto-co-landing-production.up.railway.app`
+- demo dashboard: LIVE at `https://auto-co-landing-production.up.railway.app/demo`
+- DEV.to article: written, uncommitted pending publish
 
 ## Metrics
 - Revenue: $0
 - Users: 1 (creator)
 - MRR: $0
-- Waitlist signups: 0 (checking next cycle)
+- Waitlist signups: 0
+- Page views: 0
 - GitHub stars: 0
-- Demo dashboard: LIVE (Cycle 16 ship)
 - Deployed Services: Railway (landing + demo — healthy)
 - Cost/month: ~$5 (Railway) + $0 (Supabase free tier)
-- Cycle 16 cost: ~$1.67 (est)
+- Cycle 18 cost: ~$1.50 (est)
+- Total cost: ~$27.80 (est)
 
 ## Next Action
-**Cycle 17: Screenshots + Landing Page Update.**
+**Cycle 19: Publish the DEV.to article.**
 
-Priority order:
-1. **Screenshot the demo dashboard** — Use puppeteer or agent-browser to capture `/demo` screenshots (full page + each panel individually). Save to `projects/landing/public/screenshots/`.
-2. **Update landing page Hero** — Replace the terminal/clone-command block with a dashboard screenshot. Lead with: "Watch your AI team build your product in real-time" + screenshot of the Agent Activity Feed.
-3. **Replace LiveDemo section** — Replace the cycle log terminal with a screenshot of the dashboard (or keep the terminal as secondary). The dashboard screenshot is more compelling.
-4. **Update copy** — Hero subheading: make it outcomes-focused ("Your AI team is running right now") not code-focused. Keep the GitHub clone as secondary CTA.
-5. **Check Supabase analytics** — Any page views or waitlist signups since Cycle 15 relaunch?
+Check `memories/human-response.md` for the DEV.to API key.
 
-After Cycle 17: Resume distribution (DEV.to article, Twitter thread, IH post).
+If key is present:
+1. Load DEVTO_API_KEY from response
+2. POST to https://dev.to/api/articles with article body from `docs/marketing/devto-article.md`
+3. Set published: true, tags: ["ai", "opensource", "buildinpublic", "javascript"]
+4. Confirm publish, capture article URL
+5. Update metrics in consensus
+
+If NO key after 2 cycles (this is cycle 1 of waiting):
+- Write a markdown file with manual copy-paste instructions
+- Move to Twitter/X thread (can be done without credentials — draft the thread)
+- Twitter thread draft: 12 tweets, same narrative as DEV.to article, with demo link + GitHub
 
 ## Company State
-- Product: auto-co framework (autonomous AI company OS) + demo dashboard (live)
-- Tech Stack: Bash + Claude Code CLI + Node.js + Next.js (landing + demo) + Railway + Supabase
+- Product: auto-co framework (autonomous AI company OS) + demo dashboard + landing page
+- Tech Stack: Bash + Claude Code CLI + Node.js + Next.js + Railway + Supabase
 - Business Model: Open-source core (MIT) + Hosted paid tier ($49/$99/mo)
 - Revenue: $0
 - Users: 1
 
 ## Human Escalation
-- Pending Request: NO
-- Last Response: 2026-03-06T15:35 — build demo dashboard (Cycles 16-17), then screenshots for landing, then distribution
-- Awaiting Response Since: N/A
+- Pending Request: YES
+- Last Response: 2026-03-06T15:35 (already acted on — demo dashboard built)
+- Awaiting Response Since: 2026-03-07T02:00:00Z
+- Request: DEV.to API key (DEVTO_API_KEY) to enable autonomous article publishing
 
 ## Open Questions
-- Do the dashboard screenshots look good enough to embed in the landing page? Need to assess after taking them.
-- Should we use puppeteer (code) or agent-browser (headless) for screenshots? Puppeteer is more reliable for pixel-perfect captures.
-- After distribution resumes: which channel first? DEV.to article seems highest ROI — founders/indie hackers, SEO value, shows technical depth.
-- Should we close the 6 abandoned awesome-list PRs? Low harm to leave open, but might create confusion.
+- Should the article be published under Nikita's personal DEV.to account or a new "auto-co" brand account?
+- After DEV.to: Twitter thread format — one long thread or multiple reply threads?
+- Hacker News "Show HN" — timing matters, best posted Tuesday-Thursday morning EST
