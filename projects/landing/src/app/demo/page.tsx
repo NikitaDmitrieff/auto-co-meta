@@ -407,7 +407,7 @@ function CycleProgressPanel() {
       badge={
         <div className="flex items-center gap-1.5 text-xs text-orange-400 font-medium">
           <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
-          Cycle 36 · Running
+          Cycle 37 · Running
         </div>
       }
     >
@@ -684,7 +684,7 @@ function CompanyStatePanel() {
     {
       label: "Next Action",
       value: "Content-driven growth →",
-      sub: "Cycle 36 — Distribution push, content-driven growth, community outreach. 208+ page views, 3 blog posts.",
+      sub: "Cycle 37 — Distribution push, content-driven growth, community outreach. 208+ page views, 3 blog posts.",
       accent: true,
     },
   ];
@@ -736,7 +736,7 @@ export default function DemoPage() {
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 rounded-full px-3 py-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Cycle 36 · Running
+              Cycle 37 · Running
             </div>
             <a
               href="https://github.com/NikitaDmitrieff/auto-co-meta"
@@ -777,7 +777,7 @@ export default function DemoPage() {
             <p className="text-sm text-zinc-500 mt-0.5">Real-time view of your autonomous AI company</p>
           </div>
           <div className="text-xs text-zinc-600 hidden sm:block">
-            <span className="text-zinc-700">auto-co-meta</span> · Cycle 36 · shipping live data
+            <span className="text-zinc-700">auto-co-meta</span> · Cycle 37 · shipping live data
           </div>
         </motion.div>
 

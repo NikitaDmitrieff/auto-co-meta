@@ -1,4 +1,4 @@
-# Reddit Distribution -- auto-co Cycle 36
+# Reddit Distribution -- auto-co Cycle 37
 
 **Status:** Ready to post (human submits)
 **Drafted by:** marketing-godin + operations-pg
@@ -22,16 +22,16 @@
 
 **Title:**
 ```
-I let 14 AI agents run my startup for 35 cycles -- $50 total cost, $0 revenue. Here's the honest P&L.
+I let 14 AI agents run my startup for 37 cycles -- $50 total cost, $0 revenue. Here's the honest P&L.
 ```
 
 **Body:**
 ```
 I've been building auto-co: a bash loop + Claude CLI that runs a 14-agent AI company autonomously.
 
-35 cycles later:
+37 cycles later:
 - **Revenue:** $0 (not spinning it)
-- **Total AI cost:** ~$50 (~$1.43/cycle average)
+- **Total AI cost:** ~$53 (~$1.43/cycle average)
 - **Infrastructure:** $5/month (Railway)
 - **Human interventions:** ~5 (API keys, DNS, account verifications)
 - **Products shipped:** landing page, demo dashboard, pricing page, admin analytics, 3 blog posts, waitlist with email capture
@@ -67,7 +67,7 @@ Would love feedback -- especially on pricing ($49/mo hosted tier) and whether th
 
 **Title:**
 ```
-The "relay baton" pattern: how I keep 14 AI agents coherent across 35+ autonomous cycles with just a markdown file
+The "relay baton" pattern: how I keep 14 AI agents coherent across 37+ autonomous cycles with just a markdown file
 ```
 
 **Body:**
@@ -90,9 +90,9 @@ No embeddings, no retrieval, no lossy compression. The entire state fits in Clau
 - Debuggable (it's a markdown file, you can read it)
 - Atomic (write to .tmp, rename -- survives crashes)
 
-**35 cycles later:**
+**37 cycles later:**
 - Landing page, demo, pricing, admin dashboard, 3 blog posts all deployed
-- ~$50 total API cost (~$1.43/cycle)
+- ~$53 total API cost (~$1.43/cycle)
 - 14 agents producing real artifacts every cycle
 - Zero state corruption incidents
 
@@ -115,7 +115,7 @@ Curious if anyone else has tried the relay baton pattern vs more complex state m
 
 **Title:**
 ```
-[Project] Auto-co: bash loop + Claude CLI running a 14-agent autonomous AI company -- 35 cycles, ~$50 total, step-by-step tutorial
+[Project] Auto-co: bash loop + Claude CLI running a 14-agent autonomous AI company -- 37 cycles, ~$53 total, step-by-step tutorial
 ```
 
 **Body:**
@@ -131,14 +131,14 @@ I've been running an experiment: can a bash loop + LLM CLI sustain autonomous co
 **The relay baton pattern:**
 Each cycle MUST: (1) read previous consensus, (2) do real work, (3) write updated consensus before ending. This is what keeps the company coherent across unlimited cycles without any external memory system.
 
-**35 cycles of results:**
+**37 cycles of results:**
 - Next.js landing page deployed to Railway
 - Live demo dashboard with 6 panels (runautoco.com/demo)
 - Pricing page with 3 tiers
 - Admin analytics dashboard with real-time page views
 - 3 SEO-optimized blog posts
 - Waitlist email capture (Supabase)
-- ~$50 total API cost, $5/mo infra
+- ~$53 total API cost, $5/mo infra
 
 **Interesting failure modes:**
 - Cycle 6: loop ran same "Next Action" twice -> added convergence detection rules
@@ -159,7 +159,7 @@ Happy to discuss the architecture -- especially the relay baton pattern vs alter
 
 **Title:**
 ```
-I built an autonomous AI company that runs on a bash loop -- self-hostable, MIT licensed, $50 for 35 cycles
+I built an autonomous AI company that runs on a bash loop -- self-hostable, MIT licensed, $50 for 37 cycles
 ```
 
 **Body:**
@@ -183,7 +183,7 @@ What it does autonomously:
 - Financial modeling
 - Analytics tracking
 
-After 35 cycles self-running: landing page live, demo dashboard, pricing page, admin analytics, 3 blog posts, ~$50 total API cost.
+After 37 cycles self-running: landing page live, demo dashboard, pricing page, admin analytics, 3 blog posts, ~$53 total API cost.
 
 Production hardening built in:
 - 30-minute watchdog timer per cycle
@@ -215,5 +215,5 @@ Demo: https://runautoco.com/demo
 
 **Key change from Cycle 30 version:**
 - All posts now link to the tutorial blog post (https://runautoco.com/blog/how-to-build-ai-agent-team) as the primary content link, driving traffic to our site
-- Updated numbers: 35 cycles, $50 total, $1.43/cycle avg, 3 blog posts
+- Updated numbers: 37 cycles, $50 total, $1.43/cycle avg, 3 blog posts
 - Removed DEV.to links (not yet published) and HN links (stale)
