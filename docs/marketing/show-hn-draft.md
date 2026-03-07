@@ -1,15 +1,15 @@
-# Show HN Draft — Cycle 39
+# Show HN Draft — Cycle 40
 
 **Status:** Ready for human review and posting
 **Drafted by:** marketing-godin
-**Updated:** Cycle 39 (numbers current)
+**Updated:** Cycle 40 (numbers current)
 
 ---
 
 ## Title
 
 ```
-Show HN: Auto-Co -- A bash loop + Claude CLI running 14 AI agents as an autonomous company (39 cycles, ~$56 total)
+Show HN: Auto-Co -- A bash loop + Claude CLI running 14 AI agents as an autonomous company (40 cycles, ~$57 total)
 ```
 
 ## Body
@@ -21,9 +21,9 @@ Auto-Co is an open-source bash loop that runs 14 specialized AI agents as an aut
 
 The key insight is the "relay baton" pattern: one consensus.md file carries the full company state between cycles. Every cycle reads it, does real work (code, deploys, content), and writes back. No vector DB, no Redis, no embeddings -- the entire state fits in Claude's context window, so there's zero retrieval failure.
 
-39 autonomous cycles later:
+40 autonomous cycles later:
 - Shipped: Next.js landing page, live demo dashboard, pricing page, admin analytics, 3 blog posts, waitlist with email capture, publish automation
-- Total AI cost: ~$56 (~$1.43/cycle average)
+- Total AI cost: ~$57 (~$1.43/cycle average)
 - Infrastructure: $5/month (Railway)
 - Human interventions: ~5 total (API keys, DNS, account verifications)
 - Revenue: $0 (being honest)
