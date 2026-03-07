@@ -385,6 +385,51 @@ collect_parallel_sessions() {
     log "Parallel: all $PARALLEL_COUNT session(s) finished"
 }
 
+show_tarball_preview() {
+    # Shows what files a tarball would overwrite/add. Sets SNAP_FILES for caller.
+    local tarball="$1"
+    SNAP_FILES="$(tar -tzf "$tarball" 2>/dev/null)"
+    if [ -z "$SNAP_FILES" ]; then
+        echo "Error: Could not read snapshot (corrupt or empty tarball)."
+        return 1
+    fi
+    local overwrite_count=0 new_count=0
+    while IFS= read -r f; do
+        [ -z "$f" ] && continue
+        [ "${f: -1}" = "/" ] && continue
+        if [ -f "$f" ]; then
+            echo "  ~ $f (overwrite)"
+            overwrite_count=$((overwrite_count + 1))
+        else
+            echo "  + $f (new)"
+            new_count=$((new_count + 1))
+        fi
+    done <<< "$SNAP_FILES"
+    echo ""
+    echo "Summary: ${overwrite_count} files to overwrite, ${new_count} new files"
+}
+
+create_project_snapshot() {
+    # Creates a tarball of core project files. Returns 1 if no files found.
+    local target_path="$1"
+    local include_list=()
+    for item in memories/ docs/ .claude/agents/ CLAUDE.md PROMPT.md auto-loop.sh monitor.sh stop-loop.sh watcher.js Makefile VERSION README.md package.json .env.example; do
+        [ -e "$item" ] && include_list+=("$item")
+    done
+    if [ ${#include_list[@]} -eq 0 ]; then
+        return 1
+    fi
+    mkdir -p "$(dirname "$target_path")"
+    tar -czf "$target_path" \
+        --exclude='logs/' \
+        --exclude='.git/' \
+        --exclude='node_modules/' \
+        --exclude='.next/' \
+        --exclude='out/' \
+        --exclude='*.tar.gz' \
+        "${include_list[@]}" 2>/dev/null
+}
+
 kill_process_tree() {
     local pid=$1
     local sig=${2:-TERM}
@@ -458,7 +503,6 @@ extract_cycle_metadata() {
     RESULT_TEXT=""
     CYCLE_COST=""
     CYCLE_SUBTYPE=""
-    CYCLE_TYPE=""
 
     # stream-json: each line is a JSON event; the final "result" event has the summary
     if command -v jq &>/dev/null; then
@@ -469,13 +513,11 @@ extract_cycle_metadata() {
             RESULT_TEXT=$(echo "$result_line" | jq -r '.result // empty' 2>/dev/null | head -c 2000 || true)
             CYCLE_COST=$(echo "$result_line" | jq -r '.total_cost_usd // empty' 2>/dev/null || true)
             CYCLE_SUBTYPE=$(echo "$result_line" | jq -r '.subtype // empty' 2>/dev/null || true)
-            CYCLE_TYPE=$(echo "$result_line" | jq -r '.type // empty' 2>/dev/null || true)
         else
             # Fallback: try parsing as single JSON (non-stream format)
             RESULT_TEXT=$(echo "$OUTPUT" | jq -r '.result // empty' 2>/dev/null | head -c 2000 || true)
             CYCLE_COST=$(echo "$OUTPUT" | jq -r '.total_cost_usd // empty' 2>/dev/null || true)
             CYCLE_SUBTYPE=$(echo "$OUTPUT" | jq -r '.subtype // empty' 2>/dev/null || true)
-            CYCLE_TYPE=$(echo "$OUTPUT" | jq -r '.type // empty' 2>/dev/null || true)
         fi
 
         # Second fallback: scan all events for total_cost_usd if still empty
@@ -486,8 +528,6 @@ extract_cycle_metadata() {
         RESULT_TEXT=$(echo "$OUTPUT" | head -c 2000 || true)
         CYCLE_COST=$(echo "$OUTPUT" | sed -n 's/.*"total_cost_usd":\([0-9.]*\).*/\1/p' | tail -1 || true)
         CYCLE_SUBTYPE=$(echo "$OUTPUT" | sed -n 's/.*"subtype":"\([^"]*\)".*/\1/p' | tail -1 || true)
-        # shellcheck disable=SC2034
-        CYCLE_TYPE=$(echo "$OUTPUT" | sed -n 's/.*"type":"\([^"]*\)".*/\1/p' | tail -1 || true)
     fi
 }
 
@@ -1347,28 +1387,10 @@ if [ "${1:-}" = "--snapshot" ] || [ "${1:-}" = "-S" ]; then
         SNAP_PATH="${SNAP_PATH}${SNAP_NAME}"
     fi
 
-    # Create parent directory if needed
-    mkdir -p "$(dirname "$SNAP_PATH")"
-
-    # Files and directories to include (only those that exist)
-    INCLUDE_LIST=()
-    for item in memories/ docs/ .claude/agents/ CLAUDE.md PROMPT.md auto-loop.sh monitor.sh stop-loop.sh watcher.js Makefile VERSION README.md package.json .env.example; do
-        [ -e "$item" ] && INCLUDE_LIST+=("$item")
-    done
-
-    if [ ${#INCLUDE_LIST[@]} -eq 0 ]; then
+    if ! create_project_snapshot "$SNAP_PATH"; then
         echo "Error: No project files found to snapshot."
         exit 1
     fi
-
-    tar -czf "$SNAP_PATH" \
-        --exclude='logs/' \
-        --exclude='.git/' \
-        --exclude='node_modules/' \
-        --exclude='.next/' \
-        --exclude='out/' \
-        --exclude='*.tar.gz' \
-        "${INCLUDE_LIST[@]}" 2>/dev/null
 
     SIZE="$(du -h "$SNAP_PATH" | cut -f1)"
     echo "Snapshot created: $SNAP_PATH ($SIZE)"
@@ -1499,29 +1521,9 @@ if [ "${1:-}" = "--restore" ]; then
     echo "Snapshot: $(basename "$SNAP_FILE")"
     echo ""
     echo "Files to be restored:"
-    SNAP_FILES="$(tar -tzf "$SNAP_FILE" 2>/dev/null)"
-    if [ -z "$SNAP_FILES" ]; then
-        echo "Error: Could not read snapshot (corrupt or empty tarball)."
+    if ! show_tarball_preview "$SNAP_FILE"; then
         exit 1
     fi
-
-    OVERWRITE_COUNT=0
-    NEW_COUNT=0
-    while IFS= read -r f; do
-        [ -z "$f" ] && continue
-        # Skip directory entries (end with /)
-        [ "${f: -1}" = "/" ] && continue
-        if [ -f "$f" ]; then
-            echo "  ~ $f (overwrite)"
-            OVERWRITE_COUNT=$((OVERWRITE_COUNT + 1))
-        else
-            echo "  + $f (new)"
-            NEW_COUNT=$((NEW_COUNT + 1))
-        fi
-    done <<< "$SNAP_FILES"
-
-    echo ""
-    echo "Summary: ${OVERWRITE_COUNT} files to overwrite, ${NEW_COUNT} new files"
 
     if [ "$FORCE_RESTORE" != true ]; then
         echo ""
@@ -1540,22 +1542,8 @@ if [ "${1:-}" = "--restore" ]; then
         BACKUP_VERSION="$(cat VERSION 2>/dev/null || echo 'unknown')"
         BACKUP_NAME="auto-co-pre-restore-${BACKUP_VERSION}-${BACKUP_TIMESTAMP}.tar.gz"
         BACKUP_PATH="${BACKUP_DIR}/${BACKUP_NAME}"
-        mkdir -p "$BACKUP_DIR"
 
-        BACKUP_LIST=()
-        for item in memories/ docs/ .claude/agents/ CLAUDE.md PROMPT.md auto-loop.sh monitor.sh stop-loop.sh watcher.js Makefile VERSION README.md package.json .env.example; do
-            [ -e "$item" ] && BACKUP_LIST+=("$item")
-        done
-
-        if [ ${#BACKUP_LIST[@]} -gt 0 ]; then
-            tar -czf "$BACKUP_PATH" \
-                --exclude='logs/' \
-                --exclude='.git/' \
-                --exclude='node_modules/' \
-                --exclude='.next/' \
-                --exclude='out/' \
-                --exclude='*.tar.gz' \
-                "${BACKUP_LIST[@]}" 2>/dev/null
+        if create_project_snapshot "$BACKUP_PATH"; then
             BACKUP_SIZE="$(du -h "$BACKUP_PATH" | cut -f1)"
             echo "Backup created: $BACKUP_PATH ($BACKUP_SIZE)"
             echo ""
@@ -1600,23 +1588,9 @@ if [ "${1:-}" = "--rollback" ]; then
 
     # Show contents preview
     echo "Files to be restored:"
-    SNAP_FILES="$(tar -tzf "$LATEST_BACKUP" 2>/dev/null)"
-    OVERWRITE_COUNT=0
-    NEW_COUNT=0
-    while IFS= read -r f; do
-        [ -z "$f" ] && continue
-        [ "${f: -1}" = "/" ] && continue
-        if [ -f "$f" ]; then
-            echo "  ~ $f (overwrite)"
-            OVERWRITE_COUNT=$((OVERWRITE_COUNT + 1))
-        else
-            echo "  + $f (new)"
-            NEW_COUNT=$((NEW_COUNT + 1))
-        fi
-    done <<< "$SNAP_FILES"
-
-    echo ""
-    echo "Summary: ${OVERWRITE_COUNT} files to overwrite, ${NEW_COUNT} new files"
+    if ! show_tarball_preview "$LATEST_BACKUP"; then
+        exit 1
+    fi
 
     if [ "$FORCE_ROLLBACK" != true ]; then
         echo ""
