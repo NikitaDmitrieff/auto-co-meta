@@ -295,6 +295,40 @@ function getMetricsHistory() {
     .filter(Boolean);
 }
 
+// ── GitHub traffic data (views + clones) ─────────────────────────────
+function getGitHubTraffic() {
+  try {
+    const viewsRaw = execSync(
+      `gh api repos/NikitaDmitrieff/auto-co-meta/traffic/views 2>/dev/null`,
+      { cwd: ROOT, encoding: "utf-8", timeout: 10000 }
+    );
+    const clonesRaw = execSync(
+      `gh api repos/NikitaDmitrieff/auto-co-meta/traffic/clones 2>/dev/null`,
+      { cwd: ROOT, encoding: "utf-8", timeout: 10000 }
+    );
+    const views = JSON.parse(viewsRaw);
+    const clones = JSON.parse(clonesRaw);
+    return {
+      views: { total: views.count || 0, unique: views.uniques || 0 },
+      clones: { total: clones.count || 0, unique: clones.uniques || 0 },
+      daily: (views.views || [])
+        .map((v) => {
+          const cloneDay = (clones.clones || []).find((c) => c.timestamp === v.timestamp);
+          return {
+            date: v.timestamp.split("T")[0],
+            views: v.count,
+            uniqueViews: v.uniques,
+            clones: cloneDay?.count || 0,
+            uniqueClones: cloneDay?.uniques || 0,
+          };
+        })
+        .filter((d) => d.views > 0 || d.clones > 0),
+    };
+  } catch {
+    return { views: { total: 0, unique: 0 }, clones: { total: 0, unique: 0 }, daily: [] };
+  }
+}
+
 // ── Deployments (static list -- could query Vercel API later) ───────
 const DEPLOYMENTS = [
   { service: "Landing Page", url: "runautoco.com", status: "live" },
@@ -318,6 +352,7 @@ const git = getGitData();
 const cycleHistory = getCycleHistory();
 const stateData = getStateData();
 const metricsHistory = getMetricsHistory();
+const traffic = getGitHubTraffic();
 
 const state = {
   generatedAt: new Date().toISOString(),
@@ -349,6 +384,7 @@ const state = {
   artifacts: stateData.artifacts,
   agentActivity: stateData.agentActivity,
   metricsHistory,
+  traffic,
 };
 
 writeFileSync(OUT, JSON.stringify(state, null, 2));

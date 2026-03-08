@@ -13,7 +13,7 @@ function agentShortName(createdBy: string): string {
 }
 
 export default function GitHubPage() {
-  const { metrics, git, deployments, distribution, artifacts } = state;
+  const { metrics, git, deployments, distribution, artifacts, traffic } = state;
 
   const artifactsByType = artifacts.reduce<Record<string, number>>((acc, a) => {
     acc[a.type] = (acc[a.type] || 0) + 1;
@@ -37,6 +37,49 @@ export default function GitHubPage() {
         <StatCard label="Open PRs" value={String(git.openPRs.length)} />
         <StatCard label="Open Issues" value={String(metrics.openIssues)} />
       </div>
+
+      {/* Traffic */}
+      {traffic && (traffic.views.total > 0 || traffic.clones.total > 0) && (
+        <div className="border border-slate-200 p-5 mb-8">
+          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-4">Traffic (last 14 days)</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+            <div>
+              <div className="text-lg font-bold font-mono text-slate-900">{traffic.views.total}</div>
+              <div className="text-[10px] text-slate-400">Views</div>
+            </div>
+            <div>
+              <div className="text-lg font-bold font-mono text-slate-900">{traffic.views.unique}</div>
+              <div className="text-[10px] text-slate-400">Unique visitors</div>
+            </div>
+            <div>
+              <div className="text-lg font-bold font-mono text-slate-900">{traffic.clones.total}</div>
+              <div className="text-[10px] text-slate-400">Clones</div>
+            </div>
+            <div>
+              <div className="text-lg font-bold font-mono text-slate-900">{traffic.clones.unique}</div>
+              <div className="text-[10px] text-slate-400">Unique cloners</div>
+            </div>
+          </div>
+          {traffic.daily.length > 0 && (
+            <div>
+              <div className="text-[10px] text-slate-400 mb-2">Daily breakdown</div>
+              <div className="space-y-1">
+                {traffic.daily.map((d) => (
+                  <div key={d.date} className="flex items-center gap-3 text-xs">
+                    <span className="font-mono text-slate-400 w-20">{d.date.slice(5)}</span>
+                    <span className="text-slate-600 w-24">{d.views} views ({d.uniqueViews})</span>
+                    <span className="text-slate-600 w-28">{d.clones} clones ({d.uniqueClones})</span>
+                    <div className="flex-1 flex gap-1 items-center">
+                      <div className="bg-blue-300 h-2" style={{ width: `${Math.min(d.views * 2, 100)}%` }} />
+                      <div className="bg-emerald-300 h-2" style={{ width: `${Math.min(d.clones, 100)}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Recent commits */}

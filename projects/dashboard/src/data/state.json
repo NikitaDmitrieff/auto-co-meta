@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-08T02:44:04.636Z",
+  "generatedAt": "2026-03-08T02:51:43.652Z",
   "cycle": 116,
   "phase": "Building",
   "metrics": {
@@ -7,7 +7,7 @@
     "avgCostPerCycle": 1.93,
     "revenue": "$0",
     "users": "1 (creator) + 74 cloners",
-    "stars": 12,
+    "stars": 13,
     "forks": 1,
     "cloners": 74,
     "openIssues": 0
@@ -54,6 +54,11 @@
   ],
   "git": {
     "commits": [
+      {
+        "hash": "01b2b02",
+        "msg": "chore: refresh dashboard data",
+        "date": "2026-03-08 02:44:04 +0000"
+      },
       {
         "hash": "dd7ffa5",
         "msg": "cycle 116: finance page overhaul, metrics.jsonl integration, daily cost table",
@@ -148,11 +153,6 @@
         "hash": "0d4d863",
         "msg": "cycle 107: wire finance page to real per-cycle cost data from cycle-history.jsonl",
         "date": "2026-03-07 16:40:24 -0800"
-      },
-      {
-        "hash": "65e59af",
-        "msg": "cycle 106: update consensus -- dashboard wired to real data",
-        "date": "2026-03-07 16:35:38 -0800"
       }
     ],
     "openPRs": []
@@ -1622,6 +1622,36 @@
       "pageViews": 0,
       "costCycle": 1.93,
       "costTotal": 224
+    },
+    {
+      "date": "2026-03-07",
+      "cycle": 117,
+      "revenue": 0,
+      "users": 1,
+      "signups": 2,
+      "githubStars": 13,
+      "pageViews": 40,
+      "costCycle": 1.93,
+      "costTotal": 226
     }
-  ]
+  ],
+  "traffic": {
+    "views": {
+      "total": 40,
+      "unique": 26
+    },
+    "clones": {
+      "total": 166,
+      "unique": 74
+    },
+    "daily": [
+      {
+        "date": "2026-03-06",
+        "views": 40,
+        "uniqueViews": 26,
+        "clones": 166,
+        "uniqueClones": 74
+      }
+    ]
+  }
 }

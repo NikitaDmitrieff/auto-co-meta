@@ -72,4 +72,15 @@ export interface DashboardState {
     costCycle: number;
     costTotal: number;
   }>;
+  traffic: {
+    views: { total: number; unique: number };
+    clones: { total: number; unique: number };
+    daily: Array<{
+      date: string;
+      views: number;
+      uniqueViews: number;
+      clones: number;
+      uniqueClones: number;
+    }>;
+  };
 }
