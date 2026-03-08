@@ -198,6 +198,72 @@ function getCycleHistory() {
     .filter(Boolean);
 }
 
+// ── JSONL state files (decisions, tasks, artifacts) ─────────────────
+function parseJsonlFile(filename) {
+  const filePath = resolve(ROOT, `state/${filename}`);
+  if (!existsSync(filePath)) return [];
+
+  const raw = readFileSync(filePath, "utf-8").trim();
+  if (!raw) return [];
+
+  return raw
+    .split("\n")
+    .map((line) => {
+      try {
+        return JSON.parse(line);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+}
+
+function getStateData() {
+  const decisions = parseJsonlFile("decisions.jsonl").map((d) => ({
+    timestamp: d.timestamp,
+    cycle: d.cycle,
+    agent: d.agent,
+    decision: d.decision,
+    rationale: d.rationale,
+    confidence: d.confidence,
+    outcome: d.outcome,
+  }));
+
+  const tasks = parseJsonlFile("tasks.jsonl").map((t) => ({
+    id: t.id,
+    cycle: t.cycle_created,
+    description: t.description,
+    owner: t.owner,
+    status: t.status,
+    priority: t.priority,
+    cycleCompleted: t.cycle_completed,
+  }));
+
+  const artifacts = parseJsonlFile("artifacts.jsonl").map((a) => ({
+    cycle: a.cycle,
+    type: a.type,
+    ref: a.ref,
+    path: a.path,
+    createdBy: a.created_by,
+  }));
+
+  // Build per-agent activity summary from decisions + tasks
+  const agentActivity = {};
+  for (const d of decisions) {
+    if (!agentActivity[d.agent]) agentActivity[d.agent] = { decisions: 0, lastCycle: 0 };
+    agentActivity[d.agent].decisions++;
+    agentActivity[d.agent].lastCycle = Math.max(agentActivity[d.agent].lastCycle, d.cycle);
+  }
+  for (const t of tasks) {
+    if (!agentActivity[t.owner]) agentActivity[t.owner] = { decisions: 0, lastCycle: 0 };
+    if (!agentActivity[t.owner].tasks) agentActivity[t.owner].tasks = 0;
+    agentActivity[t.owner].tasks++;
+    agentActivity[t.owner].lastCycle = Math.max(agentActivity[t.owner].lastCycle, t.cycle);
+  }
+
+  return { decisions, tasks, artifacts, agentActivity };
+}
+
 // ── Deployments (static list -- could query Vercel API later) ───────
 const DEPLOYMENTS = [
   { service: "Landing Page", url: "runautoco.com", status: "live" },
@@ -219,6 +285,7 @@ if (!existsSync(resolve(ROOT, "memories/consensus.md"))) {
 const consensus = parseConsensus();
 const git = getGitData();
 const cycleHistory = getCycleHistory();
+const stateData = getStateData();
 
 const state = {
   generatedAt: new Date().toISOString(),
@@ -245,6 +312,10 @@ const state = {
   },
   deployments: DEPLOYMENTS,
   cycleHistory,
+  decisions: stateData.decisions,
+  tasks: stateData.tasks,
+  artifacts: stateData.artifacts,
+  agentActivity: stateData.agentActivity,
 };
 
 writeFileSync(OUT, JSON.stringify(state, null, 2));
