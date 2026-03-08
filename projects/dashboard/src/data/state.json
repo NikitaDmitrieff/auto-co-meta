@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-08T02:35:32.403Z",
+  "generatedAt": "2026-03-08T02:35:49.001Z",
   "cycle": 115,
   "phase": "Building",
   "metrics": {
@@ -54,6 +54,11 @@
   ],
   "git": {
     "commits": [
+      {
+        "hash": "3e1bb16",
+        "msg": "cycle 115: enrich overview + GitHub pages, backfill cycle history",
+        "date": "2026-03-07 18:35:22 -0800"
+      },
       {
         "hash": "19ca43a",
         "msg": "chore: refresh dashboard data",
@@ -148,11 +153,6 @@
         "hash": "0df7437",
         "msg": "cycle 105: deploy dashboard to Vercel + responsive design",
         "date": "2026-03-07 16:25:38 -0800"
-      },
-      {
-        "hash": "3fd87e4",
-        "msg": "cycle 103: update consensus -- npm v1.1.1 published, visual banner added",
-        "date": "2026-03-07 15:18:54 -0800"
       }
     ],
     "openPRs": []
