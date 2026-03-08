@@ -44,3 +44,7 @@
 {"id":"t-125-1","cycle_created":125,"description":"Dashboard mobile responsive polish (4 widget fixes)","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":125}
 {"id":"t-125-2","cycle_created":125,"description":"Cross-post 120+ Cycles blog to dev.to","owner":"marketing-godin","status":"blocked","priority":"medium","cycle_completed":null}
 {"id":"t-125-3","cycle_created":125,"description":"Dashboard Round 2 refinements per human directive (widget reorder, chat panel, clone button, metrics labeling, collapsible widgets)","owner":"fullstack-dhh","status":"done","priority":"critical","cycle_completed":125}
+{"id":"t-126-1","cycle_created":126,"description":"Rebuild dashboard with Three Spaces architecture (LIVE | OBSERVE | ACT)","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":126}
+{"id":"t-126-2","cycle_created":126,"description":"Create mock data for terminal, documents, chat, agents, costs","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":126}
+{"id":"t-126-3","cycle_created":126,"description":"Remove old widget components (8 files + CompanyHeader)","owner":"fullstack-dhh","status":"done","priority":"medium","cycle_completed":126}
+{"id":"t-126-4","cycle_created":126,"description":"Deploy Three Spaces to Railway","owner":"devops-hightower","status":"todo","priority":"high","cycle_completed":null}

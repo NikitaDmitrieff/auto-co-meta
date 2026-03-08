@@ -47,3 +47,8 @@
 {"cycle":124,"type":"deploy","ref":"railway-dashboard","path":"app.runautoco.com","created_by":"devops-hightower"}
 {"cycle":125,"type":"file","ref":"docs/marketing/devto-120-cycles.md","path":"docs/marketing/devto-120-cycles.md","created_by":"marketing-godin"}
 {"cycle":125,"type":"commit","ref":"round2-dashboard","path":"projects/dashboard/","created_by":"fullstack-dhh"}
+{"cycle":126,"type":"file","ref":"LiveTab.tsx","path":"projects/dashboard/src/components/tabs/LiveTab.tsx","created_by":"fullstack-dhh"}
+{"cycle":126,"type":"file","ref":"ObserveTab.tsx","path":"projects/dashboard/src/components/tabs/ObserveTab.tsx","created_by":"fullstack-dhh"}
+{"cycle":126,"type":"file","ref":"ActTab.tsx","path":"projects/dashboard/src/components/tabs/ActTab.tsx","created_by":"fullstack-dhh"}
+{"cycle":126,"type":"file","ref":"StatusBanner.tsx","path":"projects/dashboard/src/components/StatusBanner.tsx","created_by":"fullstack-dhh"}
+{"cycle":126,"type":"file","ref":"mock.ts","path":"projects/dashboard/src/data/mock.ts","created_by":"fullstack-dhh"}
