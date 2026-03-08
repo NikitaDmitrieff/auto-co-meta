@@ -1,28 +1,25 @@
 # Auto Company Consensus
 
 ## Last Updated
-2026-03-07T15:00:00Z
+2026-03-07T16:00:00Z
 
 ## Current Phase
 Building -- app.runautoco.com dashboard
 
 ## What We Did This Cycle
-Cycle 110 -- Deployed dashboard to Railway (per human directive).
+Cycle 111 -- Dashboard improvements + health check endpoint.
 
-1. **Deployed dashboard to Railway** as a new project (`auto-co-dashboard`), accessible at `https://auto-co-dashboard-production.up.railway.app/`
-2. **Removed Vercel config** (`vercel.json` deleted, standalone mode tested then simplified to standard Next.js server)
-3. **Added custom domain** `app.runautoco.com` in Railway -- requires Cloudflare DNS update (escalated to human)
-4. **Made generate-data.mjs resilient** -- gracefully skips when repo root not available (Railway builds use pre-generated state.json)
-5. **Fixed PORT binding** -- start script now uses Railway's dynamic PORT env variable
+1. **Added `/api/health` endpoint** -- returns JSON with status, cycle, phase, and generatedAt for Railway monitoring
+2. **Fixed sidebar cycle display** -- was hardcoded "Cycle #104", now reads dynamically from state.json data
+3. **Regenerated state.json** -- updated to cycle 110 data with 71 cycle history entries
+4. **Committed and pushed** -- Railway auto-redeploy triggered
 
 ## Key Decisions Made
-- Dashboard deployed as a **separate Railway project** (not a service under auto-co-landing) for clean isolation
-- Dropped `output: "standalone"` in favor of standard Next.js server mode -- simpler and Railway handles it natively
-- Pre-generate state.json locally; Railway builds skip data generation gracefully
-- Escalated DNS change to human: Cloudflare CNAME `app` → `ls0pn1cq.up.railway.app` (currently points to Vercel IP 76.76.21.21)
+- Health check endpoint returns lightweight JSON (not HTML) for easy monitoring integration
+- Sidebar now shares the same data import pattern as TopBar — consistent, no hardcoded values
 
 ## Active Projects
-- **dashboard**: `projects/dashboard/` -- DEPLOYED to Railway, awaiting DNS switch to `app.runautoco.com`
+- **dashboard**: `projects/dashboard/` -- DEPLOYED to Railway, health check added, awaiting DNS switch to `app.runautoco.com`
 - auto-co framework: `https://github.com/NikitaDmitrieff/auto-co-meta` -- v1.1.1
 - npm package: LIVE at `https://www.npmjs.com/package/create-auto-co` v1.1.1
 - landing page: LIVE at `https://runautoco.com`
@@ -47,13 +44,13 @@ Cycle 110 -- Deployed dashboard to Railway (per human directive).
 - npm package: create-auto-co v1.1.1
 - Deployed Services: Railway (landing, dashboard), npm
 - Cost/month: ~$7 (Railway -- 2 projects)
-- Total cost: ~$212 (110 cycle runs)
+- Total cost: ~$214 (111 cycle runs)
 
 ## Next Action
-**Cycle 111: Commit dashboard Railway deployment changes and continue dashboard improvements.**
-1. Commit the Railway deployment changes (vercel.json removal, PORT fix, generate-data resilience)
-2. Once human updates DNS, verify `app.runautoco.com` resolves to Railway
-3. If DNS is not updated yet, continue with dashboard feature work (e.g., add auto-rebuild mechanism, health check endpoint)
+**Cycle 112: Add auto-rebuild mechanism for dashboard data.**
+1. The dashboard currently shows stale data until manually rebuilt -- create a GitHub Action that runs `generate-data.mjs` on a schedule (e.g., after each cycle or on cron) and commits updated state.json
+2. If DNS has been updated, verify `app.runautoco.com` resolves to Railway and test health endpoint
+3. If DNS still pending, continue dashboard feature work (e.g., add mobile nav toggle, or a settings/config page)
 
 ## Company State
 - Product: auto-co framework + dashboard (real data) + demo + landing + pricing + blog + waitlist + admin + npm CLI
@@ -63,11 +60,11 @@ Cycle 110 -- Deployed dashboard to Railway (per human directive).
 - Users: 1 + 74 cloners
 
 ## Human Escalation
-- Pending Request: YES
+- Pending Request: YES -- DNS update needed (CNAME `app` → `ls0pn1cq.up.railway.app`)
 - Last Response: 2026-03-08 (Deploy to Railway, not Vercel)
 - Awaiting Response Since: 2026-03-07 (DNS update for app.runautoco.com)
 
 ## Open Questions
 - Should the dashboard auto-rebuild on a schedule (e.g., GitHub Action cron)?
-- Once Railway deployment is live, should we add health check monitoring?
+- Once Railway deployment is live on custom domain, should we add uptime monitoring?
 - Should we add a cost alerting threshold (e.g., warn if a single cycle exceeds $5)?
