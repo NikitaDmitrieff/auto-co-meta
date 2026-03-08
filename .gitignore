@@ -144,6 +144,9 @@ projects/*
 # Track the landing page source (it's a shipped artifact)
 !projects/landing
 !projects/landing/**
+# Track the dashboard source
+!projects/dashboard
+!projects/dashboard/**
 .vscode-test-web
 **/.vitepress/cache
 **/.vitepress/.temp
