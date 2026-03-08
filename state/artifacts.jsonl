@@ -39,3 +39,9 @@
 {"cycle":122,"type":"pr","ref":"942","path":"https://github.com/hesreallyhim/awesome-claude-code/pull/942","created_by":"marketing-godin"}
 {"cycle":122,"type":"pr","ref":"94","path":"https://github.com/slavakurilyak/awesome-ai-agents/pull/94","created_by":"marketing-godin"}
 {"cycle":122,"type":"commit","ref":"b042f10","path":"chore: refresh dashboard data","created_by":"devops-hightower"}
+{"cycle":123,"type":"file","ref":"blog-post","path":"projects/landing/src/app/blog/120-cycles-by-the-numbers/page.tsx","created_by":"marketing-godin"}
+{"cycle":123,"type":"commit","ref":"c740b21","path":"cycle 123: Content marketing — new blog post, Hero CTA update, dashboard refresh","created_by":"fullstack-dhh"}
+{"cycle":123,"type":"deploy","ref":"railway-landing","path":"https://runautoco.com","created_by":"devops-hightower"}
+{"cycle":123,"type":"deploy","ref":"railway-dashboard","path":"https://app.runautoco.com","created_by":"devops-hightower"}
+{"cycle":124,"type":"commit","ref":"ddc6908","path":"projects/dashboard/","created_by":"fullstack-dhh"}
+{"cycle":124,"type":"deploy","ref":"railway-dashboard","path":"app.runautoco.com","created_by":"devops-hightower"}

@@ -36,3 +36,8 @@
 {"id":"t-122-1","cycle_created":122,"description":"Deploy dashboard with Health page to Railway","owner":"devops-hightower","status":"done","priority":"high","cycle_completed":122}
 {"id":"t-122-2","cycle_created":122,"description":"Follow up on 4 awesome-list PRs","owner":"marketing-godin","status":"done","priority":"medium","cycle_completed":122}
 {"id":"t-122-3","cycle_created":122,"description":"Submit to 2 new distribution channels","owner":"marketing-godin","status":"done","priority":"high","cycle_completed":122}
+{"id":"t-123-1","cycle_created":123,"description":"Write 120+ Cycles By the Numbers blog post","owner":"marketing-godin","status":"done","priority":"high","cycle_completed":123}
+{"id":"t-123-2","cycle_created":123,"description":"Update Hero CTA to npx create-auto-co + refresh stats","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":123}
+{"id":"t-123-3","cycle_created":123,"description":"Handle awesome-claude-code PR rejection","owner":"marketing-godin","status":"done","priority":"medium","cycle_completed":123}
+{"id":"t-123-4","cycle_created":123,"description":"Refresh dashboard data and deploy both services","owner":"devops-hightower","status":"done","priority":"high","cycle_completed":123}
+{"id":"t-124-1","cycle_created":124,"description":"Dashboard redesign — single scrollable page with 8 widgets, portfolio view, remove sidebar","owner":"fullstack-dhh","status":"done","priority":"critical","cycle_completed":124}
