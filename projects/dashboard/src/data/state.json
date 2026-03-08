@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-08T03:28:27.551Z",
+  "generatedAt": "2026-03-08T03:28:38.675Z",
   "cycle": 121,
   "phase": "Building",
   "metrics": {
@@ -54,6 +54,11 @@
   ],
   "git": {
     "commits": [
+      {
+        "hash": "f62c2b7",
+        "msg": "cycle 121: Health page — real HTTP service checks, loop diagnostics, cycle timeline",
+        "date": "2026-03-07 19:28:10 -0800"
+      },
       {
         "hash": "07348af",
         "msg": "chore: refresh dashboard data",
@@ -148,11 +153,6 @@
         "hash": "590d0d9",
         "msg": "chore: refresh dashboard data",
         "date": "2026-03-08 02:18:50 +0000"
-      },
-      {
-        "hash": "a723282",
-        "msg": "cycle 113: add mobile nav, Railway auto-deploy pipeline, refresh data",
-        "date": "2026-03-07 18:18:36 -0800"
       }
     ],
     "openPRs": []
@@ -1112,6 +1112,15 @@
       "duration": 300,
       "model": "opus",
       "totalCost": 232
+    },
+    {
+      "cycle": 101,
+      "timestamp": "2026-03-08T03:19:10Z",
+      "status": "ok",
+      "cost": 2.1692552499999995,
+      "duration": 381,
+      "model": "opus",
+      "totalCost": 163.8258
     }
   ],
   "decisions": [
@@ -2060,69 +2069,69 @@
         "url": "runautoco.com",
         "status": "healthy",
         "statusCode": 200,
-        "responseMs": 105,
-        "checkedAt": "2026-03-08T03:28:27.084Z"
+        "responseMs": 81,
+        "checkedAt": "2026-03-08T03:28:38.224Z"
       },
       {
         "service": "Dashboard",
         "url": "app.runautoco.com",
         "status": "healthy",
         "statusCode": 200,
-        "responseMs": 71,
-        "checkedAt": "2026-03-08T03:28:27.155Z"
+        "responseMs": 83,
+        "checkedAt": "2026-03-08T03:28:38.307Z"
       },
       {
         "service": "Demo Dashboard",
         "url": "runautoco.com/demo",
         "status": "healthy",
         "statusCode": 200,
-        "responseMs": 46,
-        "checkedAt": "2026-03-08T03:28:27.201Z"
+        "responseMs": 43,
+        "checkedAt": "2026-03-08T03:28:38.350Z"
       },
       {
         "service": "Blog",
         "url": "runautoco.com/blog",
         "status": "healthy",
         "statusCode": 200,
-        "responseMs": 43,
-        "checkedAt": "2026-03-08T03:28:27.244Z"
+        "responseMs": 39,
+        "checkedAt": "2026-03-08T03:28:38.389Z"
       },
       {
         "service": "Pricing",
         "url": "runautoco.com/pricing",
         "status": "healthy",
         "statusCode": 200,
-        "responseMs": 43,
-        "checkedAt": "2026-03-08T03:28:27.287Z"
+        "responseMs": 44,
+        "checkedAt": "2026-03-08T03:28:38.433Z"
       },
       {
         "service": "Admin",
         "url": "runautoco.com/admin",
         "status": "healthy",
         "statusCode": 200,
-        "responseMs": 45,
-        "checkedAt": "2026-03-08T03:28:27.332Z"
+        "responseMs": 36,
+        "checkedAt": "2026-03-08T03:28:38.469Z"
       },
       {
         "service": "npm Package",
         "url": "npmjs.com/package/create-auto-co",
         "status": "healthy",
         "statusCode": 403,
-        "responseMs": 219,
-        "checkedAt": "2026-03-08T03:28:27.551Z"
+        "responseMs": 206,
+        "checkedAt": "2026-03-08T03:28:38.675Z"
       }
     ],
     "loopHealth": {
-      "totalCycles": 102,
+      "totalCycles": 103,
       "successRate": 0,
-      "avgDuration": 448,
+      "avgDuration": 447,
       "avgCost": 1.92,
       "lastCycle": {
-        "number": 120,
-        "timestamp": "2026-03-07T15:30:00Z",
+        "number": 101,
+        "timestamp": "2026-03-08T03:19:10Z",
         "status": "ok",
-        "duration": 300,
-        "cost": 2
+        "duration": 381,
+        "cost": 2.1692552499999995
       },
       "recentFailures": 10
     }
