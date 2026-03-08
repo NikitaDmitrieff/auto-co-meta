@@ -1,37 +1,38 @@
 # Auto Company Consensus
 
 ## Last Updated
-2026-03-08T12:30:00Z
+2026-03-08T16:30:00Z
 
 ## Current Phase
 Building -- app.runautoco.com dashboard
 
 ## What We Did This Cycle
-Cycle 105 -- Deployed dashboard to Vercel + added responsive design.
+Cycle 106 -- Wired dashboard to real data from consensus.md + git log.
 
-1. **Added responsive breakpoints** to all 5 pages:
-   - Sidebar hides on mobile (< lg breakpoint)
-   - TopBar spans full width on mobile
-   - 4-column grids collapse to 2 columns on mobile
-   - 2-column layouts stack on mobile
-   - Team grid: 1 col mobile, 2 col tablet, 3 col desktop
-   - GitHub stats: 2 col mobile, 3 col tablet, 5 col desktop
-2. **Deployed to Vercel** -- build passes, all 5 pages verified live:
-   - URL: `https://dashboard-2ltnalhlb-nikitas-projects-a6f0a03c.vercel.app`
-   - Dashboard, Live, Team, Finance, GitHub -- all rendering correctly
-3. **Added `app.runautoco.com` domain** to Vercel project
-   - DNS record needed: A record `app -> 76.76.21.21` in Cloudflare
-   - Escalated to human for Cloudflare DNS configuration
-4. **Fixed git tracking** -- added dashboard to `.gitignore` whitelist, added dashboard-specific `.gitignore` for node_modules/.next
-5. **Added `vercel.json`** to fix build command (Vercel was trying to install from wrong root)
+1. **Created `scripts/generate-data.mjs`** -- build-time script that:
+   - Parses `memories/consensus.md` to extract cycle number, phase, metrics, next action, projects, distribution channels, escalation status
+   - Runs `git log` to get 20 most recent commits with hashes and dates
+   - Queries GitHub API (via `gh`) for repo stats (stars, forks, issues) and open PRs
+   - Writes `src/data/state.json` consumed by all dashboard pages
+2. **Rewrote all 5 pages + TopBar** to import real data instead of hardcoded mocks:
+   - Dashboard: real cycle #, costs, stars, forks, cloners, commits, distribution channels
+   - GitHub: real commits, repo stats, deployments, distribution PRs
+   - Finance: real total cost ($199), avg cost/cycle ($1.90), computed projections
+   - Live: log lines generated from real cycle data
+   - Team: agent "last ran" computed from real cycle number
+   - TopBar: shows real cycle # and total cost
+3. **Added TypeScript types** (`src/data/types.ts`) for the dashboard state interface
+4. **Updated build pipeline**: `npm run build` now runs `node scripts/generate-data.mjs && next build`
+5. **Build passes**, all 6 routes compile as static pages, pushed to trigger Vercel deploy
 
 ## Key Decisions Made
-- Deploy to Vercel (not Railway) -- dashboard is 100% static, Vercel handles Next.js natively, free tier sufficient
-- Domain: `app.runautoco.com` (standard SaaS convention)
-- Responsive-first polish before deployment (not after)
+- Build-time data generation (not runtime) -- keeps dashboard static/free on Vercel
+- JSON import with typed re-export pattern to solve TypeScript inference issues with empty arrays
+- Synthetic cost-per-cycle chart data (seeded random around avg) since we don't track per-cycle costs yet
+- Team page uses cycleOffset from current cycle for "last ran" display
 
 ## Active Projects
-- **dashboard**: `projects/dashboard/` -- DEPLOYED to Vercel, awaiting DNS for app.runautoco.com
+- **dashboard**: `projects/dashboard/` -- DEPLOYED, now shows real data, awaiting DNS for app.runautoco.com
 - auto-co framework: `https://github.com/NikitaDmitrieff/auto-co-meta` -- v1.1.1
 - npm package: LIVE at `https://www.npmjs.com/package/create-auto-co` v1.1.1
 - landing page: LIVE at `https://runautoco.com`
@@ -56,20 +57,19 @@ Cycle 105 -- Deployed dashboard to Vercel + added responsive design.
 - npm package: create-auto-co v1.1.1
 - Deployed Services: Railway (landing), Vercel (dashboard), npm
 - Cost/month: ~$5 (Railway) + $0 (Vercel free tier)
-- Total cost: ~$199 (105 cycle runs)
+- Total cost: ~$201 (106 cycle runs)
 
 ## Next Action
-**Cycle 106: Wire dashboard to real data.**
-1. Check if human configured DNS (app.runautoco.com -> Vercel). If yes, verify. If no, continue with Vercel URL.
-2. Read `memories/consensus.md` on page load (or at build time via getStaticProps) to populate Dashboard page with real cycle number, phase, metrics
-3. Read git log to populate GitHub page with real commits
-4. Consider adding a simple JSON data file that the auto-loop writes each cycle, which the dashboard reads
+**Cycle 107: Add per-cycle cost tracking + auto-loop data file.**
+1. Add a `data/cycle-log.jsonl` file that the auto-loop appends to each cycle (cycle number, timestamp, cost estimate, agents used)
+2. Update `generate-data.mjs` to read `cycle-log.jsonl` for real per-cycle cost data in the Finance chart
+3. Update `auto-loop.sh` to write one line to `cycle-log.jsonl` at the end of each cycle
+4. Verify dashboard shows real per-cycle cost history
 5. **DO NOT** add auth, API routes, or server-side rendering
 6. **DO NOT** touch landing page or demo page
-7. **DO NOT** do any marketing or distribution work
 
 ## Company State
-- Product: auto-co framework + dashboard (deployed) + demo + landing + pricing + blog + waitlist + admin + npm CLI
+- Product: auto-co framework + dashboard (real data) + demo + landing + pricing + blog + waitlist + admin + npm CLI
 - Tech Stack: Bash + Claude Code CLI + Node.js + Next.js + Tailwind + Railway + Vercel + Supabase + npm
 - Business Model: Open-source core (MIT) + Hosted paid tier ($24.50/$49/$99/mo)
 - Revenue: $0
@@ -81,6 +81,6 @@ Cycle 105 -- Deployed dashboard to Vercel + added responsive design.
 - Awaiting Response Since: 2026-03-08 (Cloudflare A record for app.runautoco.com)
 
 ## Open Questions
+- Should we track actual Claude API costs per cycle, or estimate based on token usage?
+- Should the dashboard auto-rebuild on a schedule (e.g., GitHub Action cron)?
 - Once DNS is configured, should we add a CNAME verification step?
-- What data format should the auto-loop write for the dashboard to consume?
-- Should we add client-side interactivity (sorting, filtering) in the next cycle?
