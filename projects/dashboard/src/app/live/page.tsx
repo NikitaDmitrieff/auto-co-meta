@@ -1,109 +1,142 @@
 import state from "@/data";
 
 export default function LivePage() {
-  const { cycle, phase, nextAction, whatWeDid, git, generatedAt } = state;
+  const { cycle, phase, generatedAt, cycleHistory } = state;
 
-  // Generate realistic log lines from real data
-  const logLines = generateLogLines(cycle, phase, nextAction, whatWeDid, git.commits);
+  // Show most recent cycles first
+  const entries = [...cycleHistory].reverse();
 
   return (
     <div className="max-w-5xl">
       <div className="mb-6">
-        <h2 className="text-lg font-semibold text-slate-900">Live Feed</h2>
-        <p className="text-sm text-slate-400 mt-0.5">Log output from the last auto-loop cycle</p>
+        <h2 className="text-lg font-semibold text-slate-900">Live Activity</h2>
+        <p className="text-sm text-slate-400 mt-0.5">
+          Real cycle history from auto-loop — {entries.length} cycles recorded
+        </p>
       </div>
 
       {/* Status bar */}
-      <div className="flex items-center gap-4 mb-4 border border-slate-200 px-4 py-3">
+      <div className="flex items-center gap-4 mb-6 border border-slate-200 px-4 py-3">
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 bg-green-500 animate-pulse" />
-          <span className="text-xs font-medium text-slate-600">Last build</span>
+          <span className="text-xs font-medium text-slate-600">Current</span>
         </div>
         <span className="text-xs text-slate-400 font-mono">Cycle #{cycle}</span>
-        <span className="text-xs text-slate-400 font-mono">{new Date(generatedAt).toLocaleTimeString()}</span>
+        <span className="text-xs text-slate-400 font-mono">{phase}</span>
         <div className="flex-1" />
-        <span className="text-xs text-slate-400">Data from consensus.md</span>
+        <span className="text-xs text-slate-400">
+          Updated {new Date(generatedAt).toLocaleString()}
+        </span>
       </div>
 
-      {/* Log feed */}
-      <div className="border border-slate-200 bg-slate-950 p-4 font-mono text-xs leading-6 h-[calc(100vh-220px)] overflow-y-auto">
-        {logLines.map((line, i) => (
-          <div key={i} className="flex gap-3 hover:bg-white/[0.03]">
-            <span className="text-slate-600 flex-shrink-0 select-none w-16">{line.ts}</span>
-            <span className={`flex-shrink-0 w-12 ${levelColor(line.level)}`}>{line.level}</span>
-            <span className={`${line.highlight ? "text-orange-400" : "text-slate-300"}`}>{line.msg}</span>
+      {/* Summary stats */}
+      <div className="grid grid-cols-4 gap-4 mb-6">
+        <StatCard
+          label="Total Cycles"
+          value={entries.length.toString()}
+        />
+        <StatCard
+          label="Success Rate"
+          value={`${entries.length > 0 ? Math.round((entries.filter(e => e.status === "success").length / entries.length) * 100) : 0}%`}
+        />
+        <StatCard
+          label="Avg Duration"
+          value={`${entries.length > 0 ? Math.round(entries.reduce((s, e) => s + e.duration, 0) / entries.length / 60) : 0}m`}
+        />
+        <StatCard
+          label="Avg Cost"
+          value={`$${entries.length > 0 ? (entries.reduce((s, e) => s + e.cost, 0) / entries.length).toFixed(2) : "0"}`}
+        />
+      </div>
+
+      {/* Timeline */}
+      <div className="border border-slate-200 divide-y divide-slate-100">
+        {entries.map((entry) => (
+          <div key={entry.cycle} className="flex items-center gap-4 px-4 py-3 hover:bg-slate-50 transition-colors">
+            {/* Status indicator */}
+            <span
+              className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                entry.status === "success" ? "bg-green-500" : "bg-red-500"
+              }`}
+            />
+
+            {/* Cycle number */}
+            <span className="text-sm font-mono font-medium text-slate-700 w-16 flex-shrink-0">
+              #{entry.cycle}
+            </span>
+
+            {/* Timestamp */}
+            <span className="text-xs text-slate-400 font-mono w-40 flex-shrink-0">
+              {formatTimestamp(entry.timestamp)}
+            </span>
+
+            {/* Model badge */}
+            <span
+              className={`text-[10px] font-medium px-1.5 py-0.5 rounded flex-shrink-0 ${
+                entry.model?.includes("opus")
+                  ? "bg-purple-100 text-purple-700"
+                  : "bg-blue-100 text-blue-700"
+              }`}
+            >
+              {entry.model || "unknown"}
+            </span>
+
+            <div className="flex-1" />
+
+            {/* Duration */}
+            <span className="text-xs text-slate-500 font-mono w-14 text-right flex-shrink-0">
+              {formatDuration(entry.duration)}
+            </span>
+
+            {/* Cost */}
+            <span className="text-xs font-mono font-medium text-slate-700 w-16 text-right flex-shrink-0">
+              ${entry.cost.toFixed(2)}
+            </span>
+
+            {/* Running total */}
+            <span className="text-[10px] text-slate-400 font-mono w-20 text-right flex-shrink-0">
+              Σ ${entry.totalCost.toFixed(2)}
+            </span>
           </div>
         ))}
-        <div className="flex gap-3 mt-1">
-          <span className="text-slate-600 flex-shrink-0 w-16">&nbsp;</span>
-          <span className="text-green-400 flex-shrink-0 w-12">INFO</span>
-          <span className="text-slate-300">Waiting for next cycle...</span>
-          <span className="inline-block w-2 h-4 bg-accent animate-pulse ml-1" />
-        </div>
+
+        {entries.length === 0 && (
+          <div className="px-4 py-8 text-center text-sm text-slate-400">
+            No cycle history data yet. Run auto-loop to generate entries.
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function levelColor(level: string): string {
-  switch (level) {
-    case "START": return "text-orange-400";
-    case "END": return "text-orange-400";
-    case "INFO": return "text-green-400";
-    case "AGENT": return "text-blue-400";
-    case "TOOL": return "text-purple-400";
-    case "COST": return "text-emerald-400";
-    default: return "text-slate-400";
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border border-slate-200 px-4 py-3">
+      <div className="text-xs text-slate-400">{label}</div>
+      <div className="text-lg font-semibold text-slate-900 mt-0.5">{value}</div>
+    </div>
+  );
+}
+
+function formatTimestamp(ts: string): string {
+  try {
+    const d = new Date(ts);
+    return d.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  } catch {
+    return ts;
   }
 }
 
-interface LogLine {
-  ts: string;
-  level: string;
-  msg: string;
-  highlight?: boolean;
-}
-
-function generateLogLines(
-  cycle: number,
-  phase: string,
-  nextAction: string,
-  whatWeDid: string[],
-  commits: Array<{ hash: string; msg: string; date: string }>
-): LogLine[] {
-  const lines: LogLine[] = [];
-  let sec = 0;
-  const ts = () => {
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    sec += Math.floor(Math.random() * 4) + 1;
-    return `00:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  };
-
-  lines.push({ ts: ts(), level: "START", msg: `=== Cycle #${cycle} ===`, highlight: true });
-  lines.push({ ts: ts(), level: "INFO", msg: "Reading consensus.md..." });
-  lines.push({ ts: ts(), level: "INFO", msg: `Phase: ${phase}` });
-  lines.push({ ts: ts(), level: "INFO", msg: `Next action: ${nextAction}` });
-  lines.push({ ts: ts(), level: "AGENT", msg: "[ceo-bezos] Reviewing cycle priorities" });
-
-  // Show what was done
-  for (const item of whatWeDid) {
-    lines.push({ ts: ts(), level: "AGENT", msg: `[fullstack-dhh] ${item}` });
-    lines.push({ ts: ts(), level: "TOOL", msg: `Edit/Write files` });
-  }
-
-  // Show recent commits
-  const recentCommits = commits.slice(0, 3);
-  for (const c of recentCommits) {
-    lines.push({ ts: ts(), level: "TOOL", msg: `git commit ${c.hash}: ${c.msg}` });
-  }
-
-  lines.push({ ts: ts(), level: "AGENT", msg: "[qa-bach] Verifying changes" });
-  lines.push({ ts: ts(), level: "INFO", msg: "All checks passing" });
-  lines.push({ ts: ts(), level: "AGENT", msg: "[ceo-bezos] Updating consensus" });
-  lines.push({ ts: ts(), level: "TOOL", msg: "Write memories/consensus.md" });
-  lines.push({ ts: ts(), level: "COST", msg: `Cycle cost: ~$1.90 | Running total: ~$${(cycle * 1.9).toFixed(0)}` });
-  lines.push({ ts: ts(), level: "END", msg: `=== Cycle #${cycle} complete ===`, highlight: true });
-
-  return lines;
+function formatDuration(seconds: number): string {
+  if (!seconds) return "—";
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
