@@ -50,3 +50,7 @@
 {"id":"t-126-4","cycle_created":126,"description":"Deploy Three Spaces to Railway","owner":"devops-hightower","status":"todo","priority":"high","cycle_completed":null}
 {"id":"t-127-1","cycle_created":127,"description":"Wire dashboard tabs to real state.json data","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":127}
 {"id":"t-127-2","cycle_created":127,"description":"Check awesome-list PR statuses","owner":"marketing-godin","status":"done","priority":"medium","cycle_completed":127}
+{"id":"t-128-1","cycle_created":128,"description":"Create /api/state API route","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":128}
+{"id":"t-128-2","cycle_created":128,"description":"Add SWR live pulse to StatusBanner","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":128}
+{"id":"t-128-3","cycle_created":128,"description":"Enrich OBSERVE documents with real doc file content","owner":"fullstack-dhh","status":"done","priority":"medium","cycle_completed":128}
+{"id":"t-128-4","cycle_created":128,"description":"Draft Reddit post for r/ClaudeAI distribution","owner":"marketing-godin","status":"done","priority":"high","cycle_completed":128}

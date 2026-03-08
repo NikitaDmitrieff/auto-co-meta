@@ -6,9 +6,9 @@
  * Run: node scripts/generate-data.mjs
  */
 
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { execSync } from "node:child_process";
-import { resolve, dirname } from "node:path";
+import { resolve, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -513,6 +513,71 @@ function synthesizeTerminalEntries(decisions, artifacts, commits, cycleHistory) 
   return entries.slice(-40);
 }
 
+// ── Real document files from docs/ ────────────────────────────────────
+function getDocFiles() {
+  const docsDir = resolve(ROOT, "docs");
+  if (!existsSync(docsDir)) return [];
+
+  const files = [];
+
+  function walk(dir) {
+    for (const entry of readdirSync(dir)) {
+      const full = resolve(dir, entry);
+      try {
+        const st = statSync(full);
+        if (st.isDirectory()) {
+          walk(full);
+        } else if (entry.endsWith(".md")) {
+          const rel = relative(ROOT, full);
+          const raw = readFileSync(full, "utf-8");
+          // Extract title from first heading or filename
+          const headingMatch = raw.match(/^#\s+(.+)/m);
+          const title = headingMatch
+            ? headingMatch[1].trim()
+            : entry.replace(/\.md$/, "").replace(/-/g, " ");
+          // Derive author from directory (docs/marketing/ -> marketing-godin)
+          const parts = rel.split("/");
+          const roleDir = parts[1] || "";
+          const authorMap = {
+            ceo: "ceo-bezos",
+            cto: "cto-vogels",
+            critic: "critic-munger",
+            product: "product-norman",
+            ui: "ui-duarte",
+            interaction: "interaction-cooper",
+            fullstack: "fullstack-dhh",
+            qa: "qa-bach",
+            devops: "devops-hightower",
+            marketing: "marketing-godin",
+            operations: "operations-pg",
+            sales: "sales-ross",
+            cfo: "cfo-campbell",
+            research: "research-thompson",
+            plans: "cto-vogels",
+          };
+          const author = authorMap[roleDir] || "fullstack-dhh";
+          // Get file modification date
+          const date = st.mtime.toISOString().split("T")[0];
+          // Preview = first 200 chars of content (strip headings)
+          const contentClean = raw.replace(/^#+\s+.+\n/gm, "").trim();
+          const preview = contentClean.slice(0, 200).replace(/\n/g, " ").trim();
+          // Truncate content to 2000 chars to keep state.json reasonable
+          const content = raw.slice(0, 2000);
+
+          files.push({ path: rel, title, author, date, preview, content });
+        }
+      } catch {
+        // skip unreadable files
+      }
+    }
+  }
+
+  walk(docsDir);
+  // Sort by date descending, take top 15
+  files.sort((a, b) => b.date.localeCompare(a.date));
+  return files.slice(0, 15);
+}
+
 // ── Main ────────────────────────────────────────────────────────────
 // Skip generation if repo root doesn't exist (e.g., Railway build)
 if (!existsSync(resolve(ROOT, "memories/consensus.md"))) {
@@ -536,6 +601,7 @@ const terminalEntries = synthesizeTerminalEntries(
   git.commits,
   cycleHistory,
 );
+const docFiles = getDocFiles();
 
 const state = {
   generatedAt: new Date().toISOString(),
@@ -575,6 +641,7 @@ const state = {
   consensusText,
   escalations,
   terminalEntries,
+  docFiles,
 };
 
 writeFileSync(OUT, JSON.stringify(state, null, 2));

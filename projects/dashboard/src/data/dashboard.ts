@@ -276,43 +276,18 @@ export const costByLayer: Array<{ layer: string; cost: number; pct: number }> = 
     .sort((a, b) => b.pct - a.pct);
 })();
 
-// Documents (from real artifacts — map to doc files)
+// Documents (from real doc files read at build time)
 export const documents: DocFile[] = (() => {
-  const artifacts = (data.artifacts as Array<Record<string, unknown>>) || [];
-  const docs: DocFile[] = [];
-  const seen = new Set<string>();
+  const docFiles = (data.docFiles as DocFile[]) || [];
+  if (docFiles.length > 0) return docFiles;
 
-  for (const a of artifacts) {
-    const path = a.path as string;
-    if (!path || seen.has(path)) continue;
-    if (!path.startsWith("docs/") && !path.endsWith(".md")) continue;
-    seen.add(path);
-
-    const parts = path.split("/");
-    const title = parts[parts.length - 1].replace(/\.md$/, "").replace(/-/g, " ");
-    const author = (a.created_by as string) || (a.createdBy as string) || "fullstack-dhh";
-
-    docs.push({
-      path,
-      title: title.charAt(0).toUpperCase() + title.slice(1),
-      author,
-      date: "",
-      preview: path,
-      content: `Document: ${path}\nCreated by: ${author}`,
-    });
-  }
-
-  // If no doc artifacts, provide a minimal set from known docs
-  if (docs.length === 0) {
-    docs.push({
-      path: "memories/consensus.md",
-      title: "Current Consensus",
-      author: "ceo-bezos",
-      date: new Date().toISOString().split("T")[0],
-      preview: "Cross-cycle relay baton",
-      content: (data.consensusText as string) || "No consensus data available.",
-    });
-  }
-
-  return docs.slice(0, 10);
+  // Fallback: consensus as a document
+  return [{
+    path: "memories/consensus.md",
+    title: "Current Consensus",
+    author: "ceo-bezos",
+    date: new Date().toISOString().split("T")[0],
+    preview: "Cross-cycle relay baton",
+    content: (data.consensusText as string) || "No consensus data available.",
+  }];
 })();

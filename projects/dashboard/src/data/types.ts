@@ -83,6 +83,14 @@ export interface DashboardState {
       uniqueClones: number;
     }>;
   };
+  docFiles: Array<{
+    path: string;
+    title: string;
+    author: string;
+    date: string;
+    preview: string;
+    content: string;
+  }>;
   health: {
     checks: Array<{
       service: string;

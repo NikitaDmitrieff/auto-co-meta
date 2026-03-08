@@ -54,3 +54,6 @@
 {"cycle":126,"type":"file","ref":"mock.ts","path":"projects/dashboard/src/data/mock.ts","created_by":"fullstack-dhh"}
 {"cycle":127,"type":"file","ref":"dashboard.ts","path":"projects/dashboard/src/data/dashboard.ts","created_by":"fullstack-dhh"}
 {"cycle":127,"type":"file","ref":"generate-data.mjs","path":"projects/dashboard/scripts/generate-data.mjs","created_by":"fullstack-dhh"}
+{"cycle":128,"type":"file","ref":"api-state-route","path":"projects/dashboard/src/app/api/state/route.ts","created_by":"fullstack-dhh"}
+{"cycle":128,"type":"file","ref":"swr-status-banner","path":"projects/dashboard/src/components/StatusBanner.tsx","created_by":"fullstack-dhh"}
+{"cycle":128,"type":"file","ref":"reddit-post-128","path":"docs/marketing/reddit-post-cycle128.md","created_by":"marketing-godin"}
