@@ -1,30 +1,30 @@
 {
-  "generatedAt": "2026-03-08T05:24:35.533Z",
-  "cycle": 125,
+  "generatedAt": "2026-03-08T05:27:13.610Z",
+  "cycle": 126,
   "phase": "Building",
   "metrics": {
-    "totalCost": 242,
+    "totalCost": 244,
     "avgCostPerCycle": 1.94,
     "revenue": "$0",
     "users": "1 (creator) + 74 GitHub clones (14d)",
-    "stars": 14,
+    "stars": 13,
     "forks": 1,
     "cloners": 0,
     "openIssues": 0
   },
-  "nextAction": "Cycle 126: Push Round 2 to Railway + dev.to publish + awesome-list follow-up.",
+  "nextAction": "Cycle 127: Deploy Three Spaces to Railway + distribution follow-up.",
   "whatWeDid": [
-    "Railway deploy verified -- app.runautoco.com returns 200, served via Railway edge through Cloudflare proxy",
-    "Mobile responsive polish -- 4 widget fixes (CompanyHeader, ActivityWidget, CycleStatusWidget, DocumentsWidget)",
-    "Dev.to cross-post prepared -- Markdown article at `docs/marketing/devto-120-cycles.md`, escalated for API key"
+    "Human directive processed -- \"Dashboard Architecture: Three Spaces\" received and executed. Replaces all previous widget layouts.",
+    "LIVE tab built -- Split view: terminal feed (60%, dark bg, agent color badges, filter tabs) + context panel (40%, dynamic content for selected entry) + bottom status bar",
+    "OBSERVE tab built -- Four sections: global metrics grid (10 metrics), document browser (file tree + rendered content), memory section (consensus + cycle history + escalations), cost breakdown (per-cycle bars, cumulative spend, cost by layer)"
   ],
   "projects": [
     {
       "name": "dashboard",
-      "status": "`projects/dashboard/` -- ROUND 2 COMPLETE, deploying to Railway at `app.runautoco.com`, 2 routes + persistent chat panel"
+      "status": "`projects/dashboard/` -- THREE SPACES COMPLETE (LIVE | OBSERVE | ACT), deploying to Railway at `app.runautoco.com`"
     }
   ],
-  "pendingEscalation": true,
+  "pendingEscalation": false,
   "distribution": [
     {
       "channel": "npm (create-auto-co)",
@@ -33,7 +33,7 @@
     },
     {
       "channel": "dev.to",
-      "status": "ARTICLE READY (awaiting API key)",
+      "status": "ARTICLE READY (awaiting API key -- 2 cycles, defaulting to skip)",
       "url": "docs/marketing/devto-120-cycles.md"
     },
     {
@@ -69,6 +69,11 @@
   ],
   "git": {
     "commits": [
+      {
+        "hash": "5742fd4",
+        "msg": "cycle 126: Dashboard Three Spaces — LIVE ",
+        "date": " OBSERVE "
+      },
       {
         "hash": "2fde03c",
         "msg": "chore: refresh dashboard data",
@@ -163,11 +168,6 @@
         "hash": "941ec32",
         "msg": "chore: refresh dashboard data",
         "date": "2026-03-08 03:01:34 +0000"
-      },
-      {
-        "hash": "ed4f898",
-        "msg": "cycle 118: floating collapsible nav redesign (human directive)",
-        "date": "2026-03-07 19:01:17 -0800"
       }
     ],
     "openPRs": []
@@ -1476,6 +1476,33 @@
       "rationale": "Human directive — Round 2 dashboard refinements executed in full",
       "confidence": 0.95,
       "outcome": "success"
+    },
+    {
+      "timestamp": "2026-03-08T10:00:00Z",
+      "cycle": 126,
+      "agent": "ceo-bezos",
+      "decision": "Execute human directive: Dashboard Three Spaces (LIVE | OBSERVE | ACT)",
+      "rationale": "Human directive is clear and specific — complete redesign replaces all widget layouts",
+      "confidence": 0.95,
+      "outcome": "success"
+    },
+    {
+      "timestamp": "2026-03-08T10:00:00Z",
+      "cycle": 126,
+      "agent": "fullstack-dhh",
+      "decision": "Single-file-per-tab architecture with mock data",
+      "rationale": "Frontend shell only as directed. LiveTab, ObserveTab, ActTab as self-contained components. Mock data in separate file for reusability",
+      "confidence": 0.9,
+      "outcome": "success"
+    },
+    {
+      "timestamp": "2026-03-08T10:00:00Z",
+      "cycle": 126,
+      "agent": "ceo-bezos",
+      "decision": "Skip dev.to auto-publish after 2 cycles with no API key response",
+      "rationale": "Default action triggered: focus on other distribution channels. Human can manually paste if desired",
+      "confidence": 0.85,
+      "outcome": "pending"
     }
   ],
   "tasks": [
@@ -1892,6 +1919,42 @@
       "status": "done",
       "priority": "critical",
       "cycleCompleted": 125
+    },
+    {
+      "id": "t-126-1",
+      "cycle": 126,
+      "description": "Rebuild dashboard with Three Spaces architecture (LIVE | OBSERVE | ACT)",
+      "owner": "fullstack-dhh",
+      "status": "done",
+      "priority": "high",
+      "cycleCompleted": 126
+    },
+    {
+      "id": "t-126-2",
+      "cycle": 126,
+      "description": "Create mock data for terminal, documents, chat, agents, costs",
+      "owner": "fullstack-dhh",
+      "status": "done",
+      "priority": "high",
+      "cycleCompleted": 126
+    },
+    {
+      "id": "t-126-3",
+      "cycle": 126,
+      "description": "Remove old widget components (8 files + CompanyHeader)",
+      "owner": "fullstack-dhh",
+      "status": "done",
+      "priority": "medium",
+      "cycleCompleted": 126
+    },
+    {
+      "id": "t-126-4",
+      "cycle": 126,
+      "description": "Deploy Three Spaces to Railway",
+      "owner": "devops-hightower",
+      "status": "todo",
+      "priority": "high",
+      "cycleCompleted": null
     }
   ],
   "artifacts": [
@@ -2237,18 +2300,53 @@
       "ref": "round2-dashboard",
       "path": "projects/dashboard/",
       "createdBy": "fullstack-dhh"
+    },
+    {
+      "cycle": 126,
+      "type": "file",
+      "ref": "LiveTab.tsx",
+      "path": "projects/dashboard/src/components/tabs/LiveTab.tsx",
+      "createdBy": "fullstack-dhh"
+    },
+    {
+      "cycle": 126,
+      "type": "file",
+      "ref": "ObserveTab.tsx",
+      "path": "projects/dashboard/src/components/tabs/ObserveTab.tsx",
+      "createdBy": "fullstack-dhh"
+    },
+    {
+      "cycle": 126,
+      "type": "file",
+      "ref": "ActTab.tsx",
+      "path": "projects/dashboard/src/components/tabs/ActTab.tsx",
+      "createdBy": "fullstack-dhh"
+    },
+    {
+      "cycle": 126,
+      "type": "file",
+      "ref": "StatusBanner.tsx",
+      "path": "projects/dashboard/src/components/StatusBanner.tsx",
+      "createdBy": "fullstack-dhh"
+    },
+    {
+      "cycle": 126,
+      "type": "file",
+      "ref": "mock.ts",
+      "path": "projects/dashboard/src/data/mock.ts",
+      "createdBy": "fullstack-dhh"
     }
   ],
   "agentActivity": {
     "devops-hightower": {
       "decisions": 5,
-      "lastCycle": 123,
-      "tasks": 15
+      "lastCycle": 126,
+      "tasks": 16
     },
     "fullstack-dhh": {
-      "decisions": 19,
-      "lastCycle": 125,
-      "tasks": 24
+      "decisions": 20,
+      "lastCycle": 126,
+      "tasks": 27
     },
     "cfo-campbell": {
       "decisions": 1,
@@ -2262,6 +2360,10 @@
       "decisions": 4,
       "lastCycle": 125,
       "tasks": 5
+    },
+    "ceo-bezos": {
+      "decisions": 2,
+      "lastCycle": 126
     },
     "qa-bach": {
       "decisions": 0,
@@ -2428,26 +2530,29 @@
       "pageViews": 40,
       "costCycle": 1.9,
       "costTotal": 242
+    },
+    {
+      "date": "2026-03-08",
+      "cycle": 126,
+      "revenue": 0,
+      "users": 1,
+      "signups": 2,
+      "githubStars": 13,
+      "pageViews": 40,
+      "costCycle": 1.94,
+      "costTotal": 244
     }
   ],
   "traffic": {
     "views": {
-      "total": 40,
-      "unique": 26
+      "total": 0,
+      "unique": 0
     },
     "clones": {
-      "total": 166,
-      "unique": 74
+      "total": 0,
+      "unique": 0
     },
-    "daily": [
-      {
-        "date": "2026-03-06",
-        "views": 40,
-        "uniqueViews": 26,
-        "clones": 166,
-        "uniqueClones": 74
-      }
-    ]
+    "daily": []
   },
   "health": {
     "checks": [
@@ -2456,56 +2561,56 @@
         "url": "runautoco.com",
         "status": "healthy",
         "statusCode": 200,
-        "responseMs": 187,
-        "checkedAt": "2026-03-08T05:24:34.633Z"
+        "responseMs": 224,
+        "checkedAt": "2026-03-08T05:27:12.688Z"
       },
       {
         "service": "Dashboard",
         "url": "app.runautoco.com",
         "status": "healthy",
         "statusCode": 200,
-        "responseMs": 128,
-        "checkedAt": "2026-03-08T05:24:34.762Z"
+        "responseMs": 194,
+        "checkedAt": "2026-03-08T05:27:12.882Z"
       },
       {
         "service": "Demo Dashboard",
         "url": "runautoco.com/demo",
         "status": "healthy",
         "statusCode": 200,
-        "responseMs": 71,
-        "checkedAt": "2026-03-08T05:24:34.834Z"
+        "responseMs": 118,
+        "checkedAt": "2026-03-08T05:27:13.000Z"
       },
       {
         "service": "Blog",
         "url": "runautoco.com/blog",
         "status": "healthy",
         "statusCode": 200,
-        "responseMs": 70,
-        "checkedAt": "2026-03-08T05:24:34.904Z"
+        "responseMs": 75,
+        "checkedAt": "2026-03-08T05:27:13.075Z"
       },
       {
         "service": "Pricing",
         "url": "runautoco.com/pricing",
         "status": "healthy",
         "statusCode": 200,
-        "responseMs": 180,
-        "checkedAt": "2026-03-08T05:24:35.084Z"
+        "responseMs": 104,
+        "checkedAt": "2026-03-08T05:27:13.179Z"
       },
       {
         "service": "Admin",
         "url": "runautoco.com/admin",
         "status": "healthy",
         "statusCode": 200,
-        "responseMs": 81,
-        "checkedAt": "2026-03-08T05:24:35.165Z"
+        "responseMs": 122,
+        "checkedAt": "2026-03-08T05:27:13.301Z"
       },
       {
         "service": "npm Package",
         "url": "npmjs.com/package/create-auto-co",
         "status": "healthy",
         "statusCode": 403,
-        "responseMs": 367,
-        "checkedAt": "2026-03-08T05:24:35.532Z"
+        "responseMs": 309,
+        "checkedAt": "2026-03-08T05:27:13.610Z"
       }
     ],
     "loopHealth": {
