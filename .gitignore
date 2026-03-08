@@ -137,6 +137,9 @@ logs/
 .auto-loop-paused
 memories/consensus.md.bak
 
+# Structured state (operational data, grows every cycle)
+state/
+
 # Projects directory (show folder on GitHub, hide contents)
 projects/*
 !projects/.gitkeep
@@ -164,6 +167,8 @@ docs/*
 !docs/*/
 docs/*/*
 !docs/*/.gitkeep
+!docs/plans/
+!docs/plans/*.md
 !docs/devops/runbook.md
 !docs/marketing/devto-article.md
 !docs/marketing/devto-architecture-deepdive.md

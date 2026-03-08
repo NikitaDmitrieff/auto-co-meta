@@ -101,6 +101,10 @@ NOTIFY_URL="${NOTIFY_URL:-}"  # Webhook URL for notifications (empty = disabled)
 WEBHOOK_URL="${WEBHOOK_URL:-}"  # Event-based webhook URL (empty = disabled)
 PLUGIN_DIR="${PLUGIN_DIR:-}"  # Directory with lifecycle hook scripts (empty = disabled)
 PARALLEL_DIR="${PARALLEL_DIR:-}"  # Directory with .md prompt files for parallel sessions (empty = disabled)
+STATE_DIR="${STATE_DIR:-state}"
+SUMMARY_ENABLED="${SUMMARY_ENABLED:-true}"
+IDLE_INTERVAL="${IDLE_INTERVAL:-600}"  # Sleep interval when no changes detected (0 = disabled)
+QMD_ENABLED="${QMD_ENABLED:-true}"
 
 # Ensure Agent Teams is available
 export CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1
@@ -529,6 +533,39 @@ extract_cycle_metadata() {
         CYCLE_COST=$(echo "$OUTPUT" | sed -n 's/.*"total_cost_usd":\([0-9.]*\).*/\1/p' | tail -1 || true)
         CYCLE_SUBTYPE=$(echo "$OUTPUT" | sed -n 's/.*"subtype":"\([^"]*\)".*/\1/p' | tail -1 || true)
     fi
+}
+
+write_cycle_summary() {
+    local cycle_num=$1
+    local summary_dir="$LOG_DIR/summaries"
+    mkdir -p "$summary_dir"
+    local summary_file="$summary_dir/cycle-$(printf '%04d' "$cycle_num").md"
+    local timestamp
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    local status="ok"
+    [ -n "${cycle_failed_reason:-}" ] && status="fail"
+
+    # Extract next action from consensus if available
+    local next_action=""
+    if [ -f "$CONSENSUS_FILE" ]; then
+        next_action=$(sed -n '/^## Next Action/,/^## /{ /^## Next Action/d; /^## /d; p; }' "$CONSENSUS_FILE" | head -5 || true)
+    fi
+
+    cat > "$summary_file" << SUMMARYEOF
+# Cycle $cycle_num Summary
+- **Date:** $timestamp
+- **Duration:** ${cycle_duration:-0}s
+- **Cost:** \$${CYCLE_COST:-unknown}
+- **Status:** $status
+- **Model:** $MODEL
+
+## Result
+$(echo "${RESULT_TEXT:-No result text captured}" | head -c 1000)
+
+## Next Action
+${next_action:-No next action found in consensus}
+SUMMARYEOF
+    log_cycle "$cycle_num" "SUMMARY_FILE" "Written to $summary_file"
 }
 
 # === Help flag ===
@@ -1276,6 +1313,15 @@ if [ "${1:-}" = "--config" ]; then
     echo "PLUGIN_DIR:             ${PLUGIN_DIR:-disabled}"
     echo "PARALLEL_DIR:           ${PARALLEL_DIR:-disabled}"
     echo ""
+    echo "--- Adaptive Frequency ---"
+    echo "IDLE_INTERVAL:          ${IDLE_INTERVAL}s (0 = disabled)"
+    echo ""
+    echo "--- Memory & State ---"
+    echo "STATE_DIR:              $STATE_DIR"
+    echo "SUMMARY_ENABLED:        $SUMMARY_ENABLED"
+    echo "QMD_ENABLED:            $QMD_ENABLED"
+    echo "QMD installed:          $(command -v qmd &>/dev/null && echo 'yes' || echo 'no')"
+    echo ""
     echo "--- Paths ---"
     echo "PROMPT_FILE:            $PROMPT_FILE"
     echo "CONSENSUS_FILE:         $CONSENSUS_FILE"
@@ -1363,6 +1409,21 @@ if [ "${1:-}" = "--env" ] || [ "${1:-}" = "-e" ]; then
 # Each .md file runs alongside the main cycle as an independent session.
 # Leave empty to disable.
 # PARALLEL_DIR=
+
+# --- Adaptive Frequency ---
+# Seconds to sleep when no changes detected between cycles (default: 600 = 10 min).
+# Set to 0 to disable adaptive frequency (always use LOOP_INTERVAL).
+# IDLE_INTERVAL=600
+
+# --- Memory & State ---
+# Enable QMD semantic search integration.
+# QMD_ENABLED=true
+
+# Directory for structured state files (decisions, tasks, metrics, artifacts).
+# STATE_DIR=state
+
+# Enable cycle log summaries in logs/summaries/.
+# SUMMARY_ENABLED=true
 
 # --- Advanced ---
 # Enable Agent Teams (experimental). Set by auto-loop.sh automatically.
@@ -2737,7 +2798,23 @@ if [ "${1:-}" = "--selftest" ]; then
         check "Agent definitions" 0 ".claude/agents/ missing"
     fi
 
-    # 11. Signal handling (verify trap is functional)
+    # 11. QMD search engine
+    if command -v qmd &>/dev/null; then
+        qmd_ver=$(qmd --version 2>/dev/null | head -1 || echo "unknown")
+        check "QMD installed" 1 "$qmd_ver"
+    else
+        check "QMD installed" 0 "npm install -g @tobilu/qmd"
+    fi
+
+    # 12. State directory
+    if [ -d "$PROJECT_DIR/$STATE_DIR" ]; then
+        state_files=$(find "$PROJECT_DIR/$STATE_DIR" -name '*.jsonl' -type f 2>/dev/null | wc -l | tr -d ' ')
+        check "State directory" 1 "$state_files JSONL files in $STATE_DIR/"
+    else
+        check "State directory" 0 "$STATE_DIR/ missing -- will be created on first run"
+    fi
+
+    # 13. Signal handling (verify trap is functional)
     if (bash -c 'trap "echo caught" SIGTERM; kill -TERM $$ 2>/dev/null; exit 0' 2>/dev/null); then
         check "Signal handling (trap)" 1 "SIGTERM trap works"
     else
@@ -2757,7 +2834,7 @@ fi
 
 # === Setup ===
 
-mkdir -p "$LOG_DIR" "$PROJECT_DIR/memories"
+mkdir -p "$LOG_DIR" "$PROJECT_DIR/memories" "$PROJECT_DIR/$STATE_DIR"
 
 # Clean up stale stop file from previous run
 rm -f "$PROJECT_DIR/.auto-loop-stop"
@@ -2827,7 +2904,8 @@ fi
 
 log "=== Auto-Co Loop Started (PID $$) ==="
 log "Project: $PROJECT_DIR"
-log "Model: $MODEL | Interval: ${LOOP_INTERVAL}s | Timeout: ${CYCLE_TIMEOUT_SECONDS}s | Breaker: ${MAX_CONSECUTIVE_ERRORS} errors | Max cycles: ${MAX_CYCLES:-unlimited}${NOTIFY_URL:+ | Notify: $NOTIFY_URL}${WEBHOOK_URL:+ | Webhook: $WEBHOOK_URL}${PLUGIN_DIR:+ | Plugins: $PLUGIN_DIR}${PARALLEL_DIR:+ | Parallel: $PARALLEL_DIR}"
+QMD_TAG=""; [ "${QMD_ENABLED:-true}" = "true" ] && QMD_TAG=" | QMD: on"
+log "Model: $MODEL | Interval: ${LOOP_INTERVAL}s | Idle: ${IDLE_INTERVAL}s | Timeout: ${CYCLE_TIMEOUT_SECONDS}s | Breaker: ${MAX_CONSECUTIVE_ERRORS} errors | Max cycles: ${MAX_CYCLES:-unlimited}${NOTIFY_URL:+ | Notify: $NOTIFY_URL}${WEBHOOK_URL:+ | Webhook: $WEBHOOK_URL}${PLUGIN_DIR:+ | Plugins: $PLUGIN_DIR}${PARALLEL_DIR:+ | Parallel: $PARALLEL_DIR}${QMD_TAG}"
 
 # === Startup Banner (terminal only) ===
 if [ -t 1 ]; then
@@ -2939,6 +3017,7 @@ This is Cycle #$loop_count. Act decisively."
     fi
 
     cycle_failed_reason=""
+    post_cycle_consensus_hash=""
     if [ "$CYCLE_TIMED_OUT" -eq 1 ]; then
         cycle_failed_reason="Timed out after ${CYCLE_TIMEOUT_SECONDS}s"
     elif [ $EXIT_CODE -ne 0 ]; then
@@ -2976,6 +3055,9 @@ This is Cycle #$loop_count. Act decisively."
         append_cycle_history "$loop_count" "ok" "${CYCLE_COST:-0}" "$cycle_duration" "$EXIT_CODE"
         send_notification "$loop_count" "ok" "${CYCLE_COST:-0}" "$cycle_duration"
         send_webhook "cycle.end" "$loop_count" "ok" "${CYCLE_COST:-0}" "$cycle_duration"
+        if [ "${SUMMARY_ENABLED:-true}" = "true" ]; then
+            write_cycle_summary "$loop_count"
+        fi
         error_count=0
     else
         error_count=$((error_count + 1))
@@ -3035,6 +3117,55 @@ This is Cycle #$loop_count. Act decisively."
         exit 0
     fi
 
-    log_cycle $loop_count "WAIT" "Sleeping ${LOOP_INTERVAL}s before next cycle..."
-    sleep "$LOOP_INTERVAL"
+    # Update QMD index in background (if enabled and installed)
+    if [ "${QMD_ENABLED:-true}" = "true" ] && command -v qmd &>/dev/null; then
+        qmd update 2>/dev/null &
+    fi
+
+    # Adaptive frequency: sleep longer when nothing changed
+    cycle_was_idle=0
+    if [ "$IDLE_INTERVAL" -gt 0 ] && [ -z "$cycle_failed_reason" ]; then
+        # Cycle is "idle" if consensus didn't change and no artifacts were produced
+        if [ "$pre_cycle_consensus_hash" = "$post_cycle_consensus_hash" ]; then
+            # Check if any artifacts were logged this cycle
+            artifacts_this_cycle=0
+            if [ -f "$PROJECT_DIR/$STATE_DIR/artifacts.jsonl" ]; then
+                artifacts_this_cycle=$(grep -c "\"cycle\":$loop_count" "$PROJECT_DIR/$STATE_DIR/artifacts.jsonl" 2>/dev/null) || artifacts_this_cycle=0
+            fi
+            if [ "$artifacts_this_cycle" -eq 0 ]; then
+                cycle_was_idle=1
+            fi
+        fi
+    fi
+
+    if [ "$cycle_was_idle" -eq 1 ]; then
+        log_cycle $loop_count "IDLE" "No changes detected. Sleeping ${IDLE_INTERVAL}s (checking every 30s for activity)..."
+        save_state "idle_adaptive"
+        # Sleep in 30s chunks, checking for activity signals each time
+        idle_elapsed=0
+        while [ "$idle_elapsed" -lt "$IDLE_INTERVAL" ]; do
+            sleep 30
+            idle_elapsed=$((idle_elapsed + 30))
+            # Check for activity: human response, external consensus change, or stop request
+            if check_stop_requested; then
+                log "Stop requested during idle. Shutting down."
+                cleanup
+            fi
+            if [ -f "$PAUSE_FILE" ]; then
+                break
+            fi
+            if [ -s "$PROJECT_DIR/memories/human-response.md" ]; then
+                log_cycle $loop_count "WAKE" "Human response detected — resuming immediately"
+                break
+            fi
+            current_consensus_hash=$(md5 -q "$CONSENSUS_FILE" 2>/dev/null || md5sum "$CONSENSUS_FILE" 2>/dev/null | cut -d' ' -f1 || echo "")
+            if [ "$current_consensus_hash" != "$post_cycle_consensus_hash" ]; then
+                log_cycle $loop_count "WAKE" "Consensus externally modified — resuming immediately"
+                break
+            fi
+        done
+    else
+        log_cycle $loop_count "WAIT" "Sleeping ${LOOP_INTERVAL}s before next cycle..."
+        sleep "$LOOP_INTERVAL"
+    fi
 done

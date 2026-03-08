@@ -15,6 +15,18 @@ Before deciding on the cycle's action, check `memories/human-response.md`. If it
 - Clear the file after processing (write an empty string)
 - Note in consensus that a human response was received and acted upon
 
+### 2b. Search Memory (when needed)
+
+When the current task benefits from historical context, use QMD to search your memory:
+- `qmd_search "keyword"` — fast BM25 keyword search across docs, decisions, past summaries
+- `qmd_vector_search "concept"` — semantic search (finds related content even without exact words)
+- `qmd_deep_search "complex question"` — hybrid search with re-ranking (best quality, slowest)
+
+Use `-c collection_name` to scope: `auto-co-docs`, `auto-co-memories`, `auto-co-summaries`, `auto-co-state`.
+
+Search when: making strategic decisions, checking what was tried before, or when the Next Action is ambiguous.
+Skip search for: routine checks, simple polish tasks, or when the consensus already contains enough context.
+
 ### 3. Decide
 
 - Clear Next Action exists -> execute it
@@ -80,6 +92,36 @@ Then run: mv memories/.consensus.tmp memories/consensus.md
 ## Open Questions
 - [questions to think about]
 ```
+
+## State Tracking (Mandatory)
+
+After updating consensus, append structured records to the state files. Each line must be valid JSON.
+
+### Decisions
+Append to `state/decisions.jsonl` for every significant decision:
+```json
+{"timestamp":"ISO8601","cycle":N,"agent":"agent-name","decision":"what was decided","rationale":"why","confidence":0.8,"outcome":"pending|success|failed"}
+```
+
+### Tasks
+Append to `state/tasks.jsonl` for tasks started or completed:
+```json
+{"id":"t-CYCLE-N","cycle_created":N,"description":"task description","owner":"agent-name","status":"todo|doing|done|blocked","priority":"high|medium|low","cycle_completed":null}
+```
+
+### Metrics
+Append to `state/metrics.jsonl` once per cycle with current numbers:
+```json
+{"date":"YYYY-MM-DD","cycle":N,"revenue":0,"users":1,"signups":2,"github_stars":5,"page_views":208,"cost_cycle":1.42,"cost_total":172}
+```
+
+### Artifacts
+Append to `state/artifacts.jsonl` for every file, commit, deploy, or PR created:
+```json
+{"cycle":N,"type":"commit|deploy|pr|file","ref":"abc123","path":"path/or/url","created_by":"agent-name"}
+```
+
+Only append — never overwrite or truncate these files.
 
 ## Convergence Rules (Mandatory)
 
