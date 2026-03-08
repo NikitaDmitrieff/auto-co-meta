@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import state from "@/data";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: DashboardIcon },
@@ -52,7 +53,7 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="px-5 py-4 border-t border-slate-200">
-        <div className="text-[10px] text-slate-400 font-mono">Cycle #104</div>
+        <div className="text-[10px] text-slate-400 font-mono">Cycle #{state.cycle}</div>
         <div className="text-[10px] text-slate-400">Running</div>
       </div>
     </aside>

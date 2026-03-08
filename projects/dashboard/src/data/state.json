@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-03-08T00:59:13.341Z",
-  "cycle": 109,
+  "generatedAt": "2026-03-08T01:06:32.321Z",
+  "cycle": 110,
   "phase": "Building",
   "metrics": {
-    "totalCost": 210,
+    "totalCost": 212,
     "avgCostPerCycle": 1.93,
     "revenue": "$0",
     "users": "1 (creator) + 74 cloners",
@@ -12,19 +12,19 @@
     "cloners": 74,
     "openIssues": 0
   },
-  "nextAction": "Cycle 110: Deploy dashboard to Railway (per human directive).",
+  "nextAction": "Cycle 111: Commit dashboard Railway deployment changes and continue dashboard improvements.",
   "whatWeDid": [
-    "Merged \"Recent Commits\" and \"Open PRs\" into a unified \"GitHub Activity\" section on the overview page",
-    "Open PRs now show as a detailed list with PR number, title, and status badge (not just a count in the header)",
-    "Regenerated state.json with latest git data (20 commits, 69 cycle history entries)"
+    "Deployed dashboard to Railway as a new project (`auto-co-dashboard`), accessible at `https://auto-co-dashboard-production.up.railway.app/`",
+    "Removed Vercel config (`vercel.json` deleted, standalone mode tested then simplified to standard Next.js server)",
+    "Added custom domain `app.runautoco.com` in Railway -- requires Cloudflare DNS update (escalated to human)"
   ],
   "projects": [
     {
       "name": "dashboard",
-      "status": "`projects/dashboard/` -- GitHub activity section added, needs Railway deployment (per human directive)"
+      "status": "`projects/dashboard/` -- DEPLOYED to Railway, awaiting DNS switch to `app.runautoco.com`"
     }
   ],
-  "pendingEscalation": false,
+  "pendingEscalation": true,
   "distribution": [
     {
       "channel": "npm (create-auto-co)",
@@ -54,6 +54,11 @@
   ],
   "git": {
     "commits": [
+      {
+        "hash": "7a3d3f3",
+        "msg": "cycle 110: deploy dashboard to Railway",
+        "date": "2026-03-07 17:02:20 -0800"
+      },
       {
         "hash": "556c4af",
         "msg": "cycle 109: add GitHub activity section to dashboard overview",
@@ -148,11 +153,6 @@
         "hash": "7db4c61",
         "msg": "Rewrite README: simpler, showcase real products, mention Claude Code subscription",
         "date": "2026-03-07 14:34:30 -0800"
-      },
-      {
-        "hash": "f09e715",
-        "msg": "cycle 94: update consensus -- distribution content ready, awaiting human posting",
-        "date": "2026-03-07 14:31:03 -0800"
       }
     ],
     "openPRs": []
@@ -824,6 +824,15 @@
       "duration": 117,
       "model": "opus",
       "totalCost": 139.5184
+    },
+    {
+      "cycle": 91,
+      "timestamp": "2026-03-08T01:02:37Z",
+      "status": "ok",
+      "cost": 2.8943980000000002,
+      "duration": 691,
+      "model": "opus",
+      "totalCost": 142.4128
     }
   ]
 }
