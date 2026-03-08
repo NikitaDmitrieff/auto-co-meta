@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-08T03:00:51.088Z",
+  "generatedAt": "2026-03-08T03:01:33.989Z",
   "cycle": 118,
   "phase": "Building",
   "metrics": {
@@ -54,6 +54,11 @@
   ],
   "git": {
     "commits": [
+      {
+        "hash": "ed4f898",
+        "msg": "cycle 118: floating collapsible nav redesign (human directive)",
+        "date": "2026-03-07 19:01:17 -0800"
+      },
       {
         "hash": "8011078",
         "msg": "chore: refresh dashboard data",
@@ -148,11 +153,6 @@
         "hash": "7a3d3f3",
         "msg": "cycle 110: deploy dashboard to Railway",
         "date": "2026-03-07 17:02:20 -0800"
-      },
-      {
-        "hash": "556c4af",
-        "msg": "cycle 109: add GitHub activity section to dashboard overview",
-        "date": "2026-03-07 16:49:01 -0800"
       }
     ],
     "openPRs": []
@@ -1067,15 +1067,6 @@
       "duration": 366,
       "model": "opus",
       "totalCost": 155.3799
-    },
-    {
-      "cycle": 98,
-      "timestamp": "2026-03-08T02:53:16Z",
-      "status": "ok",
-      "cost": 2.41276915,
-      "duration": 431,
-      "model": "opus",
-      "totalCost": 157.7927
     }
   ],
   "decisions": [
@@ -1230,15 +1221,6 @@
       "decision": "Integrate GitHub traffic API (views/clones) into data pipeline and GitHub page",
       "rationale": "GitHub traffic data provides real engagement metrics beyond stars/forks; essential for tracking growth",
       "confidence": 0.9,
-      "outcome": "success"
-    },
-    {
-      "timestamp": "2026-03-07T13:00:00Z",
-      "cycle": 118,
-      "agent": "fullstack-dhh",
-      "decision": "Replace static white sidebar with floating collapsible nav matching demo pattern",
-      "rationale": "Human directive to port demo nav design to dashboard - dark neo-brutalist floating nav with motion animations",
-      "confidence": 0.95,
       "outcome": "success"
     }
   ],
@@ -1485,15 +1467,6 @@
       "status": "done",
       "priority": "low",
       "cycleCompleted": 117
-    },
-    {
-      "id": "t-118-1",
-      "cycle": 118,
-      "description": "Dashboard nav redesign: floating collapsible nav with dark neo-brutalist styling",
-      "owner": "fullstack-dhh",
-      "status": "done",
-      "priority": "high",
-      "cycleCompleted": 118
     }
   ],
   "artifacts": [
@@ -1678,34 +1651,6 @@
       "ref": "railway",
       "path": "https://app.runautoco.com",
       "createdBy": "devops-hightower"
-    },
-    {
-      "cycle": 118,
-      "type": "file",
-      "ref": "Sidebar.tsx",
-      "path": "projects/dashboard/src/components/Sidebar.tsx",
-      "createdBy": "fullstack-dhh"
-    },
-    {
-      "cycle": 118,
-      "type": "file",
-      "ref": "MobileNav.tsx",
-      "path": "projects/dashboard/src/components/MobileNav.tsx",
-      "createdBy": "fullstack-dhh"
-    },
-    {
-      "cycle": 118,
-      "type": "file",
-      "ref": "TopBar.tsx",
-      "path": "projects/dashboard/src/components/TopBar.tsx",
-      "createdBy": "fullstack-dhh"
-    },
-    {
-      "cycle": 118,
-      "type": "file",
-      "ref": "layout.tsx",
-      "path": "projects/dashboard/src/app/layout.tsx",
-      "createdBy": "fullstack-dhh"
     }
   ],
   "agentActivity": {
@@ -1715,9 +1660,9 @@
       "tasks": 11
     },
     "fullstack-dhh": {
-      "decisions": 12,
-      "lastCycle": 118,
-      "tasks": 16
+      "decisions": 11,
+      "lastCycle": 117,
+      "tasks": 15
     },
     "cfo-campbell": {
       "decisions": 1,
@@ -1799,36 +1744,17 @@
       "pageViews": 40,
       "costCycle": 1.93,
       "costTotal": 226
-    },
-    {
-      "date": "2026-03-07",
-      "cycle": 118,
-      "revenue": 0,
-      "users": 1,
-      "signups": 2,
-      "githubStars": 13,
-      "pageViews": 40,
-      "costCycle": 1.93,
-      "costTotal": 228
     }
   ],
   "traffic": {
     "views": {
-      "total": 40,
-      "unique": 26
+      "total": 0,
+      "unique": 0
     },
     "clones": {
-      "total": 166,
-      "unique": 74
+      "total": 0,
+      "unique": 0
     },
-    "daily": [
-      {
-        "date": "2026-03-06",
-        "views": 40,
-        "uniqueViews": 26,
-        "clones": 166,
-        "uniqueClones": 74
-      }
-    ]
+    "daily": []
   }
 }
