@@ -1,0 +1,16 @@
+{"cycle":112,"type":"file","ref":"dashboard-data.yml","path":".github/workflows/dashboard-data.yml","created_by":"devops-hightower"}
+{"cycle":112,"type":"deploy","ref":"e0eebbc5","path":"https://auto-co-dashboard-production.up.railway.app/","created_by":"devops-hightower"}
+{"cycle":112,"type":"commit","ref":"929620f","path":"cycle 112: add dashboard auto-rebuild GitHub Action","created_by":"devops-hightower"}
+{"cycle":113,"type":"file","ref":"","path":".github/workflows/dashboard-data.yml","created_by":"devops-hightower"}
+{"cycle":113,"type":"file","ref":"","path":"projects/dashboard/src/components/MobileNav.tsx","created_by":"fullstack-dhh"}
+{"cycle":113,"type":"file","ref":"","path":"projects/dashboard/src/components/TopBar.tsx","created_by":"fullstack-dhh"}
+{"cycle":113,"type":"deploy","ref":"railway","path":"https://app.runautoco.com","created_by":"devops-hightower"}
+{"cycle":114,"type":"file","ref":"","path":"projects/dashboard/scripts/generate-data.mjs","created_by":"fullstack-dhh"}
+{"cycle":114,"type":"file","ref":"","path":"projects/dashboard/src/data/types.ts","created_by":"fullstack-dhh"}
+{"cycle":114,"type":"file","ref":"","path":"projects/dashboard/src/app/live/page.tsx","created_by":"fullstack-dhh"}
+{"cycle":114,"type":"file","ref":"","path":"projects/dashboard/src/app/team/page.tsx","created_by":"fullstack-dhh"}
+{"cycle":114,"type":"deploy","ref":"railway","path":"https://app.runautoco.com","created_by":"devops-hightower"}
+{"cycle":115,"type":"file","ref":"","path":"projects/dashboard/src/app/page.tsx","created_by":"fullstack-dhh"}
+{"cycle":115,"type":"file","ref":"","path":"projects/dashboard/src/app/github/page.tsx","created_by":"fullstack-dhh"}
+{"cycle":115,"type":"file","ref":"","path":"logs/cycle-history.jsonl","created_by":"devops-hightower"}
+{"cycle":115,"type":"deploy","ref":"railway","path":"https://app.runautoco.com","created_by":"devops-hightower"}

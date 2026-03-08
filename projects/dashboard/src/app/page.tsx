@@ -1,7 +1,7 @@
 import state from "@/data";
 
 export default function DashboardPage() {
-  const { cycle, phase, metrics, nextAction, whatWeDid, pendingEscalation, deployments } = state;
+  const { cycle, phase, metrics, nextAction, whatWeDid, pendingEscalation, deployments, decisions, artifacts } = state;
   const avgCost = metrics.avgCostPerCycle;
 
   return (
@@ -112,7 +112,69 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Recent Decisions */}
+        {decisions.length > 0 && (
+          <div className="border border-slate-200 p-5 lg:col-span-2">
+            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-4">Recent Decisions</h3>
+            <div className="space-y-3">
+              {decisions.slice(-3).reverse().map((d, i) => (
+                <div key={i} className="flex items-start gap-3 py-2 border-b border-slate-100 last:border-0">
+                  <span className="w-7 h-7 flex items-center justify-center text-[10px] font-bold font-mono bg-accent/10 text-accent flex-shrink-0 uppercase">
+                    {agentShortName(d.agent)}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm text-slate-700 line-clamp-2">{d.decision}</div>
+                    <div className="text-[10px] text-slate-400 font-mono mt-0.5">cycle {d.cycle}</div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 bg-slate-100 text-slate-500">
+                      {Math.round(d.confidence * 100)}%
+                    </span>
+                    <span className={`text-[10px] font-mono px-1.5 py-0.5 ${
+                      d.outcome === "success" ? "bg-green-50 text-green-600" :
+                      d.outcome === "failed" ? "bg-red-50 text-red-600" :
+                      "bg-amber-50 text-amber-600"
+                    }`}>
+                      {d.outcome}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Recent Artifacts */}
+      {artifacts.length > 0 && (
+        <div className="mt-6 border border-slate-200 p-5">
+          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-4">Recent Artifacts</h3>
+          <div className="space-y-2">
+            {artifacts.slice(-5).reverse().map((a, i) => (
+              <div key={i} className="flex items-center gap-3 py-1.5 border-b border-slate-100 last:border-0">
+                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 uppercase flex-shrink-0 ${
+                  a.type === "commit" ? "bg-accent/10 text-accent" :
+                  a.type === "deploy" ? "bg-green-50 text-green-600" :
+                  a.type === "pr" ? "bg-purple-50 text-purple-600" :
+                  "bg-slate-100 text-slate-500"
+                }`}>
+                  {a.type}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm text-slate-700 truncate font-mono">{a.path || a.ref}</div>
+                </div>
+                <span className="text-[10px] text-slate-400 font-mono flex-shrink-0 uppercase">
+                  {agentShortName(a.createdBy)}
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono flex-shrink-0">
+                  c{a.cycle}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Distribution tracker */}
       {state.distribution.length > 0 && (
@@ -156,6 +218,11 @@ function MetricCard({ label, value, sub }: { label: string; value: string; sub: 
       <div className="text-[10px] text-slate-400 mt-0.5">{sub}</div>
     </div>
   );
+}
+
+function agentShortName(agent: string): string {
+  const parts = agent.split("-");
+  return parts.length > 1 ? parts.slice(1).join("-").toUpperCase() : agent.toUpperCase();
 }
 
 function formatDate(dateStr: string): string {

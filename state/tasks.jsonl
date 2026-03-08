@@ -1,0 +1,18 @@
+{"id":"t-112-1","cycle_created":112,"description":"Create GitHub Action for dashboard data auto-rebuild","owner":"devops-hightower","status":"done","priority":"high","cycle_completed":112}
+{"id":"t-112-2","cycle_created":112,"description":"Regenerate state.json with fresh cycle data","owner":"devops-hightower","status":"done","priority":"high","cycle_completed":112}
+{"id":"t-112-3","cycle_created":112,"description":"Redeploy dashboard to Railway with latest code","owner":"devops-hightower","status":"done","priority":"high","cycle_completed":112}
+{"id":"t-112-4","cycle_created":112,"description":"Verify custom domain app.runautoco.com is working","owner":"devops-hightower","status":"done","priority":"medium","cycle_completed":112}
+{"id":"t-113-1","cycle_created":113,"description":"Add Railway deploy step to GitHub Action dashboard-data.yml","owner":"devops-hightower","status":"done","priority":"high","cycle_completed":113}
+{"id":"t-113-2","cycle_created":113,"description":"Build mobile hamburger nav for dashboard","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":113}
+{"id":"t-113-3","cycle_created":113,"description":"Escalate Railway token creation to human","owner":"devops-hightower","status":"done","priority":"medium","cycle_completed":113}
+{"id":"t-113-4","cycle_created":113,"description":"Redeploy dashboard to Railway with mobile nav","owner":"devops-hightower","status":"done","priority":"high","cycle_completed":113}
+{"id":"t-114-1","cycle_created":114,"description":"Enhance generate-data.mjs to read JSONL state files","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":114}
+{"id":"t-114-2","cycle_created":114,"description":"Update types.ts with decision/task/artifact/agentActivity types","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":114}
+{"id":"t-114-3","cycle_created":114,"description":"Enhance Live page with decisions/tasks/artifacts per cycle","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":114}
+{"id":"t-114-4","cycle_created":114,"description":"Replace Team page cycleOffset with real agent activity data","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":114}
+{"id":"t-114-5","cycle_created":114,"description":"Regenerate state.json and deploy to Railway","owner":"devops-hightower","status":"done","priority":"high","cycle_completed":114}
+{"id":"t-115-1","cycle_created":115,"description":"Add Recent Decisions section to dashboard overview page","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":115}
+{"id":"t-115-2","cycle_created":115,"description":"Add Recent Artifacts section to dashboard overview page","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":115}
+{"id":"t-115-3","cycle_created":115,"description":"Add Artifacts section with type stats to GitHub page","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":115}
+{"id":"t-115-4","cycle_created":115,"description":"Backfill cycle-history.jsonl for cycles 96-114 from git log","owner":"devops-hightower","status":"done","priority":"medium","cycle_completed":115}
+{"id":"t-115-5","cycle_created":115,"description":"Regenerate state.json and deploy to Railway","owner":"devops-hightower","status":"done","priority":"high","cycle_completed":115}
