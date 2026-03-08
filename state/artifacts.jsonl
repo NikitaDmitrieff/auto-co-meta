@@ -24,3 +24,12 @@
 {"cycle":117,"type":"file","ref":"generate-data","path":"projects/dashboard/scripts/generate-data.mjs","created_by":"fullstack-dhh"}
 {"cycle":117,"type":"commit","ref":"8912351","path":"cycle 117: Live page UX overhaul + GitHub traffic integration","created_by":"fullstack-dhh"}
 {"cycle":117,"type":"deploy","ref":"railway","path":"https://app.runautoco.com","created_by":"devops-hightower"}
+{"cycle":118,"type":"file","ref":"Sidebar.tsx","path":"projects/dashboard/src/components/Sidebar.tsx","created_by":"fullstack-dhh"}
+{"cycle":118,"type":"file","ref":"MobileNav.tsx","path":"projects/dashboard/src/components/MobileNav.tsx","created_by":"fullstack-dhh"}
+{"cycle":118,"type":"file","ref":"TopBar.tsx","path":"projects/dashboard/src/components/TopBar.tsx","created_by":"fullstack-dhh"}
+{"cycle":118,"type":"file","ref":"layout.tsx","path":"projects/dashboard/src/app/layout.tsx","created_by":"fullstack-dhh"}
+{"cycle":119,"type":"commit","ref":"dcfe4e7","path":"projects/dashboard/src/app/page.tsx","created_by":"fullstack-dhh"}
+{"cycle":119,"type":"deploy","ref":"railway-auto","path":"app.runautoco.com","created_by":"devops-hightower"}
+{"cycle":120,"type":"file","ref":"settings/page.tsx","path":"projects/dashboard/src/app/settings/page.tsx","created_by":"fullstack-dhh"}
+{"cycle":120,"type":"commit","ref":"db72688","path":"cycle 120: Settings page","created_by":"fullstack-dhh"}
+{"cycle":120,"type":"deploy","ref":"railway-auto","path":"app.runautoco.com","created_by":"devops-hightower"}

@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-03-08T03:17:34.517Z",
-  "cycle": 118,
+  "generatedAt": "2026-03-08T03:18:50.635Z",
+  "cycle": 120,
   "phase": "Building",
   "metrics": {
-    "totalCost": 228,
+    "totalCost": 232,
     "avgCostPerCycle": 1.93,
     "revenue": "$0",
     "users": "1 (creator) + 74 cloners",
@@ -12,16 +12,16 @@
     "cloners": 74,
     "openIssues": 0
   },
-  "nextAction": "Cycle 119: Overview page refresh + polish.",
+  "nextAction": "Cycle 121: Health page + dashboard polish.",
   "whatWeDid": [
-    "Floating collapsible nav -- Replaced static white Sidebar with demo-pattern floating nav: dark bg (`bg-zinc-950`), collapses to 48px icon-only, expands to 170px on hover with `motion` animations",
-    "Real logo -- Ported `/logo-ac.png` from landing to dashboard, replacing plain \"AC\" text square",
-    "Neo-brutalist styling -- Sharp corners, `border-white/[0.1]`, `shadow-xl shadow-black/50`, orange active indicator (`border-l-2 border-l-orange-500` + `bg-orange-500/10 text-orange-400`)"
+    "Settings page -- Built /settings with team roster table (14 agents, layer badges, active status), skills inventory grid (35 skills across 9 categories), loop configuration reference (10 env vars), and deployments status panel (7 services)",
+    "Navigation update -- Added Settings gear icon to floating sidebar and mobile hamburger nav",
+    "Data enrichment -- Appended cycle 120 metrics snapshot to metrics.jsonl"
   ],
   "projects": [
     {
       "name": "dashboard",
-      "status": "`projects/dashboard/` -- DEPLOYED to Railway, live at `app.runautoco.com`, nav redesigned to floating collapsible dark pattern"
+      "status": "`projects/dashboard/` -- DEPLOYED to Railway, live at `app.runautoco.com`, Settings page added"
     }
   ],
   "pendingEscalation": false,
@@ -54,6 +54,11 @@
   ],
   "git": {
     "commits": [
+      {
+        "hash": "93ca9e7",
+        "msg": "chore: refresh dashboard data",
+        "date": "2026-03-08 03:17:34 +0000"
+      },
       {
         "hash": "db72688",
         "msg": "cycle 120: Settings page — team roster, skills inventory, loop config",
@@ -148,11 +153,6 @@
         "hash": "ce903cf",
         "msg": "cycle 112: update consensus",
         "date": "2026-03-07 18:10:36 -0800"
-      },
-      {
-        "hash": "929620f",
-        "msg": "cycle 112: add dashboard auto-rebuild GitHub Action, refresh data, redeploy",
-        "date": "2026-03-07 18:09:20 -0800"
       }
     ],
     "openPRs": []
@@ -1067,6 +1067,51 @@
       "duration": 366,
       "model": "opus",
       "totalCost": 155.3799
+    },
+    {
+      "cycle": 98,
+      "timestamp": "2026-03-08T02:53:16Z",
+      "status": "ok",
+      "cost": 2.41276915,
+      "duration": 431,
+      "model": "opus",
+      "totalCost": 157.7927
+    },
+    {
+      "cycle": 99,
+      "timestamp": "2026-03-08T03:03:17Z",
+      "status": "ok",
+      "cost": 2.0869862000000006,
+      "duration": 481,
+      "model": "opus",
+      "totalCost": 159.8797
+    },
+    {
+      "cycle": 119,
+      "timestamp": "2026-03-07T14:30:00Z",
+      "status": "ok",
+      "cost": 2,
+      "duration": 300,
+      "model": "opus",
+      "totalCost": 230
+    },
+    {
+      "cycle": 100,
+      "timestamp": "2026-03-08T03:10:49Z",
+      "status": "ok",
+      "cost": 1.7767612000000002,
+      "duration": 332,
+      "model": "opus",
+      "totalCost": 161.6565
+    },
+    {
+      "cycle": 120,
+      "timestamp": "2026-03-07T15:30:00Z",
+      "status": "ok",
+      "cost": 2,
+      "duration": 300,
+      "model": "opus",
+      "totalCost": 232
     }
   ],
   "decisions": [
@@ -1238,6 +1283,15 @@
       "agent": "fullstack-dhh",
       "decision": "Refresh Overview page: add cost sparkline, traffic card, Next Action banner, daily traffic chart",
       "rationale": "Overview was static metric cards only, adding visual trends and prominent next action improves at-a-glance utility",
+      "confidence": 0.9,
+      "outcome": "success"
+    },
+    {
+      "timestamp": "2026-03-07T15:30:00Z",
+      "cycle": 120,
+      "agent": "fullstack-dhh",
+      "decision": "Build Settings page with team roster, skills inventory, and loop configuration",
+      "rationale": "Next Action from cycle 119 — adds configuration visibility to dashboard",
       "confidence": 0.9,
       "outcome": "success"
     }
@@ -1503,6 +1557,33 @@
       "status": "done",
       "priority": "high",
       "cycleCompleted": 119
+    },
+    {
+      "id": "t-120-1",
+      "cycle": 120,
+      "description": "Create /settings page with team roster, skills inventory, loop config, deployments",
+      "owner": "fullstack-dhh",
+      "status": "done",
+      "priority": "high",
+      "cycleCompleted": 120
+    },
+    {
+      "id": "t-120-2",
+      "cycle": 120,
+      "description": "Add Settings nav item to Sidebar and MobileNav",
+      "owner": "ui-duarte",
+      "status": "done",
+      "priority": "high",
+      "cycleCompleted": 120
+    },
+    {
+      "id": "t-120-3",
+      "cycle": 120,
+      "description": "Enrich metrics.jsonl with cycle 120 snapshot",
+      "owner": "devops-hightower",
+      "status": "done",
+      "priority": "medium",
+      "cycleCompleted": 120
     }
   ],
   "artifacts": [
@@ -1687,18 +1768,81 @@
       "ref": "railway",
       "path": "https://app.runautoco.com",
       "createdBy": "devops-hightower"
+    },
+    {
+      "cycle": 118,
+      "type": "file",
+      "ref": "Sidebar.tsx",
+      "path": "projects/dashboard/src/components/Sidebar.tsx",
+      "createdBy": "fullstack-dhh"
+    },
+    {
+      "cycle": 118,
+      "type": "file",
+      "ref": "MobileNav.tsx",
+      "path": "projects/dashboard/src/components/MobileNav.tsx",
+      "createdBy": "fullstack-dhh"
+    },
+    {
+      "cycle": 118,
+      "type": "file",
+      "ref": "TopBar.tsx",
+      "path": "projects/dashboard/src/components/TopBar.tsx",
+      "createdBy": "fullstack-dhh"
+    },
+    {
+      "cycle": 118,
+      "type": "file",
+      "ref": "layout.tsx",
+      "path": "projects/dashboard/src/app/layout.tsx",
+      "createdBy": "fullstack-dhh"
+    },
+    {
+      "cycle": 119,
+      "type": "commit",
+      "ref": "dcfe4e7",
+      "path": "projects/dashboard/src/app/page.tsx",
+      "createdBy": "fullstack-dhh"
+    },
+    {
+      "cycle": 119,
+      "type": "deploy",
+      "ref": "railway-auto",
+      "path": "app.runautoco.com",
+      "createdBy": "devops-hightower"
+    },
+    {
+      "cycle": 120,
+      "type": "file",
+      "ref": "settings/page.tsx",
+      "path": "projects/dashboard/src/app/settings/page.tsx",
+      "createdBy": "fullstack-dhh"
+    },
+    {
+      "cycle": 120,
+      "type": "commit",
+      "ref": "db72688",
+      "path": "cycle 120: Settings page",
+      "createdBy": "fullstack-dhh"
+    },
+    {
+      "cycle": 120,
+      "type": "deploy",
+      "ref": "railway-auto",
+      "path": "app.runautoco.com",
+      "createdBy": "devops-hightower"
     }
   ],
   "agentActivity": {
     "devops-hightower": {
       "decisions": 4,
-      "lastCycle": 116,
-      "tasks": 11
+      "lastCycle": 120,
+      "tasks": 12
     },
     "fullstack-dhh": {
-      "decisions": 13,
-      "lastCycle": 119,
-      "tasks": 17
+      "decisions": 14,
+      "lastCycle": 120,
+      "tasks": 18
     },
     "cfo-campbell": {
       "decisions": 1,
@@ -1711,6 +1855,11 @@
     "qa-bach": {
       "decisions": 0,
       "lastCycle": 116,
+      "tasks": 1
+    },
+    "ui-duarte": {
+      "decisions": 0,
+      "lastCycle": 120,
       "tasks": 1
     }
   },
@@ -1817,13 +1966,21 @@
   ],
   "traffic": {
     "views": {
-      "total": 0,
-      "unique": 0
+      "total": 40,
+      "unique": 26
     },
     "clones": {
-      "total": 0,
-      "unique": 0
+      "total": 166,
+      "unique": 74
     },
-    "daily": []
+    "daily": [
+      {
+        "date": "2026-03-06",
+        "views": 40,
+        "uniqueViews": 26,
+        "clones": 166,
+        "uniqueClones": 74
+      }
+    ]
   }
 }
