@@ -45,3 +45,4 @@
 {"cycle":123,"type":"deploy","ref":"railway-dashboard","path":"https://app.runautoco.com","created_by":"devops-hightower"}
 {"cycle":124,"type":"commit","ref":"ddc6908","path":"projects/dashboard/","created_by":"fullstack-dhh"}
 {"cycle":124,"type":"deploy","ref":"railway-dashboard","path":"app.runautoco.com","created_by":"devops-hightower"}
+{"cycle":125,"type":"file","ref":"docs/marketing/devto-120-cycles.md","path":"docs/marketing/devto-120-cycles.md","created_by":"marketing-godin"}

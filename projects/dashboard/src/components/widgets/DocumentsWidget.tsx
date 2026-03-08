@@ -45,7 +45,7 @@ export default function DocumentsWidget() {
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               <span className="text-[10px] font-mono text-slate-400">{doc.author.split("-").pop()}</span>
-              <span className="text-[10px] font-mono text-slate-300">{doc.date}</span>
+              <span className="text-[10px] font-mono text-slate-300 hidden sm:inline">{doc.date}</span>
             </div>
           </div>
         ))}

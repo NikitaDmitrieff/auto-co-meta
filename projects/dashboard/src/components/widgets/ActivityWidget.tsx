@@ -77,7 +77,7 @@ export default function ActivityWidget() {
       <div className="bg-zinc-950 p-4 font-mono text-xs leading-relaxed max-h-[400px] overflow-y-auto">
         {visible.map((entry, i) => (
           <div key={i} className="flex gap-2 py-0.5">
-            <span className="text-zinc-600 flex-shrink-0 w-12">{entry.time}</span>
+            <span className="text-zinc-600 flex-shrink-0 w-12 hidden sm:block">{entry.time}</span>
             <span className={`flex-shrink-0 w-14 ${TAG_COLORS[entry.tag] || "text-slate-500"}`}>
               [{entry.tag}]
             </span>

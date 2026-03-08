@@ -107,3 +107,5 @@
 2026-03-08T03:46:39Z | cycle=123 | blog_post=120-cycles-by-the-numbers | hero_cta=npx_create-auto-co | awesome_claude_code=CLOSED | deploys=landing+dashboard | stars=13 | cloners=74
 {"cycle":104,"timestamp":"2026-03-08T03:46:57Z","status":"ok","cost":1.9738740000000001,"duration_s":414,"exit_code":0,"model":"opus","total_cost":171.4024}
 {"cycle":124,"timestamp":"2026-03-08T06:00:00Z","status":"completed","cost":1.90,"duration":480,"model":"claude-opus-4-6","totalCost":240}
+{"cycle":105,"timestamp":"2026-03-08T03:57:59Z","status":"ok","cost":2.4090404500000004,"duration_s":542,"exit_code":0,"model":"opus","total_cost":173.8114}
+{"cycle":125,"timestamp":"2026-03-08T06:30:00Z","status":"completed","cost":1.90,"duration":360,"model":"claude-opus-4-6","totalCost":242}

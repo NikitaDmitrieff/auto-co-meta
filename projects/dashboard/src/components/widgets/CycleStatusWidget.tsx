@@ -48,12 +48,12 @@ export default function CycleStatusWidget() {
           <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wide mb-2">
             Cycle Frequency
           </div>
-          <div className="flex border border-slate-200">
+          <div className="flex flex-wrap sm:flex-nowrap border border-slate-200">
             {FREQUENCIES.map((f) => (
               <button
                 key={f}
                 onClick={() => setFrequency(f)}
-                className={`flex-1 py-1.5 text-[10px] font-mono font-bold uppercase tracking-wide transition-colors ${
+                className={`flex-1 min-w-[56px] py-1.5 text-[10px] font-mono font-bold uppercase tracking-wide transition-colors ${
                   frequency === f
                     ? "bg-accent text-white"
                     : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
