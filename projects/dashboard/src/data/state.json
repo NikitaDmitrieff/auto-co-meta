@@ -1,27 +1,27 @@
 {
-  "generatedAt": "2026-03-08T04:09:44.656Z",
+  "generatedAt": "2026-03-08T04:11:22.479Z",
   "cycle": 125,
   "phase": "Building",
   "metrics": {
     "totalCost": 242,
     "avgCostPerCycle": 1.94,
     "revenue": "$0",
-    "users": "1 (creator) + 74 cloners",
+    "users": "1 (creator) + 74 GitHub clones (14d)",
     "stars": 13,
     "forks": 1,
-    "cloners": 74,
+    "cloners": 0,
     "openIssues": 0
   },
-  "nextAction": "Cycle 126: Deploy dashboard polish + check awesome-list PR status + dev.to publish if API key received.",
+  "nextAction": "Cycle 126: Push Round 2 to Railway + dev.to publish + awesome-list follow-up.",
   "whatWeDid": [
-    "Railway deploy verified -- app.runautoco.com returns 200, served via Railway edge through Cloudflare proxy. DNS resolves correctly.",
-    "Mobile responsive polish -- Fixed 4 widgets for mobile breakpoints:",
-    "Build passes -- 6/6 static pages generated, all widgets compile cleanly"
+    "Railway deploy verified -- app.runautoco.com returns 200, served via Railway edge through Cloudflare proxy",
+    "Mobile responsive polish -- 4 widget fixes (CompanyHeader, ActivityWidget, CycleStatusWidget, DocumentsWidget)",
+    "Dev.to cross-post prepared -- Markdown article at `docs/marketing/devto-120-cycles.md`, escalated for API key"
   ],
   "projects": [
     {
       "name": "dashboard",
-      "status": "`projects/dashboard/` -- POLISHED for mobile, deploying to Railway at `app.runautoco.com`, 2 routes (portfolio + company, 8 widgets)"
+      "status": "`projects/dashboard/` -- ROUND 2 COMPLETE, deploying to Railway at `app.runautoco.com`, 2 routes + persistent chat panel"
     }
   ],
   "pendingEscalation": true,
@@ -69,6 +69,11 @@
   ],
   "git": {
     "commits": [
+      {
+        "hash": "5288f5c",
+        "msg": "cycle 125: Dashboard Round 2 — human directive executed",
+        "date": "2026-03-07 20:11:08 -0800"
+      },
       {
         "hash": "1dabdfa",
         "msg": "cycle 125: Dashboard mobile polish + dev.to article prep",
@@ -163,11 +168,6 @@
         "hash": "8011078",
         "msg": "chore: refresh dashboard data",
         "date": "2026-03-08 02:53:12 +0000"
-      },
-      {
-        "hash": "b96fd20",
-        "msg": "chore: refresh dashboard data",
-        "date": "2026-03-07 18:52:55 -0800"
       }
     ],
     "openPRs": []
@@ -1458,6 +1458,15 @@
       "rationale": "Blog content marketing — dev.to is a key distribution channel for developer audience, but no API key available",
       "confidence": 0.7,
       "outcome": "pending"
+    },
+    {
+      "timestamp": "2026-03-08T07:00:00Z",
+      "cycle": 125,
+      "agent": "fullstack-dhh",
+      "decision": "Dashboard Round 2 per human directive: reordered widgets (Activity hero full-width, GitHub #2, Chat persistent side panel), added cost transparency to banner (last + total), Clone button on portfolio with honest metrics labeling (GitHub clones not cloners), Documents/Tasks collapsed by default, Team widget shows recent agent interactions",
+      "rationale": "Human directive — Round 2 dashboard refinements executed in full",
+      "confidence": 0.95,
+      "outcome": "success"
     }
   ],
   "tasks": [
@@ -1865,6 +1874,15 @@
       "status": "blocked",
       "priority": "medium",
       "cycleCompleted": null
+    },
+    {
+      "id": "t-125-3",
+      "cycle": 125,
+      "description": "Dashboard Round 2 refinements per human directive (widget reorder, chat panel, clone button, metrics labeling, collapsible widgets)",
+      "owner": "fullstack-dhh",
+      "status": "done",
+      "priority": "critical",
+      "cycleCompleted": 125
     }
   ],
   "artifacts": [
@@ -2203,6 +2221,13 @@
       "ref": "docs/marketing/devto-120-cycles.md",
       "path": "docs/marketing/devto-120-cycles.md",
       "createdBy": "marketing-godin"
+    },
+    {
+      "cycle": 125,
+      "type": "commit",
+      "ref": "round2-dashboard",
+      "path": "projects/dashboard/",
+      "createdBy": "fullstack-dhh"
     }
   ],
   "agentActivity": {
@@ -2212,9 +2237,9 @@
       "tasks": 15
     },
     "fullstack-dhh": {
-      "decisions": 18,
+      "decisions": 19,
       "lastCycle": 125,
-      "tasks": 23
+      "tasks": 24
     },
     "cfo-campbell": {
       "decisions": 1,
@@ -2398,22 +2423,14 @@
   ],
   "traffic": {
     "views": {
-      "total": 40,
-      "unique": 26
+      "total": 0,
+      "unique": 0
     },
     "clones": {
-      "total": 166,
-      "unique": 74
+      "total": 0,
+      "unique": 0
     },
-    "daily": [
-      {
-        "date": "2026-03-06",
-        "views": 40,
-        "uniqueViews": 26,
-        "clones": 166,
-        "uniqueClones": 74
-      }
-    ]
+    "daily": []
   },
   "health": {
     "checks": [
@@ -2422,56 +2439,56 @@
         "url": "runautoco.com",
         "status": "healthy",
         "statusCode": 200,
-        "responseMs": 71,
-        "checkedAt": "2026-03-08T04:09:44.162Z"
+        "responseMs": 357,
+        "checkedAt": "2026-03-08T04:11:21.042Z"
       },
       {
         "service": "Dashboard",
         "url": "app.runautoco.com",
         "status": "healthy",
         "statusCode": 200,
-        "responseMs": 81,
-        "checkedAt": "2026-03-08T04:09:44.244Z"
+        "responseMs": 301,
+        "checkedAt": "2026-03-08T04:11:21.343Z"
       },
       {
         "service": "Demo Dashboard",
         "url": "runautoco.com/demo",
         "status": "healthy",
         "statusCode": 200,
-        "responseMs": 44,
-        "checkedAt": "2026-03-08T04:09:44.288Z"
+        "responseMs": 283,
+        "checkedAt": "2026-03-08T04:11:21.626Z"
       },
       {
         "service": "Blog",
         "url": "runautoco.com/blog",
         "status": "healthy",
         "statusCode": 200,
-        "responseMs": 39,
-        "checkedAt": "2026-03-08T04:09:44.327Z"
+        "responseMs": 275,
+        "checkedAt": "2026-03-08T04:11:21.901Z"
       },
       {
         "service": "Pricing",
         "url": "runautoco.com/pricing",
         "status": "healthy",
         "statusCode": 200,
-        "responseMs": 53,
-        "checkedAt": "2026-03-08T04:09:44.380Z"
+        "responseMs": 197,
+        "checkedAt": "2026-03-08T04:11:22.098Z"
       },
       {
         "service": "Admin",
         "url": "runautoco.com/admin",
         "status": "healthy",
         "statusCode": 200,
-        "responseMs": 39,
-        "checkedAt": "2026-03-08T04:09:44.419Z"
+        "responseMs": 227,
+        "checkedAt": "2026-03-08T04:11:22.325Z"
       },
       {
         "service": "npm Package",
         "url": "npmjs.com/package/create-auto-co",
         "status": "healthy",
         "statusCode": 403,
-        "responseMs": 237,
-        "checkedAt": "2026-03-08T04:09:44.656Z"
+        "responseMs": 153,
+        "checkedAt": "2026-03-08T04:11:22.478Z"
       }
     ],
     "loopHealth": {
