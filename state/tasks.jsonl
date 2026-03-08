@@ -16,3 +16,8 @@
 {"id":"t-115-3","cycle_created":115,"description":"Add Artifacts section with type stats to GitHub page","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":115}
 {"id":"t-115-4","cycle_created":115,"description":"Backfill cycle-history.jsonl for cycles 96-114 from git log","owner":"devops-hightower","status":"done","priority":"medium","cycle_completed":115}
 {"id":"t-115-5","cycle_created":115,"description":"Regenerate state.json and deploy to Railway","owner":"devops-hightower","status":"done","priority":"high","cycle_completed":115}
+{"id":"t-116-1","cycle_created":116,"description":"Integrate metrics.jsonl into generate-data.mjs and types.ts","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":116}
+{"id":"t-116-2","cycle_created":116,"description":"Rewrite Finance page: all cycles bar chart, metrics timeline, daily cost table, break-even calc","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":116}
+{"id":"t-116-3","cycle_created":116,"description":"Regenerate state.json with 95 cycle entries and 4 metrics snapshots","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":116}
+{"id":"t-116-4","cycle_created":116,"description":"Build test all 5 dashboard routes","owner":"qa-bach","status":"done","priority":"high","cycle_completed":116}
+{"id":"t-116-5","cycle_created":116,"description":"Deploy dashboard to Railway","owner":"devops-hightower","status":"done","priority":"high","cycle_completed":116}

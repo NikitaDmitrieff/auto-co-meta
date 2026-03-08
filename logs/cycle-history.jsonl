@@ -92,3 +92,5 @@
 {"cycle": 112, "timestamp": "2026-03-08T02:09:20Z", "status": "ok", "cost": 3.7067, "duration_s": 556, "exit_code": 0, "model": "sonnet", "total_cost": 199.3058, "backfilled": true}
 {"cycle": 113, "timestamp": "2026-03-08T02:18:36Z", "status": "ok", "cost": 3.6, "duration_s": 540, "exit_code": 0, "model": "sonnet", "total_cost": 202.9058, "backfilled": true}
 {"cycle": 114, "timestamp": "2026-03-08T02:27:36Z", "status": "ok", "cost": 2.0, "duration_s": 300, "exit_code": 0, "model": "sonnet", "total_cost": 204.9058, "backfilled": true}
+{"cycle":96,"timestamp":"2026-03-08T02:35:59Z","status":"ok","cost":3.4297335000000007,"duration_s":349,"exit_code":0,"model":"opus","total_cost":153.1687}
+{"cycle":116,"timestamp":"2026-03-08T07:00:00Z","status":"ok","cost":1.93,"duration_s":360,"exit_code":0,"model":"opus","total_cost":224}

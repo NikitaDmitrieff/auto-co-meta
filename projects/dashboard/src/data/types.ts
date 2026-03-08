@@ -61,4 +61,15 @@ export interface DashboardState {
     tasks?: number;
     lastCycle: number;
   }>;
+  metricsHistory: Array<{
+    date: string;
+    cycle: number;
+    revenue: number;
+    users: number;
+    signups: number;
+    githubStars: number;
+    pageViews: number;
+    costCycle: number;
+    costTotal: number;
+  }>;
 }

@@ -264,6 +264,37 @@ function getStateData() {
   return { decisions, tasks, artifacts, agentActivity };
 }
 
+// ── Metrics history (daily snapshots from state/metrics.jsonl) ───────
+function getMetricsHistory() {
+  const metricsFile = resolve(ROOT, "state/metrics.jsonl");
+  if (!existsSync(metricsFile)) return [];
+
+  const raw = readFileSync(metricsFile, "utf-8").trim();
+  if (!raw) return [];
+
+  return raw
+    .split("\n")
+    .map((line) => {
+      try {
+        const e = JSON.parse(line);
+        return {
+          date: e.date,
+          cycle: e.cycle,
+          revenue: e.revenue || 0,
+          users: e.users || 0,
+          signups: e.signups || 0,
+          githubStars: e.github_stars || 0,
+          pageViews: e.page_views || 0,
+          costCycle: e.cost_cycle || 0,
+          costTotal: e.cost_total || 0,
+        };
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+}
+
 // ── Deployments (static list -- could query Vercel API later) ───────
 const DEPLOYMENTS = [
   { service: "Landing Page", url: "runautoco.com", status: "live" },
@@ -286,6 +317,7 @@ const consensus = parseConsensus();
 const git = getGitData();
 const cycleHistory = getCycleHistory();
 const stateData = getStateData();
+const metricsHistory = getMetricsHistory();
 
 const state = {
   generatedAt: new Date().toISOString(),
@@ -316,6 +348,7 @@ const state = {
   tasks: stateData.tasks,
   artifacts: stateData.artifacts,
   agentActivity: stateData.agentActivity,
+  metricsHistory,
 };
 
 writeFileSync(OUT, JSON.stringify(state, null, 2));

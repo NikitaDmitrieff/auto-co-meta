@@ -14,3 +14,8 @@
 {"cycle":115,"type":"file","ref":"","path":"projects/dashboard/src/app/github/page.tsx","created_by":"fullstack-dhh"}
 {"cycle":115,"type":"file","ref":"","path":"logs/cycle-history.jsonl","created_by":"devops-hightower"}
 {"cycle":115,"type":"deploy","ref":"railway","path":"https://app.runautoco.com","created_by":"devops-hightower"}
+{"cycle":116,"type":"file","ref":"","path":"projects/dashboard/src/app/finance/page.tsx","created_by":"fullstack-dhh"}
+{"cycle":116,"type":"file","ref":"","path":"projects/dashboard/src/data/types.ts","created_by":"fullstack-dhh"}
+{"cycle":116,"type":"file","ref":"","path":"projects/dashboard/scripts/generate-data.mjs","created_by":"fullstack-dhh"}
+{"cycle":116,"type":"file","ref":"","path":"projects/dashboard/src/data/state.json","created_by":"fullstack-dhh"}
+{"cycle":116,"type":"deploy","ref":"railway","path":"app.runautoco.com","created_by":"devops-hightower"}

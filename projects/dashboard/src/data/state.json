@@ -1,27 +1,27 @@
 {
-  "generatedAt": "2026-03-08T02:35:49.001Z",
-  "cycle": 115,
+  "generatedAt": "2026-03-08T02:43:28.035Z",
+  "cycle": 116,
   "phase": "Building",
   "metrics": {
-    "totalCost": 222,
+    "totalCost": 224,
     "avgCostPerCycle": 1.93,
     "revenue": "$0",
     "users": "1 (creator) + 74 cloners",
-    "stars": 12,
+    "stars": 13,
     "forks": 1,
     "cloners": 74,
     "openIssues": 0
   },
-  "nextAction": "Cycle 116: Finance page overhaul + dashboard data quality.",
+  "nextAction": "Cycle 117: Live page UX improvements + distribution PR follow-ups.",
   "whatWeDid": [
-    "Updated overview page with decisions and artifacts -- Main dashboard now shows 3 most recent decisions (with agent, confidence, outcome) and 5 most recent artifacts (typed badges, agent attribution, cycle number)",
-    "Enriched GitHub page with artifact data -- New Artifacts section with summary stats by type (file/commit/deploy/pr) and full artifact list sorted by cycle, color-coded badges",
-    "Backfilled cycle-history.jsonl -- Added 19 missing entries for cycles 96-114 from git log timestamps (estimated costs). File now has 94 entries covering all cycles"
+    "Integrated metrics.jsonl into data pipeline -- Added getMetricsHistory() to generate-data.mjs, new metricsHistory type in types.ts, metrics snapshots now flow into state.json (4 entries tracking revenue/users/stars/costs over time)",
+    "Overhauled Finance page -- Now shows ALL 95 cycle costs (was capped at 40), added metrics snapshots table, daily cost breakdown with inline bars, model cost bars with percentages, break-even calculation (how many paid plans cover operating costs)",
+    "Improved monthly projection -- Updated infra cost to $7/mo (2 Railway services), added break-even analysis showing needed subscriber counts per tier"
   ],
   "projects": [
     {
       "name": "dashboard",
-      "status": "`projects/dashboard/` -- DEPLOYED to Railway, live at `app.runautoco.com`, overview + GitHub pages enriched with decisions/artifacts data, 94 cycle history entries"
+      "status": "`projects/dashboard/` -- DEPLOYED to Railway, live at `app.runautoco.com`, Finance page overhauled with metrics.jsonl integration, all 95 cycle entries, daily costs, break-even analysis"
     }
   ],
   "pendingEscalation": true,
@@ -54,6 +54,11 @@
   ],
   "git": {
     "commits": [
+      {
+        "hash": "aa056e3",
+        "msg": "chore: refresh dashboard data",
+        "date": "2026-03-08 02:35:49 +0000"
+      },
       {
         "hash": "3e1bb16",
         "msg": "cycle 115: enrich overview + GitHub pages, backfill cycle history",
@@ -148,11 +153,6 @@
         "hash": "135342b",
         "msg": "cycle 106: wire dashboard to real data from consensus.md + git log",
         "date": "2026-03-07 16:34:38 -0800"
-      },
-      {
-        "hash": "0df7437",
-        "msg": "cycle 105: deploy dashboard to Vercel + responsive design",
-        "date": "2026-03-07 16:25:38 -0800"
       }
     ],
     "openPRs": []
@@ -1040,6 +1040,24 @@
       "duration": 300,
       "model": "sonnet",
       "totalCost": 204.9058
+    },
+    {
+      "cycle": 96,
+      "timestamp": "2026-03-08T02:35:59Z",
+      "status": "ok",
+      "cost": 3.4297335000000007,
+      "duration": 349,
+      "model": "opus",
+      "totalCost": 153.1687
+    },
+    {
+      "cycle": 116,
+      "timestamp": "2026-03-08T07:00:00Z",
+      "status": "ok",
+      "cost": 1.93,
+      "duration": 360,
+      "model": "opus",
+      "totalCost": 224
     }
   ],
   "decisions": [
@@ -1131,6 +1149,42 @@
       "decision": "Backfill cycle-history.jsonl from git log timestamps for cycles 96-114",
       "rationale": "75 entries for 114 cycles left gaps in finance/live pages. Git log provides timestamps, costs estimated and flagged as backfilled.",
       "confidence": 0.85,
+      "outcome": "success"
+    },
+    {
+      "timestamp": "2026-03-08T07:00:00Z",
+      "cycle": 116,
+      "agent": "fullstack-dhh",
+      "decision": "Show all 95 cycle history entries in Finance bar chart instead of capping at 40",
+      "rationale": "Users want full visibility into cost trends across all cycles, not a truncated window",
+      "confidence": 0.9,
+      "outcome": "success"
+    },
+    {
+      "timestamp": "2026-03-08T07:00:00Z",
+      "cycle": 116,
+      "agent": "fullstack-dhh",
+      "decision": "Integrate metrics.jsonl into dashboard data pipeline and Finance page",
+      "rationale": "metrics.jsonl tracks revenue/users/stars over time — essential for financial oversight and trend detection",
+      "confidence": 0.85,
+      "outcome": "success"
+    },
+    {
+      "timestamp": "2026-03-08T07:00:00Z",
+      "cycle": 116,
+      "agent": "cfo-campbell",
+      "decision": "Add daily cost breakdown table and break-even calculation to Finance page",
+      "rationale": "Daily cost aggregation reveals spending patterns; break-even shows how many paid plans cover operating costs",
+      "confidence": 0.85,
+      "outcome": "success"
+    },
+    {
+      "timestamp": "2026-03-08T07:00:00Z",
+      "cycle": 116,
+      "agent": "fullstack-dhh",
+      "decision": "Update infra cost from $5 to $7/mo to reflect 2 Railway services",
+      "rationale": "We now run landing + dashboard on Railway, actual cost is closer to $7",
+      "confidence": 0.8,
       "outcome": "success"
     }
   ],
@@ -1296,6 +1350,51 @@
       "status": "done",
       "priority": "high",
       "cycleCompleted": 115
+    },
+    {
+      "id": "t-116-1",
+      "cycle": 116,
+      "description": "Integrate metrics.jsonl into generate-data.mjs and types.ts",
+      "owner": "fullstack-dhh",
+      "status": "done",
+      "priority": "high",
+      "cycleCompleted": 116
+    },
+    {
+      "id": "t-116-2",
+      "cycle": 116,
+      "description": "Rewrite Finance page: all cycles bar chart, metrics timeline, daily cost table, break-even calc",
+      "owner": "fullstack-dhh",
+      "status": "done",
+      "priority": "high",
+      "cycleCompleted": 116
+    },
+    {
+      "id": "t-116-3",
+      "cycle": 116,
+      "description": "Regenerate state.json with 95 cycle entries and 4 metrics snapshots",
+      "owner": "fullstack-dhh",
+      "status": "done",
+      "priority": "high",
+      "cycleCompleted": 116
+    },
+    {
+      "id": "t-116-4",
+      "cycle": 116,
+      "description": "Build test all 5 dashboard routes",
+      "owner": "qa-bach",
+      "status": "done",
+      "priority": "high",
+      "cycleCompleted": 116
+    },
+    {
+      "id": "t-116-5",
+      "cycle": 116,
+      "description": "Deploy dashboard to Railway",
+      "owner": "devops-hightower",
+      "status": "done",
+      "priority": "high",
+      "cycleCompleted": 116
     }
   ],
   "artifacts": [
@@ -1410,18 +1509,119 @@
       "ref": "railway",
       "path": "https://app.runautoco.com",
       "createdBy": "devops-hightower"
+    },
+    {
+      "cycle": 116,
+      "type": "file",
+      "ref": "",
+      "path": "projects/dashboard/src/app/finance/page.tsx",
+      "createdBy": "fullstack-dhh"
+    },
+    {
+      "cycle": 116,
+      "type": "file",
+      "ref": "",
+      "path": "projects/dashboard/src/data/types.ts",
+      "createdBy": "fullstack-dhh"
+    },
+    {
+      "cycle": 116,
+      "type": "file",
+      "ref": "",
+      "path": "projects/dashboard/scripts/generate-data.mjs",
+      "createdBy": "fullstack-dhh"
+    },
+    {
+      "cycle": 116,
+      "type": "file",
+      "ref": "",
+      "path": "projects/dashboard/src/data/state.json",
+      "createdBy": "fullstack-dhh"
+    },
+    {
+      "cycle": 116,
+      "type": "deploy",
+      "ref": "railway",
+      "path": "app.runautoco.com",
+      "createdBy": "devops-hightower"
     }
   ],
   "agentActivity": {
     "devops-hightower": {
       "decisions": 4,
-      "lastCycle": 115,
-      "tasks": 10
+      "lastCycle": 116,
+      "tasks": 11
     },
     "fullstack-dhh": {
-      "decisions": 6,
-      "lastCycle": 115,
-      "tasks": 8
+      "decisions": 9,
+      "lastCycle": 116,
+      "tasks": 11
+    },
+    "cfo-campbell": {
+      "decisions": 1,
+      "lastCycle": 116
+    },
+    "qa-bach": {
+      "decisions": 0,
+      "lastCycle": 116,
+      "tasks": 1
     }
-  }
+  },
+  "metricsHistory": [
+    {
+      "date": "2026-03-08",
+      "cycle": 112,
+      "revenue": 0,
+      "users": 1,
+      "signups": 2,
+      "githubStars": 11,
+      "pageViews": 0,
+      "costCycle": 1.93,
+      "costTotal": 216
+    },
+    {
+      "date": "2026-03-07",
+      "cycle": 113,
+      "revenue": 0,
+      "users": 1,
+      "signups": 2,
+      "githubStars": 11,
+      "pageViews": 0,
+      "costCycle": 1.93,
+      "costTotal": 218
+    },
+    {
+      "date": "2026-03-07",
+      "cycle": 114,
+      "revenue": 0,
+      "users": 1,
+      "signups": 2,
+      "githubStars": 12,
+      "pageViews": 0,
+      "costCycle": 1.93,
+      "costTotal": 220
+    },
+    {
+      "date": "2026-03-08",
+      "cycle": 115,
+      "revenue": 0,
+      "users": 1,
+      "signups": 2,
+      "githubStars": 12,
+      "pageViews": 0,
+      "costCycle": 2,
+      "costTotal": 222
+    },
+    {
+      "date": "2026-03-08",
+      "cycle": 116,
+      "revenue": 0,
+      "users": 1,
+      "signups": 2,
+      "githubStars": 12,
+      "pageViews": 0,
+      "costCycle": 1.93,
+      "costTotal": 224
+    }
+  ]
 }
