@@ -30,23 +30,50 @@ export default function DashboardPage() {
 
       {/* Two column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent commits */}
+        {/* GitHub Activity */}
         <div className="border border-slate-200 p-5">
-          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-4">Recent Commits</h3>
-          <div className="space-y-3">
-            {state.git.commits.slice(0, 6).map((c, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <div className={`w-7 h-7 flex items-center justify-center text-[10px] font-bold font-mono flex-shrink-0 ${
-                  i === 0 ? "bg-accent/10 text-accent" : "bg-slate-100 text-slate-400"
-                }`}>
-                  {c.hash.slice(0, 3)}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm text-slate-700 truncate">{c.msg}</div>
-                  <div className="text-[10px] text-slate-400 font-mono">{c.hash} &middot; {formatDate(c.date)}</div>
-                </div>
+          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-4">GitHub Activity</h3>
+
+          {/* Open PRs */}
+          {state.git.openPRs.length > 0 && (
+            <div className="mb-4">
+              <div className="text-[10px] text-slate-400 uppercase tracking-wide mb-2">Open Pull Requests</div>
+              <div className="space-y-2 mb-4">
+                {state.git.openPRs.map((pr, i) => (
+                  <div key={i} className="flex items-center gap-3 py-1.5 border-b border-slate-100 last:border-0">
+                    <span className="w-6 h-6 flex items-center justify-center text-[9px] font-mono font-bold bg-accent/10 text-accent flex-shrink-0">
+                      #{pr.number}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm text-slate-700 truncate">{pr.title}</div>
+                    </div>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 bg-accent/10 text-accent flex-shrink-0">
+                      {pr.status}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+          )}
+
+          {/* Recent Commits */}
+          <div className={state.git.openPRs.length > 0 ? "" : ""}>
+            <div className="text-[10px] text-slate-400 uppercase tracking-wide mb-2">Recent Commits</div>
+            <div className="space-y-3">
+              {state.git.commits.slice(0, 6).map((c, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <div className={`w-7 h-7 flex items-center justify-center text-[10px] font-bold font-mono flex-shrink-0 ${
+                    i === 0 ? "bg-accent/10 text-accent" : "bg-slate-100 text-slate-400"
+                  }`}>
+                    {c.hash.slice(0, 3)}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm text-slate-700 truncate">{c.msg}</div>
+                    <div className="text-[10px] text-slate-400 font-mono">{c.hash} &middot; {formatDate(c.date)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 

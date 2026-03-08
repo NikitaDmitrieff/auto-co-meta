@@ -1,27 +1,27 @@
 # Auto Company Consensus
 
 ## Last Updated
-2026-03-09T12:00:00Z
+2026-03-09T14:00:00Z
 
 ## Current Phase
 Building -- app.runautoco.com dashboard
 
 ## What We Did This Cycle
-Cycle 108 -- Wired live activity page to real cycle history timeline.
+Cycle 109 -- Enhanced dashboard overview with GitHub activity section + regenerated data.
 
-1. **Rewrote `/live` page** to display real cycle history from `cycleHistory` data instead of synthetic log lines
-2. **Timeline entries** show status indicator (green/red dot), cycle number, timestamp, model badge (opus=purple, sonnet=blue), duration, cost, and running total
-3. **Summary stats row** at top: total cycles (68), success rate, avg duration, avg cost per cycle
-4. **Most recent first** ordering so latest cycles appear at the top
-5. **Build passes** -- all 8 routes compile as static pages, 68 cycle history entries loaded
+1. **Merged "Recent Commits" and "Open PRs" into a unified "GitHub Activity" section** on the overview page
+2. **Open PRs now show as a detailed list** with PR number, title, and status badge (not just a count in the header)
+3. **Regenerated state.json** with latest git data (20 commits, 69 cycle history entries)
+4. **Received human response**: Deploy dashboard to Railway (NOT Vercel), delete Vercel deployment
+5. **Build passes** -- all 8 routes compile as static pages
 
 ## Key Decisions Made
-- Replaced synthetic log-style display with a structured timeline -- cleaner, more informative, and based on real data
-- Color-coded model badges (purple for opus, blue for sonnet) for quick visual identification
-- Kept it simple: no API routes, no server-side rendering, pure static page reading from state.json
+- Combined commits + PRs into a single "GitHub Activity" panel for a cleaner overview layout
+- Human directive received: use Railway for dashboard hosting, not Vercel -- will execute next cycle
+- Kept static site generation approach (no API routes)
 
 ## Active Projects
-- **dashboard**: `projects/dashboard/` -- DEPLOYED, live page now shows real cycle timeline, awaiting DNS for app.runautoco.com
+- **dashboard**: `projects/dashboard/` -- GitHub activity section added, needs Railway deployment (per human directive)
 - auto-co framework: `https://github.com/NikitaDmitrieff/auto-co-meta` -- v1.1.1
 - npm package: LIVE at `https://www.npmjs.com/package/create-auto-co` v1.1.1
 - landing page: LIVE at `https://runautoco.com`
@@ -44,31 +44,31 @@ Cycle 108 -- Wired live activity page to real cycle history timeline.
 - GitHub stars: 10
 - GitHub forks: 1
 - npm package: create-auto-co v1.1.1
-- Deployed Services: Railway (landing), Vercel (dashboard), npm
-- Cost/month: ~$5 (Railway) + $0 (Vercel free tier)
-- Total cost: ~$205 (108 cycle runs)
+- Deployed Services: Railway (landing), npm
+- Cost/month: ~$5 (Railway)
+- Total cost: ~$210 (109 cycle runs)
 
 ## Next Action
-**Cycle 109: Add GitHub activity section to the dashboard overview page.**
-1. Show recent commits and open PRs on the main `/` overview page (data already in `state.json` via `git.commits` and `git.openPRs`)
-2. Display as a compact list: commit hash, message, date for commits; number, title, status for PRs
-3. Replace or augment the current overview with this real GitHub activity
-4. **DO NOT** add auth, API routes, or server-side rendering
+**Cycle 110: Deploy dashboard to Railway (per human directive).**
+1. Deploy `projects/dashboard/` as a Railway service (same project as landing page, or new service)
+2. Configure custom domain `app.runautoco.com` on the Railway service
+3. If Railway needs a different CNAME/IP, escalate to human for Cloudflare DNS update
+4. Delete any existing Vercel deployment for this project
 5. **DO NOT** touch landing page or demo page
 
 ## Company State
 - Product: auto-co framework + dashboard (real data) + demo + landing + pricing + blog + waitlist + admin + npm CLI
-- Tech Stack: Bash + Claude Code CLI + Node.js + Next.js + Tailwind + Railway + Vercel + Supabase + npm
+- Tech Stack: Bash + Claude Code CLI + Node.js + Next.js + Tailwind + Railway + npm
 - Business Model: Open-source core (MIT) + Hosted paid tier ($24.50/$49/$99/mo)
 - Revenue: $0
 - Users: 1 + 74 cloners
 
 ## Human Escalation
-- Pending Request: YES -- DNS configuration needed
-- Last Response: 2026-03-08 (Build the real dashboard)
-- Awaiting Response Since: 2026-03-08 (Cloudflare A record for app.runautoco.com)
+- Pending Request: NO (response received and processed)
+- Last Response: 2026-03-08 (Deploy to Railway, not Vercel)
+- Awaiting Response Since: N/A
 
 ## Open Questions
 - Should the dashboard auto-rebuild on a schedule (e.g., GitHub Action cron)?
-- Once DNS is configured, should we add a CNAME verification step?
+- Once Railway deployment is live, should we add health check monitoring?
 - Should we add a cost alerting threshold (e.g., warn if a single cycle exceeds $5)?

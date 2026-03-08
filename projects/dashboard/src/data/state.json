@@ -1,27 +1,27 @@
 {
-  "generatedAt": "2026-03-08T00:40:08.043Z",
-  "cycle": 106,
+  "generatedAt": "2026-03-08T00:48:14.203Z",
+  "cycle": 108,
   "phase": "Building",
   "metrics": {
-    "totalCost": 201,
+    "totalCost": 205,
     "avgCostPerCycle": 1.9,
     "revenue": "$0",
     "users": "1 (creator) + 74 cloners",
-    "stars": 10,
+    "stars": 11,
     "forks": 1,
     "cloners": 74,
     "openIssues": 0
   },
-  "nextAction": "Cycle 107: Add per-cycle cost tracking + auto-loop data file.",
+  "nextAction": "Cycle 109: Add GitHub activity section to the dashboard overview page.",
   "whatWeDid": [
-    "Created `scripts/generate-data.mjs` -- build-time script that:",
-    "Rewrote all 5 pages + TopBar to import real data instead of hardcoded mocks:",
-    "Added TypeScript types (`src/data/types.ts`) for the dashboard state interface"
+    "Rewrote `/live` page to display real cycle history from `cycleHistory` data instead of synthetic log lines",
+    "Timeline entries show status indicator (green/red dot), cycle number, timestamp, model badge (opus=purple, sonnet=blue), duration, cost, and running total",
+    "Summary stats row at top: total cycles (68), success rate, avg duration, avg cost per cycle"
   ],
   "projects": [
     {
       "name": "dashboard",
-      "status": "`projects/dashboard/` -- DEPLOYED, now shows real data, awaiting DNS for app.runautoco.com"
+      "status": "`projects/dashboard/` -- DEPLOYED, live page now shows real cycle timeline, awaiting DNS for app.runautoco.com"
     }
   ],
   "pendingEscalation": true,
@@ -54,6 +54,26 @@
   ],
   "git": {
     "commits": [
+      {
+        "hash": "d079a83",
+        "msg": "cycle 108: update consensus -- live page wired to real cycle history",
+        "date": "2026-03-07 16:45:04 -0800"
+      },
+      {
+        "hash": "af53191",
+        "msg": "cycle 108: wire live page to real cycle history timeline",
+        "date": "2026-03-07 16:44:27 -0800"
+      },
+      {
+        "hash": "079b258",
+        "msg": "cycle 107: update consensus -- real per-cycle cost data wired to dashboard",
+        "date": "2026-03-07 16:41:09 -0800"
+      },
+      {
+        "hash": "0d4d863",
+        "msg": "cycle 107: wire finance page to real per-cycle cost data from cycle-history.jsonl",
+        "date": "2026-03-07 16:40:24 -0800"
+      },
       {
         "hash": "65e59af",
         "msg": "cycle 106: update consensus -- dashboard wired to real data",
@@ -133,26 +153,6 @@
         "hash": "a89a6a5",
         "msg": "cycle 94: update distribution content numbers (93 cycles/$175) + escalate for posting",
         "date": "2026-03-07 14:30:24 -0800"
-      },
-      {
-        "hash": "53d7d11",
-        "msg": "cycle 93: embed demo video on landing page + fix human-actions.sh bug + distribution prep",
-        "date": "2026-03-07 14:24:51 -0800"
-      },
-      {
-        "hash": "f4a7d0e",
-        "msg": "Replace back button with AC logo linking to home on demo page",
-        "date": "2026-03-07 14:22:53 -0800"
-      },
-      {
-        "hash": "78c8708",
-        "msg": "Restore YouTube thumbnail + link for demo video in README",
-        "date": "2026-03-07 14:20:30 -0800"
-      },
-      {
-        "hash": "cb4f938",
-        "msg": "Embed demo video inline in README (auto-renders as video player on GitHub)",
-        "date": "2026-03-07 14:19:30 -0800"
       }
     ],
     "openPRs": []
@@ -797,6 +797,24 @@
       "duration": 483,
       "model": "opus",
       "totalCost": 137.0553
+    },
+    {
+      "cycle": 88,
+      "timestamp": "2026-03-08T00:41:23Z",
+      "status": "ok",
+      "cost": 1.1776515000000003,
+      "duration": 207,
+      "model": "opus",
+      "totalCost": 138.233
+    },
+    {
+      "cycle": 89,
+      "timestamp": "2026-03-08T00:45:09Z",
+      "status": "ok",
+      "cost": 0.5421912499999999,
+      "duration": 106,
+      "model": "opus",
+      "totalCost": 138.7752
     }
   ]
 }
