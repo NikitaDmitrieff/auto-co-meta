@@ -1,27 +1,27 @@
 {
-  "generatedAt": "2026-03-08T02:51:59.701Z",
-  "cycle": 116,
+  "generatedAt": "2026-03-08T02:53:12.652Z",
+  "cycle": 117,
   "phase": "Building",
   "metrics": {
-    "totalCost": 224,
+    "totalCost": 226,
     "avgCostPerCycle": 1.93,
     "revenue": "$0",
     "users": "1 (creator) + 74 cloners",
-    "stars": 12,
+    "stars": 13,
     "forks": 1,
     "cloners": 74,
     "openIssues": 0
   },
-  "nextAction": "Cycle 117: Live page UX improvements + distribution PR follow-ups.",
+  "nextAction": "Cycle 118: Overview page refresh + Settings/Config page.",
   "whatWeDid": [
-    "Integrated metrics.jsonl into data pipeline -- Added getMetricsHistory() to generate-data.mjs, new metricsHistory type in types.ts, metrics snapshots now flow into state.json (4 entries tracking revenue/users/stars/costs over time)",
-    "Overhauled Finance page -- Now shows ALL 95 cycle costs (was capped at 40), added metrics snapshots table, daily cost breakdown with inline bars, model cost bars with percentages, break-even calculation (how many paid plans cover operating costs)",
-    "Improved monthly projection -- Updated infra cost to $7/mo (2 Railway services), added break-even analysis showing needed subscriber counts per tier"
+    "Live page UX overhaul -- Converted to client component with collapsible cycle rows (click to expand/collapse), cycle duration bar chart (last 40 cycles), and search/filter controls (text search, status filter, agent filter with clear button)",
+    "GitHub traffic integration -- Added getGitHubTraffic() to data pipeline pulling views+clones from GitHub API; added traffic section to GitHub page with totals + daily breakdown chart; 40 views (26 unique), 166 clones (74 unique) in last 14 days",
+    "Metrics enrichment -- Appended cycle 117 entry to metrics.jsonl with page_views data (40)"
   ],
   "projects": [
     {
       "name": "dashboard",
-      "status": "`projects/dashboard/` -- DEPLOYED to Railway, live at `app.runautoco.com`, Finance page overhauled with metrics.jsonl integration, all 95 cycle entries, daily costs, break-even analysis"
+      "status": "`projects/dashboard/` -- DEPLOYED to Railway, live at `app.runautoco.com`, Live page overhauled with filters+collapsible+duration chart, GitHub page has traffic section"
     }
   ],
   "pendingEscalation": true,
@@ -54,6 +54,16 @@
   ],
   "git": {
     "commits": [
+      {
+        "hash": "b96fd20",
+        "msg": "chore: refresh dashboard data",
+        "date": "2026-03-07 18:52:55 -0800"
+      },
+      {
+        "hash": "751dd50",
+        "msg": "chore: refresh dashboard data",
+        "date": "2026-03-08 02:51:59 +0000"
+      },
       {
         "hash": "8912351",
         "msg": "cycle 117: Live page UX overhaul + GitHub traffic integration",
@@ -143,16 +153,6 @@
         "hash": "d079a83",
         "msg": "cycle 108: update consensus -- live page wired to real cycle history",
         "date": "2026-03-07 16:45:04 -0800"
-      },
-      {
-        "hash": "af53191",
-        "msg": "cycle 108: wire live page to real cycle history timeline",
-        "date": "2026-03-07 16:44:27 -0800"
-      },
-      {
-        "hash": "079b258",
-        "msg": "cycle 107: update consensus -- real per-cycle cost data wired to dashboard",
-        "date": "2026-03-07 16:41:09 -0800"
       }
     ],
     "openPRs": []
@@ -1058,6 +1058,15 @@
       "duration": 360,
       "model": "opus",
       "totalCost": 224
+    },
+    {
+      "cycle": 97,
+      "timestamp": "2026-03-08T02:44:05Z",
+      "status": "ok",
+      "cost": 2.21124475,
+      "duration": 366,
+      "model": "opus",
+      "totalCost": 155.3799
     }
   ],
   "decisions": [
@@ -1185,6 +1194,33 @@
       "decision": "Update infra cost from $5 to $7/mo to reflect 2 Railway services",
       "rationale": "We now run landing + dashboard on Railway, actual cost is closer to $7",
       "confidence": 0.8,
+      "outcome": "success"
+    },
+    {
+      "timestamp": "2026-03-07T12:00:00Z",
+      "cycle": 117,
+      "agent": "interaction-cooper",
+      "decision": "Convert Live page to client component with collapsible rows and interactive filters",
+      "rationale": "Live page had too many expanded details cluttering the view; collapsible rows + filters improve navigation for 95+ cycles",
+      "confidence": 0.9,
+      "outcome": "success"
+    },
+    {
+      "timestamp": "2026-03-07T12:00:00Z",
+      "cycle": 117,
+      "agent": "fullstack-dhh",
+      "decision": "Add cycle duration chart to Live page showing last 40 cycles",
+      "rationale": "Duration data existed in cycleHistory but was only shown inline; chart reveals duration patterns and anomalies at a glance",
+      "confidence": 0.85,
+      "outcome": "success"
+    },
+    {
+      "timestamp": "2026-03-07T12:00:00Z",
+      "cycle": 117,
+      "agent": "fullstack-dhh",
+      "decision": "Integrate GitHub traffic API (views/clones) into data pipeline and GitHub page",
+      "rationale": "GitHub traffic data provides real engagement metrics beyond stars/forks; essential for tracking growth",
+      "confidence": 0.9,
       "outcome": "success"
     }
   ],
@@ -1395,6 +1431,42 @@
       "status": "done",
       "priority": "high",
       "cycleCompleted": 116
+    },
+    {
+      "id": "t-117-1",
+      "cycle": 117,
+      "description": "Upgrade Live page with collapsible rows, duration chart, agent/status filters",
+      "owner": "fullstack-dhh",
+      "status": "done",
+      "priority": "high",
+      "cycleCompleted": 117
+    },
+    {
+      "id": "t-117-2",
+      "cycle": 117,
+      "description": "Add GitHub traffic data (views/clones) to generate-data.mjs pipeline",
+      "owner": "fullstack-dhh",
+      "status": "done",
+      "priority": "medium",
+      "cycleCompleted": 117
+    },
+    {
+      "id": "t-117-3",
+      "cycle": 117,
+      "description": "Add traffic section to GitHub page with daily breakdown",
+      "owner": "fullstack-dhh",
+      "status": "done",
+      "priority": "medium",
+      "cycleCompleted": 117
+    },
+    {
+      "id": "t-117-4",
+      "cycle": 117,
+      "description": "Append metrics.jsonl with cycle 117 data including page_views",
+      "owner": "fullstack-dhh",
+      "status": "done",
+      "priority": "low",
+      "cycleCompleted": 117
     }
   ],
   "artifacts": [
@@ -1544,6 +1616,41 @@
       "ref": "railway",
       "path": "app.runautoco.com",
       "createdBy": "devops-hightower"
+    },
+    {
+      "cycle": 117,
+      "type": "file",
+      "ref": "live-page",
+      "path": "projects/dashboard/src/app/live/page.tsx",
+      "createdBy": "fullstack-dhh"
+    },
+    {
+      "cycle": 117,
+      "type": "file",
+      "ref": "github-page",
+      "path": "projects/dashboard/src/app/github/page.tsx",
+      "createdBy": "fullstack-dhh"
+    },
+    {
+      "cycle": 117,
+      "type": "file",
+      "ref": "generate-data",
+      "path": "projects/dashboard/scripts/generate-data.mjs",
+      "createdBy": "fullstack-dhh"
+    },
+    {
+      "cycle": 117,
+      "type": "commit",
+      "ref": "8912351",
+      "path": "cycle 117: Live page UX overhaul + GitHub traffic integration",
+      "createdBy": "fullstack-dhh"
+    },
+    {
+      "cycle": 117,
+      "type": "deploy",
+      "ref": "railway",
+      "path": "https://app.runautoco.com",
+      "createdBy": "devops-hightower"
     }
   ],
   "agentActivity": {
@@ -1553,13 +1660,17 @@
       "tasks": 11
     },
     "fullstack-dhh": {
-      "decisions": 9,
-      "lastCycle": 116,
-      "tasks": 11
+      "decisions": 11,
+      "lastCycle": 117,
+      "tasks": 15
     },
     "cfo-campbell": {
       "decisions": 1,
       "lastCycle": 116
+    },
+    "interaction-cooper": {
+      "decisions": 1,
+      "lastCycle": 117
     },
     "qa-bach": {
       "decisions": 0,
