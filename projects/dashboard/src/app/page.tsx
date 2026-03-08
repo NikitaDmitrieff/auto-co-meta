@@ -1,8 +1,24 @@
 import state from "@/data";
 
 export default function DashboardPage() {
-  const { cycle, phase, metrics, nextAction, whatWeDid, pendingEscalation, deployments, decisions, artifacts } = state;
+  const { cycle, phase, metrics, nextAction, whatWeDid, pendingEscalation, deployments, decisions, artifacts, traffic, cycleHistory } = state;
   const avgCost = metrics.avgCostPerCycle;
+
+  // Build cost sparkline points from cycle history
+  const sparklinePoints = (() => {
+    if (cycleHistory.length < 2) return null;
+    const costs = cycleHistory.map((c) => c.cost);
+    const max = Math.max(...costs, 0.1);
+    const w = 80;
+    const h = 24;
+    return costs
+      .map((cost, i) => {
+        const x = (i / (costs.length - 1)) * w;
+        const y = h - (cost / (max * 1.1)) * h;
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      })
+      .join(" ");
+  })();
 
   return (
     <div className="max-w-6xl">
@@ -13,7 +29,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Status cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatusCard label="Current Cycle" value={`#${cycle}`} accent />
         <StatusCard label="Phase" value={phase} />
         <StatusCard label="Deployed Services" value={String(deployments.length)} />
@@ -21,12 +37,54 @@ export default function DashboardPage() {
       </div>
 
       {/* Metrics row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <MetricCard label="Total Cost" value={`$${metrics.totalCost.toFixed(2)}`} sub={`${cycle} cycles`} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="border border-slate-200 p-4">
+          <div className="text-[10px] text-slate-400 uppercase tracking-wide mb-1">Total Cost</div>
+          <div className="flex items-end gap-3">
+            <div className="text-lg font-bold text-slate-900 font-mono">${metrics.totalCost.toFixed(2)}</div>
+            {sparklinePoints && (
+              <svg width="80" height="24" className="flex-shrink-0 mb-0.5">
+                <polyline
+                  points={sparklinePoints}
+                  fill="none"
+                  stroke="#f97316"
+                  strokeWidth="1.5"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            )}
+          </div>
+          <div className="text-[10px] text-slate-400 mt-0.5">{cycle} cycles</div>
+        </div>
         <MetricCard label="Avg Cost/Cycle" value={`$${avgCost.toFixed(2)}`} sub={`across ${cycle} cycles`} />
         <MetricCard label="GitHub Stars" value={String(metrics.stars)} sub={`${metrics.forks} forks`} />
-        <MetricCard label="Cloners" value={String(metrics.cloners)} sub="unique" />
+        <div className="border border-slate-200 p-4">
+          <div className="text-[10px] text-slate-400 uppercase tracking-wide mb-1">Traffic (14d)</div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-lg font-bold text-slate-900 font-mono">{traffic.views.total}</span>
+            <span className="text-[10px] text-slate-400">views</span>
+          </div>
+          <div className="flex items-center gap-3 mt-0.5">
+            <span className="text-[10px] text-slate-500 font-mono">{traffic.clones.unique} cloners</span>
+            <span className="text-[10px] text-slate-400">&middot;</span>
+            <span className="text-[10px] text-slate-500 font-mono">{traffic.views.unique} unique</span>
+          </div>
+        </div>
       </div>
+
+      {/* Next Action banner */}
+      <div className="border-l-2 border-l-orange-500 bg-orange-500/5 p-4 mb-6">
+        <div className="text-[10px] text-orange-600 uppercase tracking-wide font-semibold mb-1">Next Action</div>
+        <div className="text-sm text-slate-700">{nextAction}</div>
+      </div>
+
+      {/* Traffic sparkline row (if we have daily data) */}
+      {traffic.daily.length > 1 && (
+        <div className="border border-slate-200 p-5 mb-6">
+          <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Daily Traffic</h3>
+          <TrafficChart daily={traffic.daily} />
+        </div>
+      )}
 
       {/* Two column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -57,7 +115,7 @@ export default function DashboardPage() {
           )}
 
           {/* Recent Commits */}
-          <div className={state.git.openPRs.length > 0 ? "" : ""}>
+          <div>
             <div className="text-[10px] text-slate-400 uppercase tracking-wide mb-2">Recent Commits</div>
             <div className="space-y-3">
               {state.git.commits.slice(0, 6).map((c, i) => (
@@ -81,10 +139,6 @@ export default function DashboardPage() {
         <div className="border border-slate-200 p-5">
           <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-4">Current State</h3>
           <div className="space-y-4">
-            <div>
-              <div className="text-[10px] text-slate-400 uppercase tracking-wide mb-1">Next Action</div>
-              <div className="text-sm text-slate-700">{nextAction}</div>
-            </div>
             <div>
               <div className="text-[10px] text-slate-400 uppercase tracking-wide mb-1">Last Cycle Output</div>
               <div className="space-y-1">
@@ -216,6 +270,50 @@ function MetricCard({ label, value, sub }: { label: string; value: string; sub: 
       <div className="text-[10px] text-slate-400 uppercase tracking-wide mb-1">{label}</div>
       <div className="text-lg font-bold text-slate-900 font-mono">{value}</div>
       <div className="text-[10px] text-slate-400 mt-0.5">{sub}</div>
+    </div>
+  );
+}
+
+function TrafficChart({ daily }: { daily: Array<{ date: string; views: number; clones: number }> }) {
+  const maxVal = Math.max(...daily.map((d) => Math.max(d.views, d.clones)), 1);
+  const w = 400;
+  const h = 60;
+
+  const viewPoints = daily
+    .map((d, i) => {
+      const x = (i / (daily.length - 1 || 1)) * w;
+      const y = h - (d.views / (maxVal * 1.1)) * h;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+
+  const clonePoints = daily
+    .map((d, i) => {
+      const x = (i / (daily.length - 1 || 1)) * w;
+      const y = h - (d.clones / (maxVal * 1.1)) * h;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+
+  return (
+    <div>
+      <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-16" preserveAspectRatio="none">
+        <polyline points={viewPoints} fill="none" stroke="#f97316" strokeWidth="2" strokeLinejoin="round" />
+        <polyline points={clonePoints} fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinejoin="round" strokeDasharray="4 3" />
+      </svg>
+      <div className="flex items-center gap-4 mt-2">
+        <div className="flex items-center gap-1.5">
+          <span className="w-3 h-0.5 bg-orange-500" />
+          <span className="text-[10px] text-slate-500">Views</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-3 h-0.5 bg-slate-400" style={{ borderTop: "2px dashed" }} />
+          <span className="text-[10px] text-slate-500">Clones</span>
+        </div>
+        <div className="ml-auto text-[10px] text-slate-400 font-mono">
+          {daily[0]?.date} — {daily[daily.length - 1]?.date}
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-08T03:01:33.989Z",
+  "generatedAt": "2026-03-08T03:09:39.737Z",
   "cycle": 118,
   "phase": "Building",
   "metrics": {
@@ -54,6 +54,11 @@
   ],
   "git": {
     "commits": [
+      {
+        "hash": "941ec32",
+        "msg": "chore: refresh dashboard data",
+        "date": "2026-03-08 03:01:34 +0000"
+      },
       {
         "hash": "ed4f898",
         "msg": "cycle 118: floating collapsible nav redesign (human directive)",
@@ -148,11 +153,6 @@
         "hash": "ab584ef",
         "msg": "cycle 111: add health check endpoint, fix sidebar cycle, refresh data",
         "date": "2026-03-07 17:06:51 -0800"
-      },
-      {
-        "hash": "7a3d3f3",
-        "msg": "cycle 110: deploy dashboard to Railway",
-        "date": "2026-03-07 17:02:20 -0800"
       }
     ],
     "openPRs": []
@@ -1222,6 +1222,24 @@
       "rationale": "GitHub traffic data provides real engagement metrics beyond stars/forks; essential for tracking growth",
       "confidence": 0.9,
       "outcome": "success"
+    },
+    {
+      "timestamp": "2026-03-07T13:00:00Z",
+      "cycle": 118,
+      "agent": "fullstack-dhh",
+      "decision": "Replace static white sidebar with floating collapsible nav matching demo pattern",
+      "rationale": "Human directive to port demo nav design to dashboard - dark neo-brutalist floating nav with motion animations",
+      "confidence": 0.95,
+      "outcome": "success"
+    },
+    {
+      "timestamp": "2026-03-07T14:00:00Z",
+      "cycle": 119,
+      "agent": "fullstack-dhh",
+      "decision": "Refresh Overview page: add cost sparkline, traffic card, Next Action banner, daily traffic chart",
+      "rationale": "Overview was static metric cards only, adding visual trends and prominent next action improves at-a-glance utility",
+      "confidence": 0.9,
+      "outcome": "success"
     }
   ],
   "tasks": [
@@ -1467,6 +1485,24 @@
       "status": "done",
       "priority": "low",
       "cycleCompleted": 117
+    },
+    {
+      "id": "t-118-1",
+      "cycle": 118,
+      "description": "Dashboard nav redesign: floating collapsible nav with dark neo-brutalist styling",
+      "owner": "fullstack-dhh",
+      "status": "done",
+      "priority": "high",
+      "cycleCompleted": 118
+    },
+    {
+      "id": "t-119-1",
+      "cycle": 119,
+      "description": "Refresh Overview page with traffic sparkline, metrics, Next Action banner",
+      "owner": "fullstack-dhh",
+      "status": "done",
+      "priority": "high",
+      "cycleCompleted": 119
     }
   ],
   "artifacts": [
@@ -1660,9 +1696,9 @@
       "tasks": 11
     },
     "fullstack-dhh": {
-      "decisions": 11,
-      "lastCycle": 117,
-      "tasks": 15
+      "decisions": 13,
+      "lastCycle": 119,
+      "tasks": 17
     },
     "cfo-campbell": {
       "decisions": 1,
@@ -1744,17 +1780,47 @@
       "pageViews": 40,
       "costCycle": 1.93,
       "costTotal": 226
+    },
+    {
+      "date": "2026-03-07",
+      "cycle": 118,
+      "revenue": 0,
+      "users": 1,
+      "signups": 2,
+      "githubStars": 13,
+      "pageViews": 40,
+      "costCycle": 1.93,
+      "costTotal": 228
+    },
+    {
+      "date": "2026-03-07",
+      "cycle": 119,
+      "revenue": 0,
+      "users": 1,
+      "signups": 2,
+      "githubStars": 13,
+      "pageViews": 40,
+      "costCycle": 0,
+      "costTotal": 228
     }
   ],
   "traffic": {
     "views": {
-      "total": 0,
-      "unique": 0
+      "total": 40,
+      "unique": 26
     },
     "clones": {
-      "total": 0,
-      "unique": 0
+      "total": 166,
+      "unique": 74
     },
-    "daily": []
+    "daily": [
+      {
+        "date": "2026-03-06",
+        "views": 40,
+        "uniqueViews": 26,
+        "clones": 166,
+        "uniqueClones": 74
+      }
+    ]
   }
 }

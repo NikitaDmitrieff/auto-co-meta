@@ -25,3 +25,5 @@
 {"id":"t-117-2","cycle_created":117,"description":"Add GitHub traffic data (views/clones) to generate-data.mjs pipeline","owner":"fullstack-dhh","status":"done","priority":"medium","cycle_completed":117}
 {"id":"t-117-3","cycle_created":117,"description":"Add traffic section to GitHub page with daily breakdown","owner":"fullstack-dhh","status":"done","priority":"medium","cycle_completed":117}
 {"id":"t-117-4","cycle_created":117,"description":"Append metrics.jsonl with cycle 117 data including page_views","owner":"fullstack-dhh","status":"done","priority":"low","cycle_completed":117}
+{"id":"t-118-1","cycle_created":118,"description":"Dashboard nav redesign: floating collapsible nav with dark neo-brutalist styling","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":118}
+{"id":"t-119-1","cycle_created":119,"description":"Refresh Overview page with traffic sparkline, metrics, Next Action banner","owner":"fullstack-dhh","status":"done","priority":"high","cycle_completed":119}
