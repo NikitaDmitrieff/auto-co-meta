@@ -1,0 +1,47 @@
+name: Refresh Dashboard Data
+
+on:
+  # Run every 6 hours (roughly matches cycle frequency)
+  schedule:
+    - cron: "0 */6 * * *"
+  # Also run when consensus or cycle history changes
+  push:
+    branches: [main]
+    paths:
+      - "memories/consensus.md"
+      - "logs/cycle-history.jsonl"
+      - "state/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Generate fresh state.json
+        working-directory: projects/dashboard
+        run: node scripts/generate-data.mjs
+
+      - name: Check for changes
+        id: diff
+        run: |
+          git diff --quiet projects/dashboard/src/data/state.json && echo "changed=false" >> "$GITHUB_OUTPUT" || echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit updated state.json
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name "auto-co[bot]"
+          git config user.email "auto-co[bot]@users.noreply.github.com"
+          git add projects/dashboard/src/data/state.json
+          git commit -m "chore: refresh dashboard data"
+          git push
