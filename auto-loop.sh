@@ -192,12 +192,34 @@ append_cycle_history() {
     local cost=${3:-0}
     local duration=$4
     local exit_code=$5
+    local reason="${6:-}"
+    local is_error_raw="${7:-}"
     local timestamp
     timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
-    # Append structured JSONL record for analytics
-    printf '{"cycle":%d,"timestamp":"%s","status":"%s","cost":%s,"duration_s":%d,"exit_code":%d,"model":"%s","total_cost":%s}\n' \
-        "$cycle_num" "$timestamp" "$status" "${cost:-0}" "${duration:-0}" "${exit_code:-0}" "$MODEL" "$total_cost" \
-        >> "$CYCLE_HISTORY_FILE"
+    # Normalize is_error to a JSON bool literal (true|false)
+    local is_error=false
+    [ "$is_error_raw" = "true" ] && is_error=true
+    # Sanitize reason into a valid JSON string. Backslash MUST be escaped first:
+    # a Windows-style path or trailing \ in a reason would otherwise emit an
+    # invalid escape (e.g. C:\Users\foo, or path\" that swallows the closing
+    # quote) and corrupt the JSONL line that --history/--dashboard later slurp
+    # with `jq -s` -- one bad line returns nothing and nukes the whole dashboard.
+    # Order matters: backslash, then control chars, then double quotes.
+    reason="${reason//\\/\\\\}"
+    reason="${reason//[$'\n\r\t']/ }"
+    reason="${reason//\"/\\\"}"
+    # Build the record, then self-check BEFORE it touches the file: if ANY field
+    # ever breaks JSON (now or future), fall back to a guaranteed-valid minimal
+    # record. One corrupt line must never enter cycle-history.jsonl.
+    local line
+    line=$(printf '{"cycle":%d,"timestamp":"%s","status":"%s","cost":%s,"duration_s":%d,"exit_code":%d,"model":"%s","total_cost":%s,"is_error":%s,"reason":"%s"}' \
+        "$cycle_num" "$timestamp" "$status" "${cost:-0}" "${duration:-0}" "${exit_code:-0}" "$MODEL" "$total_cost" "$is_error" "$reason")
+    if ! printf '%s' "$line" | jq -e . >/dev/null 2>&1; then
+        log "WARNING: cycle $cycle_num history record failed JSON validation; emitting sanitized record"
+        line=$(printf '{"cycle":%d,"timestamp":"%s","status":"%s","cost":0,"duration_s":0,"exit_code":%d,"model":"","total_cost":0,"is_error":%s,"reason":"<sanitized: invalid reason field>"}' \
+            "$cycle_num" "$timestamp" "$status" "${exit_code:-0}" "$is_error")
+    fi
+    printf '%s\n' "$line" >> "$CYCLE_HISTORY_FILE"
 }
 
 backup_consensus() {
@@ -207,10 +229,17 @@ backup_consensus() {
 }
 
 restore_consensus() {
+    # Returns 0 if restored from backup, 1 if there was no backup to restore
+    # from. Callers MUST branch on this — silently leaving an invalid consensus
+    # in place while logging "restored" would carry a corrupt relay baton into
+    # the next cycle (first cycle ever, or a manually deleted .bak).
     if [ -f "$CONSENSUS_FILE.bak" ]; then
         cp "$CONSENSUS_FILE.bak" "$CONSENSUS_FILE"
         log "Consensus restored from backup after failed cycle"
+        return 0
     fi
+    log "WARNING: no consensus backup to restore from -- invalid consensus left in place"
+    return 1
 }
 
 validate_consensus() {
@@ -223,10 +252,38 @@ validate_consensus() {
     if ! grep -q "^## Next Action" "$CONSENSUS_FILE"; then
         return 1
     fi
+    # Headers present is not enough -- the Next Action section must carry actual
+    # content. A header with an empty body means the relay baton was lost: the
+    # cycle was killed mid-write (or wrote structure with no body) and the next
+    # cycle would start with no direction. The atomic .tmp->mv rename protects
+    # against partial bytes, NOT against a structurally-complete-but-empty file.
+    # Scope is Next Action only -- it is the baton ("the single most important
+    # thing to do next cycle"); Company State is descriptive, header-presence
+    # suffices. Extract section body (lines after the header up to next `## `
+    # header) and require >=1 non-whitespace character.
+    local na_body
+    na_body=$(awk '/^## Next Action/{f=1;next} /^## /{f=0} f' "$CONSENSUS_FILE")
+    if [ -z "${na_body//[[:space:]]/}" ]; then
+        return 1
+    fi
     if ! grep -q "^## Company State" "$CONSENSUS_FILE"; then
         return 1
     fi
     return 0
+}
+
+# Escape a value for safe embedding inside a JSON string field. A raw " or \ in
+# $MODEL, a status, or an error reason (which often comes straight from captured
+# command output) would otherwise break the payload: invalid JSON that the
+# receiver rejects or misparses. Backslash first, then quote, then control chars.
+json_escape() {
+    local s="${1-}"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\n'/\\n}"
+    s="${s//$'\r'/\\r}"
+    s="${s//$'\t'/\\t}"
+    printf '%s' "$s"
 }
 
 send_notification() {
@@ -239,7 +296,7 @@ send_notification() {
     timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
     local payload
     payload=$(printf '{"cycle":%d,"status":"%s","cost":%s,"duration_s":%d,"model":"%s","total_cost":%s,"timestamp":"%s"}' \
-        "$cycle_num" "$status" "${cost}" "${duration}" "$MODEL" "$total_cost" "$timestamp")
+        "$cycle_num" "$(json_escape "$status")" "${cost}" "${duration}" "$(json_escape "$MODEL")" "$total_cost" "$(json_escape "$timestamp")")
     # Fire-and-forget: don't block the loop if the webhook is slow or down
     curl -s -o /dev/null -X POST -H "Content-Type: application/json" -d "$payload" "$NOTIFY_URL" --max-time 10 &
 }
@@ -252,7 +309,7 @@ send_webhook() {
     # Build base payload with event type
     local payload
     payload=$(printf '{"event":"%s","timestamp":"%s","model":"%s","project":"%s"' \
-        "$event" "$timestamp" "$MODEL" "$(basename "$PROJECT_DIR")")
+        "$(json_escape "$event")" "$(json_escape "$timestamp")" "$(json_escape "$MODEL")" "$(json_escape "$(basename "$PROJECT_DIR")")")
     # Append event-specific fields
     case "$event" in
         cycle.start)
@@ -260,11 +317,11 @@ send_webhook() {
             ;;
         cycle.end)
             payload=$(printf '%s,"cycle":%d,"status":"%s","cost":%s,"duration_s":%d,"total_cost":%s}' \
-                "$payload" "${2:-0}" "${3:-unknown}" "${4:-0}" "${5:-0}" "$total_cost")
+                "$payload" "${2:-0}" "$(json_escape "${3:-unknown}")" "${4:-0}" "${5:-0}" "$total_cost")
             ;;
         error)
             payload=$(printf '%s,"cycle":%d,"reason":"%s","error_count":%d,"max_errors":%d}' \
-                "$payload" "${2:-0}" "${3:-unknown}" "${4:-0}" "$MAX_CONSECUTIVE_ERRORS")
+                "$payload" "${2:-0}" "$(json_escape "${3:-unknown}")" "${4:-0}" "$MAX_CONSECUTIVE_ERRORS")
             ;;
         circuit_break)
             payload=$(printf '%s,"cycle":%d,"cooldown_s":%d,"error_count":%d}' \
@@ -507,6 +564,7 @@ extract_cycle_metadata() {
     RESULT_TEXT=""
     CYCLE_COST=""
     CYCLE_SUBTYPE=""
+    CYCLE_IS_ERROR=""
 
     # stream-json: each line is a JSON event; the final "result" event has the summary
     if command -v jq &>/dev/null; then
@@ -517,11 +575,13 @@ extract_cycle_metadata() {
             RESULT_TEXT=$(echo "$result_line" | jq -r '.result // empty' 2>/dev/null | head -c 2000 || true)
             CYCLE_COST=$(echo "$result_line" | jq -r '.total_cost_usd // empty' 2>/dev/null || true)
             CYCLE_SUBTYPE=$(echo "$result_line" | jq -r '.subtype // empty' 2>/dev/null || true)
+            CYCLE_IS_ERROR=$(echo "$result_line" | jq -r '.is_error // empty' 2>/dev/null || true)
         else
             # Fallback: try parsing as single JSON (non-stream format)
             RESULT_TEXT=$(echo "$OUTPUT" | jq -r '.result // empty' 2>/dev/null | head -c 2000 || true)
             CYCLE_COST=$(echo "$OUTPUT" | jq -r '.total_cost_usd // empty' 2>/dev/null || true)
             CYCLE_SUBTYPE=$(echo "$OUTPUT" | jq -r '.subtype // empty' 2>/dev/null || true)
+            CYCLE_IS_ERROR=$(echo "$OUTPUT" | jq -r '.is_error // empty' 2>/dev/null || true)
         fi
 
         # Second fallback: scan all events for total_cost_usd if still empty
@@ -1861,7 +1921,7 @@ if [ "${1:-}" = "--dashboard" ]; then
                     avg_dur: (([.[].duration_s] | add) / length | floor),
                     total_cost: (([.[].cost] | add) * 100 | floor / 100),
                     total_dur_h: (([.[].duration_s] | add) / 3600 * 100 | floor / 100),
-                    last5: [.[-5:][] | {c:.cycle, s:.status, cost:.cost, dur:.duration_s}]
+                    last5: [.[-5:][] | {c:.cycle, s:.status, cost:.cost, dur:.duration_s, r:(.reason // "-")}]
                 }
             end
         ' "$CYCLE_HISTORY_FILE" 2>/dev/null || echo "$cycle_stats")
@@ -1964,14 +2024,18 @@ if [ "${1:-}" = "--dashboard" ]; then
     printf "${BOLD}  RECENT CYCLES${RESET}\n"
     printf "  ${DIM}${line}${RESET}\n"
     printf "  ${DIM}%-8s %-8s %-10s %-10s${RESET}\n" "CYCLE" "STATUS" "COST" "TIME"
-    echo "$cycle_stats" | jq -r '.last5[] | "  \(.c)\t\(.s)\t$\(.cost)\t\(.dur)s"' 2>/dev/null | \
-        while IFS=$'\t' read -r cy st co du; do
+    echo "$cycle_stats" | jq -r '.last5[] | "  \(.c)\t\(.s)\t$\(.cost)\t\(.dur)s\t\(.r)"' 2>/dev/null | \
+        while IFS=$'\t' read -r cy st co du re; do
             if [ "$st" = "ok" ]; then
                 sc="${GREEN}"
             else
                 sc="${RED}"
             fi
-            printf "  %-8s ${sc}%-8s${RESET} %-10s %-10s\n" "$cy" "$st" "$co" "$du"
+            if [ -n "$re" ] && [ "$re" != "-" ]; then
+                printf "  %-8s ${sc}%-8s${RESET} %-10s %-10s ${RED}%s${RESET}\n" "$cy" "$st" "$co" "$du" "$re"
+            else
+                printf "  %-8s ${sc}%-8s${RESET} %-10s %-10s\n" "$cy" "$st" "$co" "$du"
+            fi
         done
     printf "\n"
 
@@ -2374,18 +2438,18 @@ if [ "${1:-}" = "--history" ]; then
     fi
     if [ "$compact" -eq 1 ]; then
         tail -n "$count" "$CYCLE_HISTORY_FILE" | jq -r \
-            '"\(.cycle) \(.status) $\(.cost) \(.duration_s)s \(.timestamp | split("T")[0])"'
+            '"\(.cycle) \(.status) $\(.cost) \(.duration_s)s \(.timestamp | split("T")[0]) [\(.reason // "-")]"'
         echo "-- $count of $total_lines cycles"
     else
-        printf "%-7s %-22s %-8s %-10s %-10s %-6s %-8s\n" \
-            "CYCLE" "TIMESTAMP" "STATUS" "COST" "DURATION" "EXIT" "MODEL"
-        printf "%-7s %-22s %-8s %-10s %-10s %-6s %-8s\n" \
-            "-----" "---------------------" "------" "--------" "--------" "----" "------"
+        printf "%-7s %-22s %-8s %-10s %-10s %-6s %-8s %s\n" \
+            "CYCLE" "TIMESTAMP" "STATUS" "COST" "DURATION" "EXIT" "MODEL" "REASON"
+        printf "%-7s %-22s %-8s %-10s %-10s %-6s %-8s %s\n" \
+            "-----" "---------------------" "------" "--------" "--------" "----" "------" "------"
         tail -n "$count" "$CYCLE_HISTORY_FILE" | jq -r \
-            '[.cycle, .timestamp, .status, .cost, .duration_s, .exit_code, .model] |
-             "\(.[0])\t\(.[1])\t\(.[2])\t$\(.[3])\t\(.[4])s\t\(.[5])\t\(.[6])"' | \
-            while IFS=$'\t' read -r cy ts st co du ex mo; do
-                printf "%-7s %-22s %-8s %-10s %-10s %-6s %-8s\n" "$cy" "$ts" "$st" "$co" "$du" "$ex" "$mo"
+            '[.cycle, .timestamp, .status, .cost, .duration_s, .exit_code, .model, (.reason // "-")] |
+             "\(.[0])\t\(.[1])\t\(.[2])\t$\(.[3])\t\(.[4])s\t\(.[5])\t\(.[6])\t\(.[7])"' | \
+            while IFS=$'\t' read -r cy ts st co du ex mo re; do
+                printf "%-7s %-22s %-8s %-10s %-10s %-6s %-8s %s\n" "$cy" "$ts" "$st" "$co" "$du" "$ex" "$mo" "$re"
             done
         echo ""
         echo "Showing last $count of $total_lines cycles"
@@ -3052,7 +3116,7 @@ This is Cycle #$loop_count. Act decisively."
         else
             log_cycle $loop_count "DIFF" "Consensus unchanged"
         fi
-        append_cycle_history "$loop_count" "ok" "${CYCLE_COST:-0}" "$cycle_duration" "$EXIT_CODE"
+        append_cycle_history "$loop_count" "ok" "${CYCLE_COST:-0}" "$cycle_duration" "$EXIT_CODE" "" "${CYCLE_IS_ERROR:-}"
         send_notification "$loop_count" "ok" "${CYCLE_COST:-0}" "$cycle_duration"
         send_webhook "cycle.end" "$loop_count" "ok" "${CYCLE_COST:-0}" "$cycle_duration"
         if [ "${SUMMARY_ENABLED:-true}" = "true" ]; then
@@ -3063,12 +3127,26 @@ This is Cycle #$loop_count. Act decisively."
         error_count=$((error_count + 1))
         log_cycle $loop_count "FAIL" "$cycle_failed_reason (cost: \$${CYCLE_COST:-unknown}, subtype: ${CYCLE_SUBTYPE:-unknown}, ${cycle_duration}s, errors: $error_count/$MAX_CONSECUTIVE_ERRORS)"
         send_webhook "error" "$loop_count" "$cycle_failed_reason" "$error_count"
-        append_cycle_history "$loop_count" "fail" "${CYCLE_COST:-0}" "$cycle_duration" "$EXIT_CODE"
+        append_cycle_history "$loop_count" "fail" "${CYCLE_COST:-0}" "$cycle_duration" "$EXIT_CODE" "$cycle_failed_reason" "${CYCLE_IS_ERROR:-}"
         send_notification "$loop_count" "fail" "${CYCLE_COST:-0}" "$cycle_duration"
         send_webhook "cycle.end" "$loop_count" "fail" "${CYCLE_COST:-0}" "$cycle_duration"
 
-        # Restore consensus on failure
-        restore_consensus
+        # Restore consensus ONLY when it's actually corrupt/invalid — not on every
+        # non-zero exit. A cycle can do real work AND hit a transient error (Claude
+        # returns subtype:success with is_error:true, exits 1, when a subagent or
+        # MCP call errors) and still write a valid consensus. Blindly restoring
+        # discards the relay baton and forces the next cycle to start from stale
+        # state. The atomic .tmp->mv write already prevents corruption;
+        # validate_consensus is the real gate.
+        if validate_consensus; then
+            log_cycle $loop_count "KEEP" "Consensus valid despite failure -- kept, work preserved"
+        else
+            if restore_consensus; then
+                log_cycle $loop_count "RESTORE" "Consensus invalid after cycle -- restored from backup"
+            else
+                log_cycle $loop_count "NOBACKUP" "Consensus invalid AND no backup exists -- left in place, needs review"
+            fi
+        fi
         # Discard any partial atomic write
         rm -f "$PROJECT_DIR/memories/.consensus.tmp"
 
@@ -3130,7 +3208,9 @@ This is Cycle #$loop_count. Act decisively."
             # Check if any artifacts were logged this cycle
             artifacts_this_cycle=0
             if [ -f "$PROJECT_DIR/$STATE_DIR/artifacts.jsonl" ]; then
-                artifacts_this_cycle=$(grep -c "\"cycle\":$loop_count" "$PROJECT_DIR/$STATE_DIR/artifacts.jsonl" 2>/dev/null) || artifacts_this_cycle=0
+                # Anchor on the JSON field terminator (,|}) so cycle 1 does not
+                # substring-match cycle 10/11/100 etc. ERE (-E) for the alternation.
+                artifacts_this_cycle=$(grep -Ec "\"cycle\":$loop_count(,|})" "$PROJECT_DIR/$STATE_DIR/artifacts.jsonl" 2>/dev/null) || artifacts_this_cycle=0
             fi
             if [ "$artifacts_this_cycle" -eq 0 ]; then
                 cycle_was_idle=1
