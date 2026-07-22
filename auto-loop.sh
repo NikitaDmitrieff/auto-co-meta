@@ -2811,11 +2811,11 @@ if [ "${1:-}" = "--selftest" ]; then
         state_files=$(find "$PROJECT_DIR/$STATE_DIR" -name '*.jsonl' -type f 2>/dev/null | wc -l | tr -d ' ')
         check "State directory" 1 "$state_files JSONL files in $STATE_DIR/"
     else
-        check "State directory" 0 "$STATE_DIR/ missing -- will be created on first run"
+        check "State directory" 1 "$STATE_DIR/ absent -- will be created on first run"
     fi
 
     # 13. Signal handling (verify trap is functional)
-    if (bash -c 'trap "echo caught" SIGTERM; kill -TERM $$ 2>/dev/null; exit 0' 2>/dev/null); then
+    if (bash -c 'trap ":" SIGTERM; kill -TERM $$ 2>/dev/null; exit 0' 2>/dev/null); then
         check "Signal handling (trap)" 1 "SIGTERM trap works"
     else
         check "Signal handling (trap)" 0 "bash signal trapping broken"
