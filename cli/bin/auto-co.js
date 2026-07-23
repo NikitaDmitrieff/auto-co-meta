@@ -5,13 +5,14 @@ import { existsSync, mkdirSync, writeFileSync, readFileSync } from "fs";
 import { resolve, basename } from "path";
 
 const VERSION = "1.1.1";
-const REPO = "https://github.com/NikitaDmitrieff/auto-co-meta.git";
+const REPO = process.env.AUTO_CO_REPO || "https://github.com/NikitaDmitrieff/auto-co-meta.git";
 
 const HELP = `
 auto-co v${VERSION} -- Run an autonomous AI company from a bash loop
 
 Usage:
-  npx create-auto-co [name]   Scaffold a new auto-co project
+  npx create-auto-co [name] [--template saas|docs-site|api-backend]
+                              Scaffold a new auto-co project
   auto-co init [name]         Same as above
   auto-co start               Start the autonomous loop
   auto-co stop                Stop the loop gracefully
@@ -65,7 +66,68 @@ function checkDeps() {
   }
 }
 
-function init(name) {
+// Parse `--template <name>` (or `--template=<name>`) from argv. null if absent.
+function parseTemplateArg(args) {
+  const i = args.indexOf("--template");
+  if (i !== -1 && args[i + 1] && !args[i + 1].startsWith("-")) return args[i + 1];
+  for (const a of args) {
+    if (a.startsWith("--template=")) return a.slice("--template=".length);
+  }
+  return null;
+}
+
+// Parse shell-ish KEY="VALUE" lines from a template.conf into an object.
+function parseConf(text) {
+  const conf = {};
+  for (const line of text.split("\n")) {
+    const m = line.match(/^([A-Z_]+)="(.*)"$/);
+    if (m) conf[m[1]] = m[2];
+  }
+  return conf;
+}
+
+// Replace the body of the `## Mission` section in a cloned CLAUDE.md with the
+// template mission. Appends a section if the header is absent (non-fatal).
+function injectMission(claudeMdPath, mission) {
+  const md = readFileSync(claudeMdPath, "utf-8");
+  const header = "## Mission";
+  const hIdx = md.indexOf(header);
+  if (hIdx === -1) {
+    writeFileSync(claudeMdPath, md + `\n\n${header}\n${mission.trim()}\n`);
+    return;
+  }
+  const bodyStart = hIdx + header.length;
+  const next = md.indexOf("\n## ", bodyStart);
+  const tail = next === -1 ? md.length : next;
+  writeFileSync(claudeMdPath, md.slice(0, bodyStart) + "\n\n" + mission.trim() + "\n" + md.slice(tail));
+}
+
+// Apply a starter template to the freshly cloned project. Reads the template's
+// conf (EXTRA_DIRS, DESCRIPTION), injects its mission into CLAUDE.md, and returns
+// the Day-0 consensus Next Action + Product label + extra dirs (dirs are created
+// later, AFTER cleanup, so metaFiles removal can't delete a declared dir).
+// Exit(1) on unknown template.
+function applyTemplate(target, name) {
+  const noop = { nextAction: null, product: null, extraDirs: [] };
+  if (!name) return noop;
+  const confPath = resolve(target, "templates", name, "template.conf");
+  if (!existsSync(confPath)) {
+    console.error(`Unknown template '${name}'. Available: saas, docs-site, api-backend.`);
+    process.exit(1);
+  }
+  const conf = parseConf(readFileSync(confPath, "utf-8"));
+  const missionPath = resolve(target, "templates", name, "mission.md");
+  if (existsSync(missionPath)) {
+    injectMission(resolve(target, "CLAUDE.md"), readFileSync(missionPath, "utf-8"));
+  }
+  let nextAction = null;
+  const naPath = resolve(target, "templates", name, "consensus-next-action.md");
+  if (existsSync(naPath)) nextAction = readFileSync(naPath, "utf-8").trim();
+  const extraDirs = (conf.EXTRA_DIRS || "").split(/\s+/).filter(Boolean);
+  return { nextAction, product: conf.DESCRIPTION || null, extraDirs };
+}
+
+function init(name, template) {
   const dir = name || "auto-co-project";
   const target = resolve(process.cwd(), dir);
 
@@ -87,6 +149,14 @@ function init(name) {
   // Remove the .git directory so it's a fresh project
   run(`rm -rf "${target}/.git"`);
 
+  // Apply starter template (if any) before cleanup removes templates/.
+  let tpl = { nextAction: null, product: null, extraDirs: [] };
+  if (template) {
+    step(`Applying '${template}' template`);
+    tpl = applyTemplate(target, template);
+    done();
+  }
+
   // Remove meta-specific files
   step("Cleaning up meta files");
   const metaFiles = [
@@ -96,6 +166,7 @@ function init(name) {
     "social-preview.png",
     "AGENTS.md",
     "cli",
+    "templates",
     "projects/landing",
     "docs/marketing",
     "docs/ceo",
@@ -140,6 +211,10 @@ function init(name) {
   for (const d of dirs) {
     mkdirSync(resolve(target, d), { recursive: true });
   }
+  // Template-declared dirs (created AFTER cleanup so metaFiles can't remove them).
+  for (const d of tpl.extraDirs) {
+    mkdirSync(resolve(target, d), { recursive: true });
+  }
   done();
 
   // Create empty human escalation files
@@ -175,10 +250,10 @@ Day 0
 - Cost/month: $0
 
 ## Next Action
-CEO calls a strategy meeting. Each agent proposes one product idea. End by ranking top 3.
+${tpl.nextAction || "CEO calls a strategy meeting. Each agent proposes one product idea. End by ranking top 3."}
 
 ## Company State
-- Product: TBD
+- Product: ${tpl.product || "TBD"}
 - Tech Stack: TBD
 - Revenue: $0
 - Users: 0
@@ -252,7 +327,7 @@ const COMMANDS = new Set(["init", "start", "stop", "status", "doctor", "--versio
 
 switch (cmd) {
   case "init":
-    init(args[1]);
+    init(args[1], parseTemplateArg(args));
     break;
   case "start":
     delegateToLoop("");
@@ -278,7 +353,7 @@ switch (cmd) {
   default:
     // Treat unknown args as project names: `npx create-auto-co my-company`
     if (!cmd.startsWith("-")) {
-      init(cmd);
+      init(cmd, parseTemplateArg(args));
     } else {
       console.error(`Unknown option: ${cmd}`);
       console.log(HELP);

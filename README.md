@@ -51,7 +51,7 @@ That's it. First cycle starts in ~30 seconds. Cost: ~$1.80/cycle.
 npx create-auto-co my-saas --template saas
 ```
 
-Templates: `saas` (Next.js + Supabase + Stripe), `docs-site` (MDX + Vercel), `api-backend` (Express + Railway).
+Templates preconfigure your company's mission and tech-stack direction (your agents build toward it from cycle 1): `saas` (Next.js + Supabase + Stripe), `docs-site` (MDX + Vercel), `api-backend` (Express + Railway).
 
 ### Clone directly
 
