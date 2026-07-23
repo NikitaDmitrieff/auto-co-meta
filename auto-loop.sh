@@ -7,7 +7,6 @@
 #
 # Usage:
 #   ./auto-loop.sh              # Run in foreground
-#   ./auto-loop.sh --daemon     # Run via launchd (no tty)
 #   ./auto-loop.sh --help       # Show full help message
 #   ./auto-loop.sh --selftest   # Validate environment without running
 #   ./auto-loop.sh --dry-run    # Build prompt + show preview, don't run
@@ -576,7 +575,6 @@ Auto-Co -- 24/7 Autonomous AI Company Loop
 
 USAGE:
   ./auto-loop.sh              Run the loop in foreground
-  ./auto-loop.sh --daemon     Run via launchd (no tty)
   ./auto-loop.sh --help       Show this help message
   ./auto-loop.sh --version    Show version
   ./auto-loop.sh --config     Print all config values
@@ -1286,6 +1284,25 @@ SYSTEMD_EOF
             exit 1
             ;;
     esac
+    exit 0
+fi
+
+# === Daemon flag (no-op guard) ===
+# Historical help advertised "./auto-loop.sh --daemon" but no such mode existed:
+# the loop already runs headless under launchd as bare ./auto-loop.sh (no tty
+# needed -- the only interactive reads are in --restore/--rollback one-shots).
+# Recognize the flag so anyone who types it gets the truth instead of a silent
+# foreground run. install-daemon.sh and --schedule are the real launchd paths.
+if [ "${1:-}" = "--daemon" ]; then
+    cat <<'EOF'
+--daemon is not a separate mode.
+
+The loop runs headless under launchd exactly as-is:
+    ./auto-loop.sh
+
+Install the launchd agent:    ./install-daemon.sh
+Generate a schedule config:   ./auto-loop.sh --schedule [MINUTES]
+EOF
     exit 0
 fi
 
