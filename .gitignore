@@ -167,7 +167,6 @@ niche-opportunity-research*.md
 .codex/
 .agents/
 social-preview.png
-install-daemon.sh
 Dockerfile
 docker-compose.yml
 
