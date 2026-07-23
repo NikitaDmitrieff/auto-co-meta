@@ -29,6 +29,16 @@ PAUSE_FLAG="$PROJECT_DIR/.auto-loop-paused"
 LABEL="com.auto-co.loop"
 HISTORY_FILE="$LOG_DIR/cycle-history.jsonl"
 
+# jq over the cycle history, tolerant of a stray or corrupt line in the JSONL.
+# Without this guard one malformed line aborts `jq -s`, turning every analytics
+# flag (--alerts/--costs/--compare/--trend/--dashboard/--health) into parse
+# errors that silently report "All clear" -- a false-negative in monitoring.
+# `jq -R 'fromjson? // empty'` parses EACH line independently, so a bad line is
+# skipped without swallowing its valid neighbours (jq's stream-resync would).
+# jqh = slurp mode (whole-array filters); jqhr = streaming mode (per-object).
+jqh()  { jq -R 'fromjson? // empty' "$HISTORY_FILE" | jq -s "$@"; }
+jqhr() { jq -R 'fromjson? // empty' "$HISTORY_FILE" | jq -r "$@"; }
+
 # Shared alerts logic used by --alerts and --health
 check_alerts() {
     local history_file="$HISTORY_FILE"
@@ -40,21 +50,21 @@ check_alerts() {
     fi
 
     local total_cycles
-    total_cycles=$(jq -s 'length' "$history_file")
+    total_cycles=$(jqh 'length')
 
     # 1. Recent failures (last 10 cycles)
     local recent_fails
-    recent_fails=$(jq -s '[.[-10:] | .[] | select(.status=="fail")] | length' "$history_file")
+    recent_fails=$(jqh '[.[-10:] | .[] | select(.status=="fail")] | length')
     if [ "$recent_fails" -gt 0 ]; then
         echo "  [WARN] $recent_fails failures in last 10 cycles"
-        jq -s '.[-10:] | .[] | select(.status=="fail") | "    Cycle \(.cycle): exit \(.exit_code), \(.duration_s)s"' -r "$history_file"
+        jqh -r '.[-10:] | .[] | select(.status=="fail") | "    Cycle \(.cycle): exit \(.exit_code), \(.duration_s)s"'
         alerts=$((alerts + 1))
     fi
 
     # 2. Cost spike detection (last cycle > 2x average)
     if [ "$total_cycles" -ge 3 ]; then
         local cost_alert
-        cost_alert=$(jq -s '
+        cost_alert=$(jqh -r '
             if length < 3 then empty
             else
                 (.[:-1] | [.[].cost] | add / length) as $avg |
@@ -63,7 +73,7 @@ check_alerts() {
                     "  [WARN] Last cycle cost $\($last) is >2x average ($\($avg | . * 100 | floor / 100))"
                 else empty end
             end
-        ' -r "$history_file")
+        ')
         if [ -n "$cost_alert" ]; then
             echo "$cost_alert"
             alerts=$((alerts + 1))
@@ -72,7 +82,7 @@ check_alerts() {
 
     # 3. Consecutive failure streak
     local streak
-    streak=$(jq -s '[foreach .[] as $x (0; if $x.status == "fail" then . + 1 else 0 end)] | max' "$history_file")
+    streak=$(jqh '[foreach .[] as $x (0; if $x.status == "fail" then . + 1 else 0 end)] | max')
     if [ "$streak" -ge 3 ]; then
         echo "  [CRIT] Worst consecutive failure streak: $streak cycles"
         alerts=$((alerts + 1))
@@ -96,7 +106,7 @@ check_alerts() {
     # 5. Duration anomaly (last cycle > 2x average duration)
     if [ "$total_cycles" -ge 3 ]; then
         local dur_alert
-        dur_alert=$(jq -s '
+        dur_alert=$(jqh -r '
             if length < 3 then empty
             else
                 (.[:-1] | [.[].duration_s] | add / length) as $avg |
@@ -105,7 +115,7 @@ check_alerts() {
                     "  [WARN] Last cycle took \($last)s (>2x avg \($avg | floor)s)"
                 else empty end
             end
-        ' -r "$history_file")
+        ')
         if [ -n "$dur_alert" ]; then
             echo "$dur_alert"
             alerts=$((alerts + 1))
@@ -216,14 +226,14 @@ case "${1:-}" in
         elif command -v jq &>/dev/null; then
             echo ""
             echo "Per-cycle breakdown:"
-            jq -r '"  Cycle \(.cycle): $\(.cost) (\(.status), \(.duration_s)s, \(.model))"' "$HISTORY_FILE"
+            jqhr '"  Cycle \(.cycle): $\(.cost) (\(.status), \(.duration_s)s, \(.model))"'
             echo ""
-            total=$(jq -s '[.[].cost] | add' "$HISTORY_FILE")
-            count=$(jq -s 'length' "$HISTORY_FILE")
-            ok=$(jq -s '[.[] | select(.status=="ok")] | length' "$HISTORY_FILE")
-            fail=$(jq -s '[.[] | select(.status=="fail")] | length' "$HISTORY_FILE")
-            avg=$(jq -s 'if length > 0 then ([.[].cost] | add) / length else 0 end' "$HISTORY_FILE")
-            avg_dur=$(jq -s 'if length > 0 then ([.[].duration_s] | add) / length | floor else 0 end' "$HISTORY_FILE")
+            total=$(jqh '[.[].cost] | add')
+            count=$(jqh 'length')
+            ok=$(jqh '[.[] | select(.status=="ok")] | length')
+            fail=$(jqh '[.[] | select(.status=="fail")] | length')
+            avg=$(jqh 'if length > 0 then ([.[].cost] | add) / length else 0 end')
+            avg_dur=$(jqh 'if length > 0 then ([.[].duration_s] | add) / length | floor else 0 end')
             echo "Total: \$$total across $count cycles ($ok ok, $fail failed)"
             echo "Average: \$$avg/cycle, ${avg_dur}s/cycle"
         else
@@ -282,19 +292,19 @@ case "${1:-}" in
 
             # Cost summary from history
             if [ -f "$HISTORY_FILE" ] && [ -s "$HISTORY_FILE" ] && command -v jq &>/dev/null; then
-                total=$(jq -s '[.[].cost] | add' "$HISTORY_FILE")
-                count=$(jq -s 'length' "$HISTORY_FILE")
-                ok=$(jq -s '[.[] | select(.status=="ok")] | length' "$HISTORY_FILE")
-                fail=$(jq -s '[.[] | select(.status=="fail")] | length' "$HISTORY_FILE")
-                avg=$(jq -s 'if length > 0 then ([.[].cost] | add) / length | . * 100 | floor / 100 else 0 end' "$HISTORY_FILE")
-                avg_dur=$(jq -s 'if length > 0 then ([.[].duration_s] | add) / length | floor else 0 end' "$HISTORY_FILE")
+                total=$(jqh '[.[].cost] | add')
+                count=$(jqh 'length')
+                ok=$(jqh '[.[] | select(.status=="ok")] | length')
+                fail=$(jqh '[.[] | select(.status=="fail")] | length')
+                avg=$(jqh 'if length > 0 then ([.[].cost] | add) / length | . * 100 | floor / 100 else 0 end')
+                avg_dur=$(jqh 'if length > 0 then ([.[].duration_s] | add) / length | floor else 0 end')
 
                 echo "  ┌─────────────────────────────────────────────────────┐"
                 printf "  │  Cycles: %-5s  OK: %-5s  Fail: %-5s             │\n" "$count" "$ok" "$fail"
                 printf "  │  Total cost: \$%-10s  Avg: \$%-8s/cycle       │\n" "$total" "$avg"
                 printf "  │  Avg duration: %ss/cycle                          │\n" "$avg_dur"
                 # Cost trend sparkline (last 10 cycles)
-                spark=$(jq -s '[ .[-10:][].cost ] | [ range(length) as $i | {v: .[$i], min: min, max: max} ] | [.[] | if .max == .min then 4 else (((.v - .min) / (.max - .min) * 7) | floor) end] | map(["▁","▂","▃","▄","▅","▆","▇","█"][.]) | join("")' "$HISTORY_FILE" 2>/dev/null | tr -d '"')
+                spark=$(jqh '[ .[-10:][].cost ] | [ range(length) as $i | {v: .[$i], min: min, max: max} ] | [.[] | if .max == .min then 4 else (((.v - .min) / (.max - .min) * 7) | floor) end] | map(["▁","▂","▃","▄","▅","▆","▇","█"][.]) | join("")' | tr -d '"')
                 printf "  │  Cost trend (last 10): %-28s │\n" "$spark"
                 echo "  └─────────────────────────────────────────────────────┘"
 
@@ -302,7 +312,7 @@ case "${1:-}" in
                 echo "  Last 10 cycles:"
                 printf "  %-6s %-6s %-9s %-8s %s\n" "Cycle" "Status" "Cost" "Duration" "Model"
                 echo "  ────── ────── ───────── ──────── ──────"
-                jq -r '"\(.cycle)\t\(.status)\t$\(.cost)\t\(.duration_s)s\t\(.model)"' "$HISTORY_FILE" \
+                jqhr '"\(.cycle)\t\(.status)\t$\(.cost)\t\(.duration_s)s\t\(.model)"' \
                     | tail -10 \
                     | while IFS=$'\t' read -r cyc st cost dur model; do
                         if [ "$st" = "ok" ]; then
@@ -345,7 +355,7 @@ case "${1:-}" in
         printf "%-12s %7s %10s %10s %10s %8s\n" "Model" "Cycles" "Total" "Avg Cost" "Avg Dur" "OK Rate"
         echo "──────────── ─────── ────────── ────────── ────────── ────────"
 
-        jq -s '
+        jqh -r '
             group_by(.model) | .[] |
             {
                 model: .[0].model,
@@ -357,7 +367,7 @@ case "${1:-}" in
                 ok_pct: (([.[] | select(.status=="ok")] | length) * 100 / length | floor)
             } |
             "\(.model)\t\(.count)\t$\(.total)\t$\(.avg_cost)\t\(.avg_dur)s\t\(.ok_pct)%"
-        ' -r "$HISTORY_FILE" \
+        ' \
             | sort -t$'\t' -k2 -rn \
             | while IFS=$'\t' read -r model count total avg_cost avg_dur ok_pct; do
                 printf "%-12s %7s %10s %10s %10s %8s\n" "$model" "$count" "$total" "$avg_cost" "$avg_dur" "$ok_pct"
@@ -365,7 +375,7 @@ case "${1:-}" in
 
         echo ""
         echo "Cost efficiency (lower = better):"
-        jq -s '
+        jqh -r '
             group_by(.model) | .[] |
             {
                 model: .[0].model,
@@ -376,7 +386,7 @@ case "${1:-}" in
                 )
             } |
             "  \(.model): $\(.cost_per_ok) per successful cycle"
-        ' -r "$HISTORY_FILE"
+        '
         ;;
 
     --trend)
@@ -386,27 +396,27 @@ case "${1:-}" in
             exit 1
         fi
 
-        total_cycles=$(jq -s 'length' "$HISTORY_FILE")
+        total_cycles=$(jqh 'length')
         shown=$((total_cycles < N ? total_cycles : N))
 
         echo "=== Cost & Duration Trend (last $shown of $total_cycles cycles) ==="
         echo ""
 
         # Cost sparkline
-        cost_spark=$(jq -s "[ .[-${N}:][].cost ] | [ range(length) as \$i | {v: .[\$i], min: min, max: max} ] | [.[] | if .max == .min then 4 else (((.v - .min) / (.max - .min) * 7) | floor) end] | map([\"▁\",\"▂\",\"▃\",\"▄\",\"▅\",\"▆\",\"▇\",\"█\"][.]) | join(\"\")" "$HISTORY_FILE" 2>/dev/null | tr -d '"')
-        cost_min=$(jq -s "[ .[-${N}:][].cost ] | min | . * 100 | floor / 100" "$HISTORY_FILE")
-        cost_max=$(jq -s "[ .[-${N}:][].cost ] | max | . * 100 | floor / 100" "$HISTORY_FILE")
-        cost_avg=$(jq -s "[ .[-${N}:][].cost ] | add / length | . * 100 | floor / 100" "$HISTORY_FILE")
+        cost_spark=$(jqh "[ .[-${N}:][].cost ] | [ range(length) as \$i | {v: .[\$i], min: min, max: max} ] | [.[] | if .max == .min then 4 else (((.v - .min) / (.max - .min) * 7) | floor) end] | map([\"▁\",\"▂\",\"▃\",\"▄\",\"▅\",\"▆\",\"▇\",\"█\"][.]) | join(\"\")" | tr -d '"')
+        cost_min=$(jqh "[ .[-${N}:][].cost ] | min | . * 100 | floor / 100")
+        cost_max=$(jqh "[ .[-${N}:][].cost ] | max | . * 100 | floor / 100")
+        cost_avg=$(jqh "[ .[-${N}:][].cost ] | add / length | . * 100 | floor / 100")
 
         printf "  Cost:     %s\n" "$cost_spark"
         printf "            min: \$%-8s  avg: \$%-8s  max: \$%-8s\n" "$cost_min" "$cost_avg" "$cost_max"
         echo ""
 
         # Duration sparkline
-        dur_spark=$(jq -s "[ .[-${N}:][].duration_s ] | [ range(length) as \$i | {v: .[\$i], min: min, max: max} ] | [.[] | if .max == .min then 4 else (((.v - .min) / (.max - .min) * 7) | floor) end] | map([\"▁\",\"▂\",\"▃\",\"▄\",\"▅\",\"▆\",\"▇\",\"█\"][.]) | join(\"\")" "$HISTORY_FILE" 2>/dev/null | tr -d '"')
-        dur_min=$(jq -s "[ .[-${N}:][].duration_s ] | min" "$HISTORY_FILE")
-        dur_max=$(jq -s "[ .[-${N}:][].duration_s ] | max" "$HISTORY_FILE")
-        dur_avg=$(jq -s "[ .[-${N}:][].duration_s ] | add / length | floor" "$HISTORY_FILE")
+        dur_spark=$(jqh "[ .[-${N}:][].duration_s ] | [ range(length) as \$i | {v: .[\$i], min: min, max: max} ] | [.[] | if .max == .min then 4 else (((.v - .min) / (.max - .min) * 7) | floor) end] | map([\"▁\",\"▂\",\"▃\",\"▄\",\"▅\",\"▆\",\"▇\",\"█\"][.]) | join(\"\")" | tr -d '"')
+        dur_min=$(jqh "[ .[-${N}:][].duration_s ] | min")
+        dur_max=$(jqh "[ .[-${N}:][].duration_s ] | max")
+        dur_avg=$(jqh "[ .[-${N}:][].duration_s ] | add / length | floor")
 
         printf "  Duration: %s\n" "$dur_spark"
         printf "            min: %-8ss  avg: %-8ss  max: %-8ss\n" "$dur_min" "$dur_avg" "$dur_max"
@@ -416,14 +426,14 @@ case "${1:-}" in
         echo "  Details:"
         printf "  %-7s %-9s %-9s %-10s %s\n" "Cycle" "Cost" "Duration" "Status" "Model"
         echo "  ------- --------- --------- ---------- ------"
-        jq -s ".[-${N}:][] | \"\(.cycle)\t\$\(.cost)\t\(.duration_s)s\t\(.status)\t\(.model)\"" -r "$HISTORY_FILE" \
+        jqh -r ".[-${N}:][] | \"\(.cycle)\t\$\(.cost)\t\(.duration_s)s\t\(.status)\t\(.model)\"" \
             | while IFS=$'\t' read -r cyc cost dur st model; do
                 printf "  %-7s %-9s %-9s %-10s %s\n" "$cyc" "$cost" "$dur" "$st" "$model"
             done
 
         # Running total trend
         echo ""
-        total=$(jq -s '[.[].cost] | add | . * 100 | floor / 100' "$HISTORY_FILE")
+        total=$(jqh '[.[].cost] | add | . * 100 | floor / 100')
         echo "  Cumulative cost: \$$total across $total_cycles cycles"
         ;;
 
@@ -502,11 +512,11 @@ case "${1:-}" in
         # 5. Quick stats
         if [ -f "$HISTORY_FILE" ] && [ -s "$HISTORY_FILE" ] && command -v jq &>/dev/null; then
             echo "--- Stats ---"
-            total_cycles=$(jq -s 'length' "$HISTORY_FILE")
-            ok=$(jq -s '[.[] | select(.status=="ok")] | length' "$HISTORY_FILE")
-            fail=$(jq -s '[.[] | select(.status=="fail")] | length' "$HISTORY_FILE")
-            total=$(jq -s '[.[].cost] | add' "$HISTORY_FILE")
-            rate=$(jq -s '([.[] | select(.status=="ok")] | length) * 100 / length | floor' "$HISTORY_FILE")
+            total_cycles=$(jqh 'length')
+            ok=$(jqh '[.[] | select(.status=="ok")] | length')
+            fail=$(jqh '[.[] | select(.status=="fail")] | length')
+            total=$(jqh '[.[].cost] | add')
+            rate=$(jqh '([.[] | select(.status=="ok")] | length) * 100 / length | floor')
             echo "  Cycles: $total_cycles ($ok ok, $fail failed)  |  Success rate: ${rate}%  |  Total cost: \$$total"
         fi
         ;;
