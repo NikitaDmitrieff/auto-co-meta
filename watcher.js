@@ -84,7 +84,7 @@ async function pollForReply() {
     body: JSON.stringify({
       offset: lastUpdateId + 1,
       timeout: 30, // long-poll 30s
-      allowed_updates: ["message"],
+      allowed_updates: ["message", "channel_post"],
     }),
   });
 
@@ -101,13 +101,10 @@ async function pollForReply() {
 
   for (const update of data.result) {
     lastUpdateId = update.update_id;
-    const msg = update.message;
-    if (
-      msg &&
-      msg.chat &&
-      String(msg.chat.id) === String(CHAT_ID) &&
-      msg.text
-    ) {
+    // Accept replies as either a private message or a channel post
+    // (channel posts arrive as update.channel_post, not update.message).
+    const msg = update.message || update.channel_post;
+    if (msg && msg.text) {
       return msg.text;
     }
   }
